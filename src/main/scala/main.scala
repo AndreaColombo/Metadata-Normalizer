@@ -12,6 +12,7 @@ object main extends App {
   val recommender = Ontology.apply("recommender")
 
   println(recommender.get_results(input))
+  //nicola bergamasco
 
 
 }
