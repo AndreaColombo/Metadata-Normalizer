@@ -22,10 +22,12 @@ object RecommenderParser {
       val score = scores(i)
       var lst = ""
       l_terms.foreach(lst += _ + " ")
-      row.append(lst, score.toString(), position.toString)
+      lst.map(_.toLower)
+      row.append(lst.map(_.toLower).replace(""""""",""), score.toString(), position.toString)
       lst = ""
       l_ontologies.foreach(lst += _ + " ")
-      row.append(lst)
+      val l = lst.map(_.toLower).replace(""""""","")
+      row.append(lst.map(_.toLower).replace(""""""",""))
       rows.append(row.toList)
     }
 

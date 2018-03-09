@@ -4,6 +4,7 @@ import scalaj.http.{Http, HttpOptions}
 import Util._
 
 trait Ontology {
+  def say();
   def get_results (string: String): List[List[String]]
 }
 
@@ -19,6 +20,8 @@ object Ontology {
       val response = Http(url).params(Seq("apikey" -> apikey, "input" -> keywords, "input_type" -> "2", "output_type" -> "2")).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       return  RecommenderParser.parse(response)
     }
+
+    override def say(): Unit = println("I am recommender")
   }
 
   private class Zooma extends Ontology {
@@ -33,6 +36,7 @@ object Ontology {
       val a = null
       return a
     }
+    override def say(): Unit = println("I am recommender")
   }
 
   private class Umls extends Ontology {
@@ -45,6 +49,7 @@ object Ontology {
       val a = null
       return a
     }
+    override def say(): Unit = println("I am recommender")
   }
 
   private class Bioportal extends Ontology {
@@ -58,6 +63,7 @@ object Ontology {
       val a = null
       return a
     }
+    override def say(): Unit = println("I am recommender")
   }
 
   def apply(s: String): Ontology = {
