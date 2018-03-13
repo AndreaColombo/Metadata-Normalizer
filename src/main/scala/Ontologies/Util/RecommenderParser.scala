@@ -2,6 +2,7 @@ package Ontologies.Util
 
 import play.api.libs.json._
 import scala.collection.mutable.ListBuffer
+import java.lang.Float.parseFloat
 
 
 object RecommenderParser {
@@ -22,12 +23,11 @@ object RecommenderParser {
       val score = scores(i)
       var lst = ""
       l_terms.foreach(lst += _ + " ")
-      lst.map(_.toLower)
-      row.append(lst.map(_.toLower).replace(""""""",""), score.toString(), position.toString)
+      row.append(position.toString,lst.map(_.toLower).replace(""""""","").dropRight(1), (parseFloat(score.toString())*100).toString)
       lst = ""
       l_ontologies.foreach(lst += _ + " ")
       val l = lst.map(_.toLower).replace(""""""","")
-      row.append(lst.map(_.toLower).replace(""""""",""))
+      row.append(lst.map(_.toLower).replace(""""""","").dropRight(1))
       rows.append(row.toList)
     }
 
