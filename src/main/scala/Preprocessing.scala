@@ -1,26 +1,30 @@
 import scala.collection.mutable.ListBuffer
+import scala.reflect.internal.util.StringOps
 
 object Preprocessing {
-  def parse(input: String): Map[String, String] = {
+  def parse(input: String): String = {
     //NEWLINE = VIRGOLA
-    val tmp = input.replace(""""""", "").replace("\n", "").replace("""\""", "").replace("/", ",").replace(";", ",")
+    val tmp = input.replace(""""""", "").replace("\n", ",").replace("""\""", "").replace("/", ",").replace(";", ",")
     //tolgo virgolette, punti e virgola e new line
     var result = ""
+    var result2 = ""
     var dropped = ""
-      var i = 0
     val lst = tmp.split(",").toList
     for (s <- lst) {
       val res = line_parse(s)
       if (res.startsWith("DROP"))
         dropped += res.replace("DROP ","") + ","
-      else result += res + ","
-      i=i+1
+      else {
+        val tmp = res.replaceAll("\\s*,\\s*", ",")
+        result += tmp + ","
+      }
     }
     dropped = dropped.dropRight(1)
     result = result.dropRight(1)
+    result.split(",").toList.distinct.foreach(result2+= _ + ",")
 
     //prima del return crea new list con elementi DROP
-    return Map("Parsed" -> result, "Dropped" -> dropped)
+    return result2.dropRight(1)
   }
 
   def line_parse(s: String): String = {
@@ -57,12 +61,13 @@ object Preprocessing {
       str = str.replace(s, ",")
     }
 
+    //FILTER IDS LIKE letters+numbers
     val r2 = "([a-z])([0-9]+)".r
 //    if (!r2.findAllIn(str).mkString.isEmpty)
 //      println(r2.findAllIn(str).mkString + " found in "+str)
 
 //    println(str)
-    return str
+    return ltrim(rtrim(str))
 
   }
 
@@ -95,5 +100,8 @@ object Preprocessing {
 
     f(chars, 0)
   }
+
+  private def ltrim(s: String) = s.replaceAll("^\\s+", "")
+  private def rtrim(s: String) = s.replaceAll("\\s+$", "")
 
 }
