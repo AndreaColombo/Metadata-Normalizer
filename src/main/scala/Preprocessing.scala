@@ -45,7 +45,6 @@ object Preprocessing {
       str = balance(str)
     }
 
-
     //TXT (TXT2) => TXT, TXT2
     val r = "\\((.*?)\\)".r
     if (!r.findAllIn(str).mkString.equals("") && !str.startsWith("DROP"))
@@ -61,8 +60,13 @@ object Preprocessing {
       str = str.replace(s, ",")
     }
 
+    //TRATTINI
+    if(str.contains("-")){
+      str += "," + str.replace("-"," ")
+    }
+
     //FILTER IDS LIKE letters+numbers
-    val r2 = "([a-z])([0-9]+)".r
+//    val r2 = "([a-z])([0-9]+)".r
 //    if (!r2.findAllIn(str).mkString.isEmpty)
 //      println(r2.findAllIn(str).mkString + " found in "+str)
 
