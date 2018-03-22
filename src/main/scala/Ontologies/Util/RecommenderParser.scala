@@ -12,10 +12,12 @@ object RecommenderParser {
     val scores = j \\ "evaluationScore"
     val ontologies = j \\ "ontologies"
     val terms = j \\ "coverageResult"
+    val matchType = j \\ "matchType"
 
     var rows = ListBuffer[List[String]]()
 
     for (i <- ontologies.indices) {
+      val service = "Recommender Keywords"
       var row = ListBuffer[String]()
       val l_ontologies = foo(ontologies(i), "acronym")
       val l_terms = foo(terms(i), "text")
@@ -33,17 +35,17 @@ object RecommenderParser {
       rows.append(row.toList)
     }
 
-    return rows.toList
+    rows.toList
   }
 
-  def foo(s: JsValue, term: String): List[String] = {
+  private def foo(s: JsValue, term: String): List[String] = {
     val set = s \\ term
     if (term.equalsIgnoreCase("acronym"))
-      return (f(set.map(_.toString()).toList))
+      f(set.map(_.toString()).toList)
 
-    return (set.map(_.toString()).toList)
+    set.map(_.toString()).toList
   }
-  def f(arr: List[String]): List[String] = (arr.indices.collect { case i if i % 2 == 0 => arr(i) }).toList
+  private def f(arr: List[String]): List[String] = arr.indices.collect { case i if i % 2 == 0 => arr(i) }.toList
 
 
 }

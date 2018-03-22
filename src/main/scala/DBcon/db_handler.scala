@@ -13,14 +13,14 @@ import Tables.ApiResults
 
 object db_handler {
 
-  val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/DBcon/application.conf"))
-  val conf = ConfigFactory.load(parsedConfig)
-  val db = Database.forConfig("mydb", conf)
-  val ApiResults = TableQuery[ApiResults]
+  private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/DBcon/application.conf"))
+  private val conf= ConfigFactory.load(parsedConfig)
+  private val db = Database.forConfig("mydb", conf)
+  private val ApiResults = TableQuery[ApiResults]
 
   val setup = DBIO.seq(ApiResults.schema.create)
 
-  val setupfuture = db.run(setup)
+  private val setupfuture = db.run(setup)
 
   def insert (rows: List[List[String]]) = {
     var ok: Seq[(String, String, String, String, String, String, String, String)] = Seq()
@@ -31,14 +31,11 @@ object db_handler {
     actual_insert(ok)
   }
 
-private def actual_insert(rows: Iterable[(String, String, String, String, String, String, String, String)]) = {
-  val insertAction = ApiResults ++= rows
-  val insert = db.run(insertAction)
-  Await.result(insert, Duration.Inf)
-}
-
-
-
+  private def actual_insert(rows: Iterable[(String, String, String, String, String, String, String, String)]) = {
+    val insertAction = ApiResults ++= rows
+    val insert = db.run(insertAction)
+    Await.result(insert, Duration.Inf)
+  }
 
 }
 

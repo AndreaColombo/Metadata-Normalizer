@@ -4,7 +4,7 @@ import scalaj.http.{Http, HttpOptions}
 import Util._
 
 trait Ontology {
-  def say();
+  def say()
   def get_results (string: String): List[List[String]]
 }
 
@@ -18,7 +18,7 @@ object Ontology {
       var lst = ""
       keywords.replace(" ", ",")
       val response = Http(url).params(Seq("apikey" -> apikey, "input" -> keywords, "input_type" -> "2", "output_type" -> "2")).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-      return  RecommenderParser.parse(response)
+      RecommenderParser.parse(response)
     }
 
     override def say(): Unit = println("I am recommender")
@@ -30,24 +30,21 @@ object Ontology {
 
     override def get_results(keyword: String): List[List[String]] = {
       keyword.replace(" ", "+")
-      return parse(Http(url).params(Seq("propertyValue"->keyword)).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body)
+      ZoomaParser.parse(Http(url).params(Seq("propertyValue"->keyword)).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body,keyword)
     }
-    def parse(str: String): List[List[String]] = {
-      val a = null
-      return a
-    }
-    override def say(): Unit = println("I am recommender")
+
+    override def say(): Unit = println("I am zooma")
   }
 
   private class Umls extends Ontology {
 
   def get_results(searchterm: String): List[List[String]] = {
       val url = "https://uts-ws.nlm.nih.gov/rest/search/current"
-      return parse(Http(url).params(Seq("string"->searchterm,"ticket"->Auth.getST(Auth.getTGT()))).asString.body)
+      parse(Http(url).params(Seq("string"->searchterm,"ticket"->Auth.getST(Auth.getTGT()))).asString.body)
     }
     def parse(str: String): List[List[String]] = {
       val a = null
-      return a
+      a
     }
     override def say(): Unit = println("I am recommender")
   }
@@ -57,11 +54,11 @@ object Ontology {
     val url = "http://data.bioontology.org/search"
     override def get_results(term: String): List[List[String]] = {
       val response = Http(url).params(Seq("apikey"->apikey, "input"->term)).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-      return parse(response)
+      parse(response)
     }
     def parse(str: String): List[List[String]] = {
       val a = null
-      return a
+      a
     }
     override def say(): Unit = println("I am recommender")
   }

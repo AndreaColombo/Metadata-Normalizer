@@ -24,7 +24,7 @@ object Preprocessing {
     result.split(",").toList.distinct.foreach(result2+= _ + ",")
 
     //prima del return crea new list con elementi DROP
-    return result2.dropRight(1)
+    result2.dropRight(1)
   }
 
   def line_parse(s: String): String = {
@@ -34,10 +34,12 @@ object Preprocessing {
       str = s.drop(1)
     else str = s
     str = str.map(_.toLower)
-
     //STARTS WITH NUMBER -> DROP
     val n = List("0,","1","2","3","4","5","6","7","8","9","+","-",";")
     if(n.exists(token => str.startsWith(token))){
+      str = drop(str)
+    }
+    if((str.length <= 3 && str.contains(" ")) || str.length <= 2 ) {
       str = drop(str)
     }
 
@@ -45,10 +47,12 @@ object Preprocessing {
       str = balance(str)
     }
 
-    //TXT (TXT2) => TXT, TXT2
+    //TXT (TXT2) => TXT, TXT2, TXT TXT2
     val r = "\\((.*?)\\)".r
-    if (!r.findAllIn(str).mkString.equals("") && !str.startsWith("DROP"))
-      str = str.replace(r.findAllIn(str).mkString, ","+r.findAllIn(str).mkString.replace("(","").replace(")",""))
+    if (!r.findAllIn(str).mkString.equals("") && !str.startsWith("DROP")) {
+      str = str.replace(r.findAllIn(str).mkString, "," + r.findAllIn(str).mkString.replace("(", "").replace(")", ""))
+      str = str + "," + str.replace(","," ")
+    }
     if (str.startsWith(",")) str = str.drop(1)
 
     //FILTER OUT ALL NUMBER SEQUENCES
@@ -71,11 +75,11 @@ object Preprocessing {
 //      println(r2.findAllIn(str).mkString + " found in "+str)
 
 //    println(str)
-    return ltrim(rtrim(str))
+    ltrim(rtrim(str))
 
   }
 
-  def drop(str: String): String = return "DROP " + str
+  def drop(str: String): String = "DROP " + str
 
   def balance(chars: String): String = {
     var str = ""
@@ -84,7 +88,7 @@ object Preprocessing {
     else if (chars.contains(")")) // c'è ) metto ( all'inizio
       str = "("+chars
     else str = chars
-    return str
+    str
   }
 
   def is_balanced(chars: List[Char]): Boolean = {
