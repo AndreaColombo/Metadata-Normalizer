@@ -1,10 +1,11 @@
 package Ontologies.Util
 
 import play.api.libs.json._
+import scalaj.http.{Http, HttpOptions}
 
 object ZoomaParser {
 
-  def parse (string: String, termAnnotated: String): List[List[String]] = {
+  def parse (string: String, termAnnotated: String, raw_value: String): List[List[String]] = {
     var rows: Seq[List[String]] = List()
     val service = "ZOOMA"
     val parsed_value = termAnnotated
@@ -12,18 +13,21 @@ object ZoomaParser {
     val l_terms = j \\ "propertyValue"
     val l_confidence = j \\ "confidence"
     val ontologies = j \\ "semanticTags"
-
+    val links = j \\ "href"
     for (i <- l_terms.indices){
       if(i%2==0) {
-        val prefLabel = l_terms(i).toString().replace(""""""","")
+        val url = links(i+1).toString().replaceAll(""""""","")
+        val j2 = Json.parse(Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body)
+        val prefLabel = (j2 \\ "label").head.toString.replaceAll(""""""","")
+        val synonyms = (j2 \\ "synonyms").head.toString().replaceAll(""""""","").replace("[","").replace("]","")
         val ontology_raw = ontologies(i).toString().substring(ontologies(i).toString().lastIndexOf('/')+1).dropRight(2)
         val ontology = ontology_raw.split("_").head
         val ontology_id = ontology_raw.split("_")(1)
         val confidence = l_confidence(i/2).toString().replace(""""""","")
-        rows :+= Seq(service,"null",parsed_value,ontology,ontology_id,"null",confidence).toList
+        rows :+= List(service,raw_value,parsed_value,ontology,ontology_id,prefLabel,synonyms,confidence)
       }
     }
     rows.toList
+    //END PARSE
   }
-
 }

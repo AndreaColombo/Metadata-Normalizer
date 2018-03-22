@@ -2,29 +2,32 @@ import scala.collection.mutable.ListBuffer
 import scala.reflect.internal.util.StringOps
 
 object Preprocessing {
-  def parse(input: String): String = {
+  def parse(input: String): Map[String, Seq[String]] = {
     //NEWLINE = VIRGOLA
     val tmp = input.replace(""""""", "").replace("\n", ",").replace("""\""", "").replace("/", ",").replace(";", ",")
     //tolgo virgolette, punti e virgola e new line
     var result = ""
     var result2 = ""
     var dropped = ""
+    var kodio: Map[String, Seq[String]] = Map()
     val lst = tmp.split(",").toList
     for (s <- lst) {
-      val res = line_parse(s)
-      if (res.startsWith("DROP"))
-        dropped += res.replace("DROP ","") + ","
-      else {
-        val tmp = res.replaceAll("\\s*,\\s*", ",")
-        result += tmp + ","
+      var medium_res = line_parse(line_parse(s))
+      var final_res_seq: Seq[String] = Seq()
+      if (!medium_res.startsWith("drop")){
+        medium_res = medium_res.replaceAll("\\s*,\\s*", ",")
+        val final_res = inner_parse(medium_res).replaceAll("\\s*,\\s*", ",")
+        final_res_seq = final_res.split(",").distinct.toSeq
+        kodio += (medium_res -> final_res_seq)
       }
     }
+//    println(kodio)
     dropped = dropped.dropRight(1)
     result = result.dropRight(1)
     result.split(",").toList.distinct.foreach(result2+= _ + ",")
 
     //prima del return crea new list con elementi DROP
-    result2.dropRight(1)
+    kodio
   }
 
   def line_parse(s: String): String = {
@@ -35,19 +38,24 @@ object Preprocessing {
     else str = s
     str = str.map(_.toLower)
     //STARTS WITH NUMBER -> DROP
-    val n = List("0,","1","2","3","4","5","6","7","8","9","+","-",";")
-    if(n.exists(token => str.startsWith(token))){
+    val n = List("0,", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "-", ";")
+    if (n.exists(token => str.startsWith(token))) {
       str = drop(str)
     }
-    if((str.length <= 3 && str.contains(" ")) || str.length <= 2 ) {
+    val tmp = str.replace("(","").replace(")","")
+    if (tmp.equalsIgnoreCase("p12")||(tmp.length <= 3 && tmp.contains(" ")) || tmp.length <= 2) {
       str = drop(str)
     }
 
-    if(!is_balanced(str.toList) && !str.startsWith("DROP")) {
+    if (!is_balanced(str.toList) && !str.startsWith("DROP")) {
       str = balance(str)
     }
+    str
+  }
 
+  def inner_parse(s: String): String = {
     //TXT (TXT2) => TXT, TXT2, TXT TXT2
+    var str = s
     val r = "\\((.*?)\\)".r
     if (!r.findAllIn(str).mkString.equals("") && !str.startsWith("DROP")) {
       str = str.replace(r.findAllIn(str).mkString, "," + r.findAllIn(str).mkString.replace("(", "").replace(")", ""))
@@ -55,28 +63,21 @@ object Preprocessing {
     }
     if (str.startsWith(",")) str = str.drop(1)
 
-    //FILTER OUT ALL NUMBER SEQUENCES
-//    val r2 = "([0-9]+)".r
-//    str = str.replace(r2.findAllIn(str).mkString,"")
+    //STOPWORDS
+    // txt STOPWORD txt 2 = txt, txt2, txt txt2
 
     val stopwords = List("from", "for")
-    for (s <- stopwords){
-      str = str.replace(s, ",")
+    if(stopwords.exists(stopword => str.contains(stopword))) {
+      stopwords.foreach(stopword => str = str.replaceAll(stopword, ","))
+      str = str + "," + str.replace(",","")
+      println(str)
     }
 
     //TRATTINI
     if(str.contains("-")){
       str += "," + str.replace("-"," ")
     }
-
-    //FILTER IDS LIKE letters+numbers
-//    val r2 = "([a-z])([0-9]+)".r
-//    if (!r2.findAllIn(str).mkString.isEmpty)
-//      println(r2.findAllIn(str).mkString + " found in "+str)
-
-//    println(str)
     ltrim(rtrim(str))
-
   }
 
   def drop(str: String): String = "DROP " + str
