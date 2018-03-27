@@ -5,7 +5,8 @@ import Util._
 
 trait Ontology {
   def say()
-  def get_results (term: String, raw_value: String): List[List[String]]
+  def get_results (term: String, map: Map[String,Seq[String]]=null): List[List[String]]
+  def get_results (term: String, raw_value: String=null): List[List[String]]
 }
 
 object Ontology {
@@ -14,14 +15,16 @@ object Ontology {
     val apikey = "2338fb64-0246-4627-bf4d-4197bc8c9c64"
     val url = "http://data.bioontology.org/recommender"
 
-    override def get_results(keywords: String, raw_value: String = ""): List[List[String]] = {
+    override def get_results(keywords: String, map: Map[String, Seq[String]]): List[List[String]] = {
       var lst = ""
       keywords.replace(" ", ",")
       val response = Http(url).params(Seq("apikey" -> apikey, "input" -> keywords, "input_type" -> "2", "output_type" -> "2")).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-      RecommenderParser.parse(response)
+      RecommenderParser.parse(response,map)
     }
 
     override def say(): Unit = println("I am recommender")
+
+    override def get_results(term: String, raw_value: String): Unit = null
   }
 
   private class Zooma extends Ontology {
@@ -34,25 +37,14 @@ object Ontology {
     }
 
     override def say(): Unit = println("I am zooma")
-  }
 
-  private class Umls extends Ontology {
-
-  def get_results(searchterm: String, raw_value: String): List[List[String]] = {
-      val url = "https://uts-ws.nlm.nih.gov/rest/search/current"
-      parse(Http(url).params(Seq("string"->searchterm,"ticket"->Auth.getST(Auth.getTGT()))).asString.body)
-    }
-    def parse(str: String): List[List[String]] = {
-      val a = null
-      a
-    }
-    override def say(): Unit = println("I am recommender")
+    override def get_results(term: String, map: Map[String, Seq[String]]): List[List[String]] = List()
   }
 
   private class Bioportal extends Ontology {
     val apikey = "2338fb64-0246-4627-bf4d-4197bc8c9c64"
     val url = "http://data.bioontology.org/search"
-    override def get_results(term: String, raw_value: String): List[List[String]] = {
+    override def get_results(term: String, map: Map[String, Seq[String]]): List[List[String]] = {
       val response = Http(url).params(Seq("apikey"->apikey, "input"->term)).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       parse(response)
     }
@@ -61,12 +53,13 @@ object Ontology {
       a
     }
     override def say(): Unit = println("I am recommender")
+
+    override def get_results(term: String, raw_value: String): Unit = null
   }
 
   def apply(s: String): Ontology = {
     if (s.equalsIgnoreCase("bioportal")) new Bioportal
     else  if (s.equalsIgnoreCase("zooma")) new Zooma
-    else  if (s.equalsIgnoreCase("umls")) new Umls
     else new Recommender
   }
 }

@@ -1,11 +1,9 @@
 package DBcon
 
 import scala.concurrent._
-import scala.concurrent.ExecutionContext.Implicits.global
 import slick.jdbc.PostgresProfile.api._
 import java.io._
 
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.Duration
 import com.typesafe.config.ConfigFactory
 
@@ -29,6 +27,7 @@ object db_handler {
       ok :+= (l(0),l(1),l(2),l(3),l(4),l(5),l(6),l(7))
     }
     actual_insert(ok)
+    println("ok insert")
   }
 
   private def actual_insert(rows: Iterable[(String, String, String, String, String, String, String, String)]) = {

@@ -70,7 +70,6 @@ object Preprocessing {
     if(stopwords.exists(stopword => str.contains(stopword))) {
       stopwords.foreach(stopword => str = str.replaceAll(stopword, ","))
       str = str + "," + str.replace(",","")
-      println(str)
     }
 
     //TRATTINI
