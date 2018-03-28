@@ -1,16 +1,23 @@
-import scala.collection.mutable.ListBuffer
-import scala.reflect.internal.util.StringOps
+package Utils
 
 object Preprocessing {
-  def parse(input: String): Map[String, Seq[String]] = {
+  var map: Map[String, Seq[String]] = Map()
+
+  def lookup (term: String): String = {
+    var originalValue = ""
+    val default = (-1,"")
+    map.find(_._2.contains(term)).getOrElse(default)._1.toString
+  }
+
+  def parse(input: String): String = {
     //NEWLINE = VIRGOLA
     val tmp = input.replace(""""""", "").replace("\n", ",").replace("""\""", "").replace("/", ",").replace(";", ",")
     //tolgo virgolette, punti e virgola e new line
     var result = ""
     var result2 = ""
     var dropped = ""
-    var kodio: Map[String, Seq[String]] = Map()
     val lst = tmp.split(",").toList
+    var toreturn = ""
     for (s <- lst) {
       var medium_res = line_parse(line_parse(s))
       var final_res_seq: Seq[String] = Seq()
@@ -18,16 +25,15 @@ object Preprocessing {
         medium_res = medium_res.replaceAll("\\s*,\\s*", ",")
         val final_res = inner_parse(medium_res).replaceAll("\\s*,\\s*", ",")
         final_res_seq = final_res.split(",").distinct.toSeq
-        kodio += (medium_res -> final_res_seq)
+        map += (medium_res -> final_res_seq)
       }
     }
-//    println(kodio)
     dropped = dropped.dropRight(1)
     result = result.dropRight(1)
     result.split(",").toList.distinct.foreach(result2+= _ + ",")
+    map.foreach(s => toreturn+= s._2.mkString(",")+",")
 
-    //prima del return crea new list con elementi DROP
-    kodio
+    toreturn.dropRight(1)
   }
 
   def line_parse(s: String): String = {

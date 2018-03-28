@@ -2,12 +2,14 @@ package Ontologies.Util
 
 import play.api.libs.json._
 import scalaj.http.{Http, HttpOptions}
+import Utils.Preprocessing.lookup
 
 object ZoomaParser {
 
-  def parse (string: String, termAnnotated: String, raw_value: String): List[List[String]] = {
+  def parse (string: String, termAnnotated: String): List[List[String]] = {
     var rows: Seq[List[String]] = List()
     val service = "ZOOMA"
+    val raw_value = lookup(termAnnotated)
     val parsed_value = termAnnotated
     val j = Json.parse(string)
     val l_terms = j \\ "propertyValue"
@@ -27,7 +29,7 @@ object ZoomaParser {
         rows :+= List(service,raw_value,parsed_value,ontology,ontology_id,prefLabel,synonyms,confidence)
       }
     }
-    rows.toList
+    rows.toList.distinct
     //END PARSE
   }
 }
