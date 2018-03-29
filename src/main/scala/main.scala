@@ -36,19 +36,28 @@ object main extends App {
 //  db_handler.insert(recommender_result)
 
 //   BIOPORTAL
-  val bioportal = Ontology.apply("bioportal")
-  var bioportal_result: Seq[List[String]] = List()
-  val start = System.currentTimeMillis
-  val totalTime = System.currentTimeMillis - start
-  println("Elapsed time: %1d ms".format(totalTime))
+//  val bioportal = Ontology.apply("bioportal")
+//  var bioportal_result: Seq[List[String]] = List()
+//  val start = System.currentTimeMillis
+//  val totalTime = System.currentTimeMillis - start
+//  println("Elapsed time: %1d ms".format(totalTime))
+//
+//  for (a <- input_l){
+//    val tmp = bioportal.get_results(a)
+//    tmp.foreach(bioportal_result:+=_)
+//  }
+//  println("bioportal finito")
+//  db_handler.insert(bioportal_result.toList)
 
-  for (a <- input_l){
-    val tmp = bioportal.get_results(a)
-    tmp.foreach(bioportal_result:+=_)
+  //OLS
+  val ols = Ontology.apply("ols")
+  var ols_result: Seq[List[String]] = List()
+  for (a<-input_l){
+    val tmp = ols.get_results(a)
+    tmp.foreach(ols_result+:=_)
   }
-  println("bioportal finito")
-  db_handler.insert(bioportal_result.toList)
-
+  println("ols finito")
+  db_handler.insert(ols_result.toList)
 
 //  println(parsed_input)
 //  val zooma_input = parsed_input.replace(' ','+').replace(',','+')
