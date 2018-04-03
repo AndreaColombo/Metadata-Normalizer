@@ -21,16 +21,16 @@ object db_handler {
   private val setupfuture = db.run(setup)
 
   def insert (rows: List[List[String]]) = {
-    var ok: Seq[(String, String, String, String, String, String, String, String)] = Seq()
+    var ok: Seq[(String, String, String, String, String, String, String, String, String)] = Seq()
 
     for (l <- rows) {
-      ok :+= (l(0),l(1),l(2),l(3),l(4),l(5),l(6),l(7))
+      ok :+= (l(0),l(1),l(2),l(3),l(4),l(5),l(6),l(7),l(8))
     }
     actual_insert(ok)
     println("ok insert")
   }
 
-  private def actual_insert(rows: Iterable[(String, String, String, String, String, String, String, String)]) = {
+  private def actual_insert(rows: Iterable[(String, String, String, String, String, String, String, String, String)]) = {
     val insertAction = ApiResults ++= rows
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
