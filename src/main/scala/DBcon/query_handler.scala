@@ -12,7 +12,7 @@ object query_handler {
   private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/DBcon/application.conf"))
   private val conf= ConfigFactory.load(parsedConfig)
 
-  def run(term_type: String): String = {
+  def run_q1(term_type: String): String = {
     val db = Database.forConfig("mydb1", conf)
     var result: Seq[String]= List()
 
@@ -41,5 +41,49 @@ object query_handler {
     }
     finally db.close()
     result.mkString(",")
+  }
+
+    def get_term_type (term: String): String = {
+
+      val db = Database.forConfig("mydb1",conf)
+      var term_type = ""
+      val query_term = "%"+term+"%"
+      val tissue = sql"""select distinct tissue
+                from biosample
+                where exists
+                (select *
+                from biosample
+                where tissue ilike $query_term)""".as[String]
+
+      val disease = sql"""select distinct disease
+                from biosample
+                where exists
+                (select *
+                from biosample
+                where disease ilike $query_term)""".as[String]
+
+      val cell_line = sql"""select distinct cell_line
+                from biosample
+                where exists
+                (select *
+                from biosample
+                where cell_line ilike $query_term)""".as[String]
+
+
+      val tissue_future = db.run(tissue).map(a =>
+        if(a.nonEmpty) term_type = "tissue")
+
+      val disease_future = db.run(disease).map(a =>
+        if(a.nonEmpty) term_type = "disease")
+
+      val cellline_future = db.run(cell_line).map(a =>
+        if(a.nonEmpty) term_type = "cell_line")
+
+      Await.result(tissue_future, Duration.Inf)
+      Await.result(disease_future,Duration.Inf)
+      Await.result(cellline_future,Duration.Inf)
+
+
+      term_type
   }
 }

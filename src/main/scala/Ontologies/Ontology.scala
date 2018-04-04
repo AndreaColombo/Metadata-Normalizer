@@ -16,7 +16,7 @@ object Ontology {
 
     private def get_results(keywords: String): List[List[String]] = {
       var lst = ""
-      val response = Http(url).params(Seq("apikey" -> apikey, "input" -> keywords, "input_type" -> "2", "output_type" -> "2")).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+      val response = Http(url).params(Seq("apikey" -> apikey, "input" -> keywords, "input_type" -> "2", "output_type" -> "2", "display_context"->"false")).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       RecommenderParser.parse(response)
     }
 
@@ -49,7 +49,7 @@ object Ontology {
     val url = "https://data.bioontology.org/search"
 
     private def get_results(term: String): List[List[String]] = {
-      val response = Http(url).params(Seq("apikey"->apikey, "q"->term)).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+      val response = Http(url).params(Seq("apikey"->apikey, "q"->term,"display_links"->"true","display_context"->"false")).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       BioportalParser.parse(response,term)
     }
 
@@ -84,7 +84,7 @@ object Ontology {
   }
 
 
-    def apply(s: String): Ontology = {
+  def apply(s: String): Ontology = {
     if (s.equalsIgnoreCase("bioportal")) new Bioportal
     else  if (s.equalsIgnoreCase("zooma")) new Zooma
     else if (s.equalsIgnoreCase("ols")) new Ols
