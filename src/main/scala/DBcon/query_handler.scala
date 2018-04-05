@@ -36,7 +36,8 @@ object query_handler {
             where tissue not like 'null'""".as[String]
     }
     try {
-      val result_future = db.run(q).map(a => println(a))
+      val result_future = db.run(q).map(_.foreach(a =>
+        result:+=a))
       Await.result(result_future, Duration.Inf)
     }
     finally db.close()
@@ -47,7 +48,7 @@ object query_handler {
 
       val db = Database.forConfig("mydb1",conf)
       var term_type = ""
-      val query_term = "%"+term+"%"
+      val query_term = "%"+term.replace("(","").replace(")","")+"%"
       val tissue = sql"""select distinct tissue
                 from biosample
                 where exists
@@ -69,20 +70,39 @@ object query_handler {
                 from biosample
                 where cell_line ilike $query_term)""".as[String]
 
+      var flag = false
+      var tissue_future: Future[Unit] = Future()
+      var disease_future: Future[Unit] = Future()
+      var cellline_future: Future[Unit] = Future()
 
-      val tissue_future = db.run(tissue).map(a =>
-        if(a.nonEmpty) term_type = "tissue")
-
-      val disease_future = db.run(disease).map(a =>
-        if(a.nonEmpty) term_type = "disease")
-
-      val cellline_future = db.run(cell_line).map(a =>
-        if(a.nonEmpty) term_type = "cell_line")
-
+      if (!flag) {
+        tissue_future = db.run(tissue).map(a =>
+          if (a.nonEmpty) {
+            term_type = "tissue"
+            flag = true
+          })
+      }
       Await.result(tissue_future, Duration.Inf)
+
+      if (!flag) {
+        disease_future = db.run(disease).map(a =>
+          if (a.nonEmpty) {
+            term_type = "disease"
+            flag = true
+          })
+      }
       Await.result(disease_future,Duration.Inf)
+
+      if (!flag) {
+        cellline_future = db.run(cell_line).map(a =>
+          if (a.nonEmpty) {
+            term_type = "cell_line"
+            flag = true
+          })
+      }
       Await.result(cellline_future,Duration.Inf)
 
+      db.close()
 
       term_type
   }

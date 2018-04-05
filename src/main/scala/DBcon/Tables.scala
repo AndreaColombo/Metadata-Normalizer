@@ -26,7 +26,7 @@ object Tables {
     def * = (s_id, key, value)
  }
 
-  class ApiResults(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String)](tag, Some("svr"), "apiresults"){
+  class ApiResults(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String)](tag, Some("svr"), "apiresults1"){
     def service = column[String]("service")
     def raw_value = column[String]("raw_value")
     def parsed_value = column[String]("parsed_value")

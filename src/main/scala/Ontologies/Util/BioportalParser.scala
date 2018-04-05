@@ -1,5 +1,6 @@
 package Ontologies.Util
 
+import DBcon.query_handler
 import play.api.libs.json._
 import Utils.Preprocessing.lookup
 
@@ -7,6 +8,7 @@ import Utils.Preprocessing.lookup
 object BioportalParser {
   val apikey = "2338fb64-0246-4627-bf4d-4197bc8c9c64"
   def parse (str: String, term: String): List[List[String]] ={
+//    println(term)
     var rows:Seq[List[String]] = List()
     val service = "Bioportal"
     val j = (Json.parse(str) \ "collection").get
@@ -23,8 +25,9 @@ object BioportalParser {
       val ontology = ontology_raw.head
       val ontology_id = ontology_raw(1)
       val score = "high "+matchType
-      rows :+= List(service,raw_value,parsed_value,ontology,ontology_id,preflabel,synonym,score)
-      println(rows)
+      val term_type = query_handler.get_term_type(raw_value)
+      rows :+= List(service,raw_value,parsed_value,ontology,ontology_id,preflabel,synonym,score,term_type)
+//      println(rows)
     }
     rows.toList.distinct
   }
