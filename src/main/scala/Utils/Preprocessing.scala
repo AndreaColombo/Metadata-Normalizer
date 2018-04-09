@@ -9,32 +9,28 @@ object Preprocessing {
     lookup_map.find(_._2.contains(term)).getOrElse(default)._1.toString
   }
 
-  def parse(input: String): String = {
+  def parse(input: List[String]): String = {
     //NEWLINE = VIRGOLA
-
-    val tmp = input.replace(""""""", "").replace("\n", ",").replace("""\""", "").replace("/", ",").replace(";", ",")
-    //tolgo virgolette, punti e virgola e new line
     var result = ""
-    var result2 = ""
-    var dropped = ""
-    val lst = tmp.split(",").toList
-    var toreturn = ""
-    for (s <- lst) {
-      var medium_res = line_parse(line_parse(s))
-      var final_res_seq: Seq[String] = Seq()
-      if (!medium_res.startsWith("drop")){
-        medium_res = medium_res.replaceAll("\\s*,\\s*", ",")
-        val final_res = inner_parse(medium_res).replaceAll("\\s*,\\s*", ",")
-        final_res_seq = final_res.split(",").distinct.toSeq
-        lookup_map += (medium_res -> final_res_seq)
-      }
-    }
-    dropped = dropped.dropRight(1)
-    result = result.dropRight(1)
-    result.split(",").toList.distinct.foreach(result2+= _ + ",")
-    lookup_map.foreach(s => toreturn+= s._2.mkString(",")+",")
 
-    toreturn.dropRight(1).replaceAll(",,",",")
+    for (s <- input){
+      val raw_value = s
+      var tmp = ""
+      val raw_input = raw_value.replace(""""""", "").replace("""\""", "").replace("/", ",").replace(";", ",").split(",")
+//      println("raw "+raw_value)
+      for (a <- raw_input){
+        val medium_value = line_parse(line_parse(a))
+        if (!medium_value.startsWith("drop")) {
+          val parsed_value = rtrim(ltrim(inner_parse(medium_value)))
+          tmp += parsed_value + ","
+        }
+      }
+      val parsedValue = tmp.replaceAll("\\s*,\\s*", ",").replaceAll("  "," ").dropRight(1)
+      lookup_map += (raw_value -> parsedValue.split(","))
+      result += parsedValue+","
+//      println()
+    }
+    result.dropRight(1)
   }
 
   def line_parse(s: String): String = {
@@ -73,7 +69,7 @@ object Preprocessing {
     //STOPWORDS
     // txt STOPWORD txt 2 = txt, txt2, txt txt2
 
-    val stopwords = List("from", "for")
+    val stopwords = List("from", "for","and")
     if(stopwords.exists(stopword => str.contains(stopword))) {
       stopwords.foreach(stopword => str = str.replaceAll(stopword, ","))
       str = str + "," + str.replace(",","")

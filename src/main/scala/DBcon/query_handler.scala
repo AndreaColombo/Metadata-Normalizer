@@ -12,7 +12,7 @@ object query_handler {
   private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/DBcon/application.conf"))
   private val conf= ConfigFactory.load(parsedConfig)
 
-  def run_q1(term_type: String): String = {
+  def run_q1(term_type: String): List[String] = {
     val db = Database.forConfig("mydb1", conf)
     var result: Seq[String]= List()
 
@@ -41,14 +41,14 @@ object query_handler {
       Await.result(result_future, Duration.Inf)
     }
     finally db.close()
-    result.mkString(",")
+    result.toList
   }
 
     def get_term_type (term: String): String = {
 
       val db = Database.forConfig("mydb1",conf)
-      var term_type = ""
-      val query_term = "%"+term.replace("(","").replace(")","")+"%"
+      var term_type = "unknown"
+      val query_term = term
       val tissue = sql"""select distinct tissue
                 from biosample
                 where exists
@@ -106,4 +106,5 @@ object query_handler {
 
       term_type
   }
+
 }

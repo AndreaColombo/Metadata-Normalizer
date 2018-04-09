@@ -38,4 +38,11 @@ object Tables {
     def term_type = column[String]("term_type")
     def * = (service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
   }
+
+  class OntologyScore (tag: Tag) extends Table [(String, String, String)](tag, Some("svr"), "ontologyscore"){
+    def ontology = column[String]("ontology")
+    def term_type = column[String]("term_type")
+    def score = column[String]("score")
+    def * = (ontology,term_type,score)
+  }
 }
