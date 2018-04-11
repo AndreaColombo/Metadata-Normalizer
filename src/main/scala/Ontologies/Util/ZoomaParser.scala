@@ -8,7 +8,6 @@ import Utils.Preprocessing.lookup
 object ZoomaParser {
 
   def parse (string: String, termAnnotated: String): List[List[String]] = {
-    println(termAnnotated)
     var rows: Seq[List[String]] = List()
     val service = "ZOOMA"
     val raw_value = lookup(termAnnotated)
@@ -22,7 +21,6 @@ object ZoomaParser {
       val url_range = (url_l \\ "href").indices
       for (m <- url_range) {
         val url = (url_l(m) \ "href").validate[String].get
-        println(url)
         val j3 = (Json.parse(Http(url).param("rows","5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded" \ "terms").getOrElse(null)
         if (j3 != null) {
           val range2 = (j3 \\ "synonyms").indices
@@ -36,7 +34,7 @@ object ZoomaParser {
             val synonym = (j4 \ "synonyms").validate[List[String]].getOrElse(List("null")).mkString(",")
             val term_type = query_handler.get_term_type(raw_value)
             //          println(raw_value, parsed_value, ontology, id, prefLabel, synonym, score)
-            rows :+= List(service, raw_value, parsed_value, ontology, id, prefLabel, synonym, score, term_type)
+            rows :+= List(service, raw_value, parsed_value, ontology.map(_.toLower), id, prefLabel, synonym, score, term_type)
           }
         }
       }

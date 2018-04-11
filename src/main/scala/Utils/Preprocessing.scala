@@ -30,7 +30,7 @@ object Preprocessing {
       result += parsedValue+","
 //      println()
     }
-    result.dropRight(1)
+    result.dropRight(1).replaceAll(",,",",")
   }
 
   def line_parse(s: String): String = {
@@ -69,10 +69,12 @@ object Preprocessing {
     //STOPWORDS
     // txt STOPWORD txt 2 = txt, txt2, txt txt2
 
-    val stopwords = List("from", "for","and")
+    val stopwords = List(" from ", " for "," and ")
     if(stopwords.exists(stopword => str.contains(stopword))) {
       stopwords.foreach(stopword => str = str.replaceAll(stopword, ","))
-      str = str + "," + str.replace(",","")
+      str = str + "," + str.replace(","," ")
+      //negative,hiv-1,
+      //
     }
 
     //TRATTINI

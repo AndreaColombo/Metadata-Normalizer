@@ -17,6 +17,7 @@ object query_handler {
     var result: Seq[String]= List()
 
     var q = sql"".as[String]
+
     if (term_type.equals("cell_line")) {
       q = sql"""
               select distinct cell_line
@@ -33,7 +34,7 @@ object query_handler {
       q = sql"""
             select distinct tissue
             from biosample
-            where tissue not like 'null'""".as[String]
+            where tissue not like 'null')""".as[String]
     }
     try {
       val result_future = db.run(q).map(_.foreach(a =>

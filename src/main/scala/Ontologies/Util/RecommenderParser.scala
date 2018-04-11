@@ -33,7 +33,7 @@ object RecommenderParser {
         val synonym = (j2 \ "synonym").validate[List[String]].getOrElse(List("null")).mkString(",").map(_.toLower)
         val term_type = query_handler.get_term_type(raw_value)
         //      println(raw_value,parsed_value,ontology,ontology_id,prefLabel,synonym, term_type)
-        rows :+= List(service, raw_value, parsed_value, ontology, ontology_id, prefLabel, synonym, "high " + match_type, term_type)
+        rows :+= List(service, raw_value, parsed_value, ontology.map(_.toLower), ontology_id, prefLabel, synonym, "high " + match_type, term_type)
       }
     }
     rows.toList.distinct

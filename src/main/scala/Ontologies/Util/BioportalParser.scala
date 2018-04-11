@@ -26,7 +26,7 @@ object BioportalParser {
       val ontology_id = ontology_raw(1)
       val score = "high "+matchType
       val term_type = query_handler.get_term_type(raw_value)
-      rows :+= List(service,raw_value,parsed_value,ontology,ontology_id,preflabel,synonym,score,term_type)
+      rows :+= List(service,raw_value,parsed_value,ontology.map(_.toLower) ,ontology_id,preflabel,synonym,score,term_type)
 //      println(rows)
     }
     rows.toList.distinct

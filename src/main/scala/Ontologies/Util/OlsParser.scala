@@ -63,7 +63,7 @@ object OlsParser {
       else score = "LOW"
 
 //      println(raw_value,parsed_value,ontology,id,prefLabel,synonym,score)
-      rows:+=List(service,raw_value,parsed_value,ontology,id,prefLabel,synonym,score,term_type)
+      rows:+=List(service,raw_value,parsed_value,ontology.map(_.toLower),id,prefLabel,synonym,score,term_type)
     }
     rows.toList.distinct
   }

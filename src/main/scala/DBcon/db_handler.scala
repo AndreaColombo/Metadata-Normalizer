@@ -17,9 +17,12 @@ object db_handler {
   private val ApiResults = TableQuery[ApiResults]
   private val OntologyScore = TableQuery[OntologyScore]
 
+
   val setup = DBIO.seq(ApiResults.schema.create)
+  val setup2 = OntologyScore.schema.create
 
   private val setupfuture = db.run(setup)
+  db.run(setup2)
 
   def insert (rows: List[List[String]]) = {
     var ok: Seq[(String, String, String, String, String, String, String, String, String)] = Seq()
@@ -52,6 +55,19 @@ object db_handler {
     db.close()
   }
 
+  def update_score (id: Int, score: Double) = {
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sqlu"""update svr.apiresults1
+             set score_num = $score
+             where id = $id
+          """
+
+    val result_future = db.run(q)
+    Await.result(result_future, Duration.Inf)
+    db.close()
+  }
+
   def update_term_type (parsedValue: String, term_type: String): Unit = {
     val q =
       sqlu"""update svr.apiresults1
@@ -63,15 +79,16 @@ object db_handler {
     db.close()
   }
 
-  def get_match_type (parsedValue: String, service: String): String = {
+  def get_match_type (id: Int, service: String): String = {
     val db = Database.forConfig("mydb", conf)
     val q =
       sql"""
            select score
            from svr.apiresults1
-           where parsed_value ilike $parsedValue
+           where id = $id
            and service ilike $service
          """.as[String]
+
     var match_type = ""
     val future_match = db.run(q).map(a => match_type = a.head)
 
@@ -80,14 +97,11 @@ object db_handler {
     match_type
   }
 
-  def ontology_score_insert(rows: List[List[String]]) = {
+  def ontology_score_insert(rows: Seq[(String,String,String)]) = {
     val db = Database.forConfig("mydb", conf)
-    var ok: Seq[(String,String,String)] = List()
-    for (l<- rows){
-      ok :+= (l(0), l(1), l(2))
-    }
-    val insertaction = OntologyScore ++= ok
-    Await.result(db.run(insertaction),Duration.Inf)
+    val insertaction = OntologyScore ++= rows
+    val result_future = db.run(insertaction)
+    Await.result(result_future, Duration.Inf)
     db.close()
   }
 
@@ -99,7 +113,7 @@ object db_handler {
       sql"""
            select distinct ontology
            from svr.apiresults1
-           where service ilike 'recommender' and term_type ilike $term_type
+           where term_type ilike $term_type and ontology not in (select distinct ontology from svr.apiresults1 where service ilike 'recommender' and term_type ilike $term_type)
          """.as[String]
     val result_future = db.run(q).map(_.foreach(
       a => result :+= a
@@ -117,15 +131,66 @@ object db_handler {
       sql"""
            select distinct parsed_value
            from svr.apiresults1
-           where service ilike 'recommender' and term_type ilike $term_type and ontology ilike $ontology
+           where term_type ilike $term_type and ontology ilike $ontology and service not ilike 'recommender'
          """.as[String]
 
     val result_future = db.run(q).map(_.foreach(
       a => result :+= a
     ))
+
     Await.result(result_future, Duration.Inf)
     db.close()
     result.toList
+  }
+
+  def get_onto_score(onto: String, term_type: String): String = {
+    val db = Database.forConfig("mydb", conf)
+    var score = ""
+    val q =
+      sql"""
+           select score
+           from svr.ontologyscore
+           where ontology ilike $onto and term_type ilike $term_type
+         """.as[String]
+    val result_future = db.run(q).map(_.foreach(a=>
+      score = a
+    ))
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    score
+  }
+
+  def get_db_lenght (): Int = {
+    val db = Database.forConfig("mydb", conf)
+    var lenght = 0
+    val q =
+      sql"""
+           select count(id)
+           from svr.apiresults1
+         """.as[Int]
+
+    val result_future = db.run(q).map(a => lenght = a.head)
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    lenght
+  }
+
+  def get_onto_service_termtype(id: Int): (String,String,String) = {
+    var result = ("", "", "")
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sql"""
+           select ontology, service, term_type
+           from svr.apiresults1
+           where id = $id
+         """.as[(String,String,String)]
+
+    val result_future = db.run(q).map(a=>
+      result = a.head
+    )
+    Await.result(result_future,Duration.Inf)
+    db.close()
+    result
   }
 }
 

@@ -36,6 +36,7 @@ object Tables {
     def synonym = column[String]("synonym")
     def score = column[String]("score")
     def term_type = column[String]("term_type")
+    def id = column[Int]("id")
     def * = (service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
   }
 
