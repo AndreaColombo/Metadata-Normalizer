@@ -22,12 +22,16 @@ object OlsParser {
 //    println(range)
 //    println(Json.prettyPrint(Json.parse(response)))
     for (i <- range.indices){
+      var deleted = false
       val j2 = j(i)
       var k = i
       val prefLabel = (j2 \ "label").validate[String].get
       val ontology = (j2 \ "ontology_name").validate[String].get.split("_").head
       val ontology_id = (j2 \ "short_form").validate[String].get
-      val id = ontology_id.substring(ontology_id.lastIndexOf("_")+1)
+      val ontology_good = ontology_id.split("_").head
+      deleted = ontology != ontology_good
+
+      val id = ontology_id
       val synonym_l = (j2 \ "synonym").validate[List[String]].getOrElse(List("null"))
       val synonym = synonym_l.mkString(",")
       val term_type = query_handler.get_term_type(raw_value)

@@ -7,28 +7,30 @@ import java.io._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import com.typesafe.config.ConfigFactory
-import Tables.{ApiResults, OntologyScore}
+import Tables.{ApiResults, OntologyScore, best_ontos}
 
 object db_handler {
 
   private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/DBcon/application.conf"))
-  private val conf= ConfigFactory.load(parsedConfig)
+  private val conf = ConfigFactory.load(parsedConfig)
   private val db = Database.forConfig("mydb", conf)
   private val ApiResults = TableQuery[ApiResults]
   private val OntologyScore = TableQuery[OntologyScore]
-
+  private val BestOntos = TableQuery[best_ontos]
 
   val setup = DBIO.seq(ApiResults.schema.create)
   val setup2 = OntologyScore.schema.create
+  val setup3  = BestOntos.schema.create
 
   private val setupfuture = db.run(setup)
   db.run(setup2)
+  db.run(setup3)
 
-  def insert (rows: List[List[String]]) = {
+  def insert(rows: List[List[String]]) = {
     var ok: Seq[(String, String, String, String, String, String, String, String, String)] = Seq()
 
     for (l <- rows) {
-      ok :+= (l(0),l(1),l(2),l(3),l(4),l(5),l(6),l(7),l(8))
+      ok :+= (l(0), l(1), l(2), l(3), l(4), l(5), l(6), l(7), l(8))
     }
     actual_insert(ok)
     println("ok insert")
@@ -42,7 +44,7 @@ object db_handler {
     db.close()
   }
 
-  def update_raw_value (rawValue: String, parsed: String) = {
+  def update_raw_value(rawValue: String, parsed: String) = {
     val db = Database.forConfig("mydb", conf)
     val q =
       sqlu"""update svr.apiresults1
@@ -55,12 +57,20 @@ object db_handler {
     db.close()
   }
 
-  def update_score (id: Int, score: Double) = {
+  def insert_best_ontos(rows: Iterable[(String, String, Double, Double, Double)]) = {
+    val db = Database.forConfig("mydb", conf)
+    val insertAction = BestOntos ++= rows
+    val insert = db.run(insertAction)
+    Await.result(insert, Duration.Inf)
+    db.close()
+  }
+
+  def update_score(score: Double, onto: String, term_type: String) = {
     val db = Database.forConfig("mydb", conf)
     val q =
       sqlu"""update svr.apiresults1
-             set score_num = $score
-             where id = $id
+             set suitability = $score
+             where ontology = $onto and term_type = $term_type
           """
 
     val result_future = db.run(q)
@@ -68,7 +78,7 @@ object db_handler {
     db.close()
   }
 
-  def update_term_type (parsedValue: String, term_type: String): Unit = {
+  def update_term_type(parsedValue: String, term_type: String): Unit = {
     val q =
       sqlu"""update svr.apiresults1
             set term_type = $term_type
@@ -79,7 +89,7 @@ object db_handler {
     db.close()
   }
 
-  def get_match_type (id: Int, service: String): String = {
+  def get_match_type(id: Int, service: String): String = {
     val db = Database.forConfig("mydb", conf)
     val q =
       sql"""
@@ -97,7 +107,7 @@ object db_handler {
     match_type
   }
 
-  def ontology_score_insert(rows: Seq[(String,String,String)]) = {
+  def ontology_score_insert(rows: Seq[(String, String, String)]) = {
     val db = Database.forConfig("mydb", conf)
     val insertaction = OntologyScore ++= rows
     val result_future = db.run(insertaction)
@@ -113,7 +123,7 @@ object db_handler {
       sql"""
            select distinct ontology
            from svr.apiresults1
-           where term_type ilike $term_type and ontology not in (select distinct ontology from svr.apiresults1 where service ilike 'recommender' and term_type ilike $term_type)
+           where term_type ilike $term_type
          """.as[String]
     val result_future = db.run(q).map(_.foreach(
       a => result :+= a
@@ -123,15 +133,15 @@ object db_handler {
     result.toList
   }
 
-  def get_term_by_ontology (ontology: String, term_type: String): List[String] = {
+  def get_term_by_ontology(ontology: String, term_type: String): List[String] = {
     var result: Seq[String] = List()
     val db = Database.forConfig("mydb", conf)
 
     val q =
       sql"""
-           select distinct parsed_value
+           select distinct raw_value
            from svr.apiresults1
-           where term_type ilike $term_type and ontology ilike $ontology and service not ilike 'recommender'
+           where term_type ilike $term_type and ontology ilike $ontology
          """.as[String]
 
     val result_future = db.run(q).map(_.foreach(
@@ -152,7 +162,7 @@ object db_handler {
            from svr.ontologyscore
            where ontology ilike $onto and term_type ilike $term_type
          """.as[String]
-    val result_future = db.run(q).map(_.foreach(a=>
+    val result_future = db.run(q).map(_.foreach(a =>
       score = a
     ))
     Await.result(result_future, Duration.Inf)
@@ -160,7 +170,7 @@ object db_handler {
     score
   }
 
-  def get_db_lenght (): Int = {
+  def get_db_lenght(): Int = {
     val db = Database.forConfig("mydb", conf)
     var lenght = 0
     val q =
@@ -175,7 +185,7 @@ object db_handler {
     lenght
   }
 
-  def get_onto_service_termtype(id: Int): (String,String,String) = {
+  def get_onto_service_termtype(id: Int): (String, String, String) = {
     var result = ("", "", "")
     val db = Database.forConfig("mydb", conf)
     val q =
@@ -183,18 +193,137 @@ object db_handler {
            select ontology, service, term_type
            from svr.apiresults1
            where id = $id
-         """.as[(String,String,String)]
+         """.as[(String, String, String)]
+
+    val result_future = db.run(q).map(a =>
+      result = a.head
+    )
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result
+  }
+
+  def get_onto_ontoid(id: Int): (String, String) = {
+    var result = ("", "")
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sql"""
+           select ontology, ontology_id
+           from svr.apiresults1
+           where id = $id
+         """.as[(String, String)]
+
+    val result_future = db.run(q).map(a =>
+      result = a.head
+    )
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result
+  }
+
+  def delete_row(id: Int): Unit = {
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sqlu"""
+            update svr.apiresults1
+            set deleted = "true"
+            where id = $id
+          """
+    val resultFuture = db.run(q)
+    Await.result(resultFuture, Duration.Inf)
+    db.close()
+  }
+
+  def get_onto_coverage(onto: String, term_type: String): (String, String) = {
+    var result = ("", "")
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sql"""
+           select count(distinct(raw_value)) / (select count(distinct(raw_value)) from svr.apiresults1 where term_type ilike $term_type)::Float, count(distinct(raw_value))
+           from svr.apiresults1
+           where ontology ilike $onto and term_type ilike $term_type
+         """.as[(String, String)]
+
+    val result_future = db.run(q).map(a =>
+      result = a.head
+    )
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result
+  }
+
+  def get_onto_matchscore(onto: String, term_type: String): String = {
+    var result = ""
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sql"""
+           select sum(matchscore)
+           from svr.apiresults1
+           where ontology ilike $onto and term_type ilike $term_type
+         """.as[String]
+
+    val result_future = db.run(q).map(a =>
+      result = a.head
+    )
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result
+  }
+
+  def get_best_onto_per_term(term_type: String): Seq[(String, String, String, String, String)] = {
+    var result = Seq(("", "", "", "", ""))
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sql"""
+           select *
+           from svr.best_onto_per_term
+           where term_type = $term_type
+         """.as[(String, String, String, String, String)]
+
+    val result_future = db.run(q).map(a=>
+      result = a
+    )
+
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result
+  }
+
+  def get_nrv(term_type: String): Int = {
+    var result = 0
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sql"""
+           select nrv_count
+           from svr.num_raw_values
+           where term_type = $term_type
+         """.as[Int]
 
     val result_future = db.run(q).map(a=>
       result = a.head
     )
-    Await.result(result_future,Duration.Inf)
+
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result
+  }
+
+  def get_score_suitability(onto: String, term_type: String): (Double, Double) = {
+    var result: (Double, Double) = (0.0,0.0)
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sql"""
+           select avg_score, suitability
+           from svr.best_onto_per_term
+           where term_type = $term_type and ontology = $onto
+         """.as[(Double, Double)]
+
+    val result_future = db.run(q).map(a=>
+      result = a.head
+    )
+
+    Await.result(result_future, Duration.Inf)
     db.close()
     result
   }
 }
-
-
-
-
-

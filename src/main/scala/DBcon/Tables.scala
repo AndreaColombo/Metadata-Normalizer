@@ -37,6 +37,7 @@ object Tables {
     def score = column[String]("score")
     def term_type = column[String]("term_type")
     def id = column[Int]("id")
+    def deleted = column[Boolean]("deleted")
     def * = (service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
   }
 
@@ -45,5 +46,14 @@ object Tables {
     def term_type = column[String]("term_type")
     def score = column[String]("score")
     def * = (ontology,term_type,score)
+  }
+
+  class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double)](tag, Some("svr"), "best_ontos"){
+    def term_type = column[String]("term_type")
+    def ontology_set = column[String]("ontologies set")
+    def coverage = column[Double]("coverage")
+    def score = column[Double]("score")
+    def suitability = column[Double]("suitability")
+    def * = (term_type,ontology_set,coverage,score,suitability)
   }
 }
