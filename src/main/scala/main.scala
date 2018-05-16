@@ -1,5 +1,5 @@
 import java.io.File
-import java.util.Calendar
+import java.util.{Calendar, Date}
 
 import DBcon._
 import Ontologies.Ontology
@@ -14,22 +14,42 @@ object main extends App {
 
 
 
-  val f = new File("best_ontos_per_type.csv")
-  val reader = CSVReader.open(f)
-  val insertvalue = reader.all()
-  var ok: Seq[(String, String, Double, Double, Double)] = List()
+//  val f = new File("best_ontos_per_type.csv")
+//  val reader = CSVReader.open(f)
+//  val insertvalue = reader.all()
+//  var ok: Seq[(String, String, Double, Double, Double)] = List()
+//
+//  for (l <- insertvalue){
+//    ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble)
+//  }
+//
+//  db_handler.insert_best_ontos(ok)
 
-  for (l <- insertvalue){
-    ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble)
+  val d1 = System.currentTimeMillis()
+
+  ontologies_set_calculator.calculate_ontology_set()
+
+  val d2 = System.currentTimeMillis()
+
+  get_elapsed_time(0,584636)
+
+
+
+
+
+  def get_elapsed_time(d1: Long, d2: Long) = {
+    val elapsed:Double = (d2-d1).toDouble / 1000
+    val min: Double = (elapsed / 60).intValue()
+    val sec: Double = (((elapsed / 60) - min) * 60).intValue
+    val millis = ((((elapsed / 60) - min) * 60) - sec) * 1000
+    println(min.toInt + ":" + sec.toInt + ":" + millis.toInt)
   }
-
-  db_handler.insert_best_ontos(ok)
-
 
   def get_timestamp() = {
     val now = Calendar.getInstance()
     println(now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+":"+now.get(Calendar.SECOND))
   }
 }
+
 
 
