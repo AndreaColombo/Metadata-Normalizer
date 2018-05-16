@@ -5,7 +5,7 @@ import com.github.tototoshi.csv.CSVWriter
 
 object ontologies_set_calculator {
 
-  val term_type = List("disease","tissue","cell_line")
+  val term_type = List("cell_line")
 
   def calculate_ontology_set() = {
 
