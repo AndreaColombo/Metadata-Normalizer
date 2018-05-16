@@ -12,30 +12,26 @@ object main extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
 
 
+  override def main(args: Array[String]): Unit = {
+    //  val f = new File("best_ontos_per_type.csv")
+    //  val reader = CSVReader.open(f)
+    //  val insertvalue = reader.all()
+    //  var ok: Seq[(String, String, Double, Double, Double)] = List()
+    //
+    //  for (l <- insertvalue){
+    //    ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble)
+    //  }
+    //
+    //  db_handler.insert_best_ontos(ok)
 
+    val d1 = System.currentTimeMillis()
 
-//  val f = new File("best_ontos_per_type.csv")
-//  val reader = CSVReader.open(f)
-//  val insertvalue = reader.all()
-//  var ok: Seq[(String, String, Double, Double, Double)] = List()
-//
-//  for (l <- insertvalue){
-//    ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble)
-//  }
-//
-//  db_handler.insert_best_ontos(ok)
+//    ontologies_set_calculator.calculate_ontology_set(args(0))
+    println(args(0))
+    val d2 = System.currentTimeMillis()
 
-  val d1 = System.currentTimeMillis()
-
-  ontologies_set_calculator.calculate_ontology_set()
-
-  val d2 = System.currentTimeMillis()
-
-  get_elapsed_time(0,584636)
-
-
-
-
+    get_elapsed_time(d1, d2)
+  }
 
   def get_elapsed_time(d1: Long, d2: Long) = {
     val elapsed:Double = (d2-d1).toDouble / 1000
