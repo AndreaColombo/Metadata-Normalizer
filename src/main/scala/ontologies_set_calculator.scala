@@ -33,7 +33,7 @@ object ontologies_set_calculator {
         for (k <- j+1 until ontos.length) {
           val onto3 = ontos(k)._2
           val terms3 = db_handler.get_term_by_ontology(onto3, t)
-          if (terms.equals((terms ::: terms3).distinct)) {
+          if (terms.equals((terms ::: terms3).distinct)) { //QUI
             val tot_count = terms.length
             val coverage: Double = tot_count.toDouble / a.toDouble
             suitability = (weight1_suit + weight2_suit) / terms.length

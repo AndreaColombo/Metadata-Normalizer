@@ -13,23 +13,23 @@ object main extends App {
 
 
   override def main(args: Array[String]): Unit = {
-      val t = args(0).replace("_","-")
-      val f = new File("best_onto_"+t+".csv")
-      val reader = CSVReader.open(f)
-      val insertvalue = reader.all()
-      var ok: Seq[(String, String, Double, Double, Double)] = List()
-    
-      for (l <- insertvalue){
-        ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble)
-      }
-    
-      db_handler.insert_best_ontos(ok)
+    val t = args(0).replace("_","-")
+    val f = new File("best_onto_"+t+".csv")
+    val reader = CSVReader.open(f)
+    val insertvalue = reader.all()
+    var ok: Seq[(String, String, Double, Double, Double)] = List()
 
-    //val d1 = System.currentTimeMillis()
+    for (l <- insertvalue){
+      ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble)
+    }
+    
+    db_handler.insert_best_ontos(ok)
 
-    //ontologies_set_calculator.calculate_ontology_set(args(0))
-    //println(args(0))
-    //val d2 = System.currentTimeMillis()
+    val d1 = System.currentTimeMillis()
+
+    ontologies_set_calculator.calculate_ontology_set(args(0))
+    println(args(0))
+    val d2 = System.currentTimeMillis()
 
     //get_elapsed_time(d1, d2)
   }
