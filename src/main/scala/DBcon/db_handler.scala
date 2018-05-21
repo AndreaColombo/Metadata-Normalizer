@@ -73,9 +73,9 @@ object db_handler {
     val q =
       sqlu"""update svr.apiresults2
              set match_score = $match_score,
-             set suitability = $suitability,
-             set onto_score = $onto_score,
-             set score_num = $score
+             suitability = $suitability,
+             onto_score = $onto_score,
+             score_num = $score
              where id = $id
           """
 

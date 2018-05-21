@@ -31,8 +31,8 @@ object main extends App {
 
     val d1 = System.currentTimeMillis()
 
-    score_calculator.calculate_ontology_score()
-//    score_calculator.calculate_score()
+//    score_calculator.calculate_ontology_score()
+    score_calculator.calculate_score()
 
     val d2 = System.currentTimeMillis()
 

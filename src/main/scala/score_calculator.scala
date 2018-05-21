@@ -88,14 +88,14 @@ object score_calculator {
       val tt = a._3
       val onto_score = db_handler.get_onto_score(onto,tt)
       val match_score = get_match_score(i, a._2)
-      val suitability = calculate_suitability_score(tt, onto)
+//      val suitability = calculate_suitability_score(tt, onto)
 
       var score = onto_score.toDouble * match_score.doubleValue
 
       if (score<0)
         score=0
 
-      db_handler.update_score(score,match_score,onto_score.toDouble,suitability,i)
+      db_handler.update_score(score,match_score,onto_score.toDouble,0.0,i)
     }
     main.get_timestamp()
 
@@ -107,10 +107,10 @@ object score_calculator {
     var result: Seq[List[String]] = List()
 
     var suitability = 0.0
-    val tmp_coverage = db_handler.get_onto_coverage(o,"tissue")
+    val tmp_coverage = db_handler.get_onto_coverage(o,t)
     val coverage = tmp_coverage._1.toDouble
     val no_annotations = tmp_coverage._2.toInt
-    val matchscore = db_handler.get_onto_matchscore(o,"tissue").toInt
+    val matchscore = db_handler.get_onto_matchscore(o,t).toInt
     suitability = (matchscore/no_annotations) * coverage
 
     suitability
