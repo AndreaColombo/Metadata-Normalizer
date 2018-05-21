@@ -56,4 +56,18 @@ object Tables {
     def suitability = column[Double]("set_suitability")
     def * = (term_type,ontology_set,coverage,score,suitability)
   }
+
+  class ApiResults2(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String)](tag, Some("svr"), "apiresults2"){
+    def service = column[String]("service")
+    def raw_value = column[String]("raw_value")
+    def parsed_value = column[String]("parsed_value")
+    def ontology = column[String]("ontology")
+    def ontology_id = column[String]("ontology_id")
+    def pref_label = column[String]("pref_label")
+    def synonym = column[String]("synonym")
+    def score = column[String]("score")
+    def term_type = column[String]("term_type")
+    def id = column[Int]("id")
+    def * = (service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
+  }
 }

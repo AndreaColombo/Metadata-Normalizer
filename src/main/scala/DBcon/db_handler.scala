@@ -7,7 +7,7 @@ import java.io._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import com.typesafe.config.ConfigFactory
-import Tables.{ApiResults, OntologyScore, best_ontos}
+import Tables.{ApiResults, ApiResults2, OntologyScore, best_ontos}
 
 object db_handler {
 
@@ -17,14 +17,17 @@ object db_handler {
   private val ApiResults = TableQuery[ApiResults]
   private val OntologyScore = TableQuery[OntologyScore]
   private val BestOntos = TableQuery[best_ontos]
+  private val ApiResults2 = TableQuery[ApiResults2]
 
   val setup = DBIO.seq(ApiResults.schema.create)
   val setup2 = OntologyScore.schema.create
   val setup3  = BestOntos.schema.create
+  val setupapiresults2 = ApiResults2.schema.create
 
   private val setupfuture = db.run(setup)
   db.run(setup2)
   db.run(setup3)
+  db.run(setupapiresults2)
 
   def insert(rows: List[List[String]]) = {
     var ok: Seq[(String, String, String, String, String, String, String, String, String)] = Seq()
@@ -38,7 +41,7 @@ object db_handler {
 
   private def actual_insert(rows: Iterable[(String, String, String, String, String, String, String, String, String)]) = {
     val db = Database.forConfig("mydb", conf)
-    val insertAction = ApiResults ++= rows
+    val insertAction = ApiResults2 ++= rows
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
     db.close()

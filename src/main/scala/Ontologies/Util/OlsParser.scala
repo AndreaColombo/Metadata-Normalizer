@@ -35,6 +35,7 @@ object OlsParser {
       val synonym_l = (j2 \ "synonym").validate[List[String]].getOrElse(List("null"))
       val synonym = synonym_l.mkString(",")
       val term_type = query_handler.get_term_type(raw_value)
+
       val s = termAnnotated.replace("-"," ").map(_.toLower).r.findAllIn(prefLabel.replace("-"," ").map(_.toLower)).mkString
       val s2 = termAnnotated.replace("-"," ").map(_.toLower).r.findAllIn(synonym.replace("-"," ").map(_.toLower)).mkString
       var s3 = ""

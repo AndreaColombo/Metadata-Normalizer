@@ -1,6 +1,7 @@
 package Ontologies.Util
 
 import DBcon.query_handler
+import Ontologies.Util.OlsParser.countWords
 import play.api.libs.json._
 import Utils.Preprocessing.lookup
 import scalaj.http.{Http, HttpOptions}
@@ -16,9 +17,10 @@ object RecommenderParser {
     val l_parsed_value = j \\ "text"
     val l_match_type = j \\ "matchType"
     val l_url = j \\ "self"
+    println(l_parsed_value.indices)
 
     for (i <- l_parsed_value.indices) {
-
+      var score = ""
       val parsed_value = l_parsed_value(i).validate[String].get.map(_.toLower)
       val raw_value = lookup(parsed_value)
       val match_type = l_match_type(i).validate[String].get.map(_.toLower)
@@ -27,13 +29,49 @@ object RecommenderParser {
       val ontology_raw = get_ontology(url)
       val ontology = ontology_raw.head.map(_.toLower)
       val ontology_id = ontology_raw(1).map(_.toLower)
-      val j2 = Json.parse(Http(url).param("apikey", apikey).param("display_context", "false").param("pagesize", "5").header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body)
+      val j2 = Json.parse(Http(url).param("apikey", apikey).param("display_context", "false").param("pagesize", "15").header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body)
       val prefLabel = (j2 \ "prefLabel").validate[String].getOrElse("null").map(_.toLower)
+      val synonym_l = (j2 \ "synonym").validate[List[String]].getOrElse(List("null"))
+      val synonym = synonym_l.mkString(",").map(_.toLower)
+
+      if(match_type.equals("pref")){
+        val s = parsed_value.replace("-"," ").map(_.toLower).r.findAllIn(prefLabel.replace("-"," ").map(_.toLower)).mkString
+        val diff = (countWords(prefLabel) - countWords(parsed_value))*2
+        if (diff > 0)
+          score = "PREF - "+diff
+        else score = "PREF"
+      }
+      else {
+        val s2 = parsed_value.replace("-"," ").map(_.toLower).r.findAllIn(synonym.replace("-"," ").map(_.toLower)).mkString
+        var syn_found = ""
+        var diff_min = 23456
+        var s3 = ""
+
+        for (syn <- synonym_l){
+          s3 = parsed_value.replace("-"," ").map(_.toLower).r.findAllIn(syn.replace("-"," ").map(_.toLower)).mkString
+          if (s3.nonEmpty) {
+            val diff = countWords(syn) - countWords(parsed_value)
+            if(diff < diff_min){
+              diff_min = diff
+              syn_found = syn
+            }
+          }
+        }
+
+        val diff = (countWords(syn_found) - countWords(parsed_value))*2
+        if (diff > 0)
+          score = "SYN - "+diff
+        else score = "SYN"
+      }
+      println("kodio")
+      println(parsed_value)
+      println(prefLabel)
+      println(match_type)
+      println(score)
       if (prefLabel != "null") {
-        val synonym = (j2 \ "synonym").validate[List[String]].getOrElse(List("null")).mkString(",").map(_.toLower)
         val term_type = query_handler.get_term_type(raw_value)
-        //      println(raw_value,parsed_value,ontology,ontology_id,prefLabel,synonym, term_type)
-        rows :+= List(service, raw_value, parsed_value, ontology.map(_.toLower), ontology_id, prefLabel, synonym, "high " + match_type, term_type)
+        //      println(raw_value,parsed_value,ontology,ontology_id,prefLabel,synonym, parsed_value_type)
+        rows :+= List(service, raw_value, parsed_value, ontology.map(_.toLower), ontology_id, prefLabel, synonym, score,term_type)
       }
     }
     rows.toList.distinct

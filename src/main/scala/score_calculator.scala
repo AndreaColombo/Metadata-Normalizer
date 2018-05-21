@@ -32,15 +32,7 @@ object score_calculator {
       else if (matchType.equalsIgnoreCase("MEDIUM")) score = 5
       else if (matchType.equalsIgnoreCase("LOW")) score = 3
     }
-    else if (service.equalsIgnoreCase("recommender")) {
-      if (matchType.equalsIgnoreCase("high pref")) score = 10
-      else score = 5
-    }
-    else if (service.equalsIgnoreCase("bioportal")) {
-      if (matchType.equalsIgnoreCase("high prefLabel")) score = 10
-      else score = 5
-    }
-    else if (service.equalsIgnoreCase("ols")) {
+    else {
       if (matchType.startsWith("PREF")) {
         if (matchType.contains("-")) {
           val lscore = matchType.split("-")

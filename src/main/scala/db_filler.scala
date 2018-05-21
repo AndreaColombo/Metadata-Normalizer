@@ -6,78 +6,73 @@ import Utils.Preprocessing.parse
 
 object db_filler {
 
-  val term_type = List("tissue","disease")
-
   val bioportal = Ontology.apply("bioportal")
   val recommender = Ontology.apply("recommender")
   val zooma = Ontology.apply("zooma")
   val ols = Ontology.apply("ols")
 
-  def update_db (): Unit = {
-    for (a <- term_type){
-      val b = parse(query_handler.run_q1(a)).split(",")
-      for (parsed <- b){
-        db_handler.update_term_type(parsed, a)
-      }
+  def update_db (a: String): Unit = {
+    val b = parse(query_handler.run_q1(a)).split(",")
+    for (parsed <- b){
+      db_handler.update_term_type(parsed, a)
     }
   }
 
-  def fill_db (): Unit = {
+  def fill_db (a: String): Unit = {
 
-    for (a <- term_type) {
-      val s = parse(query_handler.run_q1(a))
-      val c = s.split(",").filterNot(sd => sd.equalsIgnoreCase("p12")).mkString(",")
-      val b = c.split(",").filterNot(sd => sd.equalsIgnoreCase("h54")).mkString(",")
-      println(a)
-      get_timestamp()
-      println(s)
-      val tmp = b.split(",")
-      val tmp1 = tmp.splitAt(tmp.length / 2)._1.toList
-      val tmp2 = tmp.splitAt(tmp.length / 2)._2.toList
-      val recsys1 = tmp1.splitAt(tmp1.length / 2)._1.mkString(",")
-      val recsys2 = tmp1.splitAt(tmp1.length / 2)._2.mkString(",")
-      val recsys3 = tmp2.splitAt(tmp2.length / 2)._1.mkString(",")
-      val recsys4 = tmp2.splitAt(tmp2.length / 2)._2.mkString(",")
-      //
-      println("bioportal inizio")
-      db_handler.insert(bioportal.input(b))
-      println("bioportal fine")
-      get_timestamp()
+    val s = parse(query_handler.run_q1(a))
+    val c = s.split(",").filterNot(sd => sd.equalsIgnoreCase("p12")).mkString(",")
+    val b = c.split(",").filterNot(sd => sd.equalsIgnoreCase("h54")).mkString(",")
+    println(a)
+    get_timestamp()
+    println(s)
+    val tmp = b.split(",")
+    val tmp1 = tmp.splitAt(tmp.length / 2)._1.toList
+    val tmp2 = tmp.splitAt(tmp.length / 2)._2.toList
+    val recsys1 = tmp1.splitAt(tmp1.length / 2)._1.mkString(",")
+    val recsys2 = tmp1.splitAt(tmp1.length / 2)._2.mkString(",")
+    val recsys3 = tmp2.splitAt(tmp2.length / 2)._1.mkString(",")
+    val recsys4 = tmp2.splitAt(tmp2.length / 2)._2.mkString(",")
+    //
+    println("bioportal inizio")
+    db_handler.insert(bioportal.input(b))
+    println("bioportal fine")
+    get_timestamp()
 
 
-      println(recsys1)
-      println("recsys 1 inizio")
-      recommender.input(recsys1)
-      println("recsys 1 fine")
-      get_timestamp()
+    println(recsys1)
+    println("recsys 1 inizio")
+    recommender.input(recsys1)
+    println("recsys 1 fine")
+    get_timestamp()
 
-      println("recsys 2 inizio")
-      db_handler.insert(recommender.input(recsys2))
-      println("recsys 2 fine")
-      get_timestamp()
+    println("recsys 2 inizio")
+    db_handler.insert(recommender.input(recsys2))
+    println("recsys 2 fine")
+    get_timestamp()
 
-      val recsys31 = recsys3.split(",").splitAt(recsys3.split(",").length / 2)._1.mkString(",")
-      val recsys32 = recsys3.split(",").splitAt(recsys3.split(",").length / 2)._2.mkString(",")
-      println("recsys 3 inizio")
-      db_handler.insert(recommender.input(recsys3))
-      println("recsys 3 fine")
-      get_timestamp()
+    val recsys31 = recsys3.split(",").splitAt(recsys3.split(",").length / 2)._1.mkString(",")
+    val recsys32 = recsys3.split(",").splitAt(recsys3.split(",").length / 2)._2.mkString(",")
+    println("recsys 3 inizio")
+    db_handler.insert(recommender.input(recsys3))
+    println("recsys 3 fine")
+    get_timestamp()
 
-      println("recsys 4 inizio")
-      db_handler.insert(recommender.input(recsys4))
-      println("recsys 4 fine")
-      get_timestamp()
+    println("recsys 4 inizio")
+    db_handler.insert(recommender.input(recsys4))
+    println("recsys 4 fine")
+    get_timestamp()
 
-      println("zooma inizio")
-      db_handler.insert(zooma.input(b))
-      println("zooma fine")
-      get_timestamp()
-      //
-      println("ols inizio")
-      db_handler.insert(ols.input(b))
-      println("ols fine")
-      get_timestamp()
-    }
+    println("zooma inizio")
+    db_handler.insert(zooma.input(b))
+    println("zooma fine")
+    get_timestamp()
+    //
+    println("ols inizio")
+    db_handler.insert(ols.input(b))
+    println("ols fine")
+    get_timestamp()
+
   }
 
   def get_timestamp() = {

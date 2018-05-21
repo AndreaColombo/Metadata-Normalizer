@@ -21,7 +21,7 @@ object ZoomaParser {
       val url_range = (url_l \\ "href").indices
       for (m <- url_range) {
         val url = (url_l(m) \ "href").validate[String].get
-        val j3 = (Json.parse(Http(url).param("rows","5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded" \ "terms").getOrElse(null)
+        val j3 = (Json.parse(Http(url).param("rows","15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded" \ "terms").getOrElse(null)
         if (j3 != null) {
           val range2 = (j3 \\ "synonyms").indices
           val score = (j2 \ "confidence").validate[String].get
