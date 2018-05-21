@@ -34,7 +34,7 @@ object query_handler {
       q = sql"""
             select distinct tissue
             from biosample
-            where tissue not like 'null')""".as[String]
+            where tissue IS NOT NULL""".as[String]
     }
     try {
       val result_future = db.run(q).map(_.foreach(a =>
