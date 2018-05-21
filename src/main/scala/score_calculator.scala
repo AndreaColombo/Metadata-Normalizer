@@ -79,21 +79,19 @@ object score_calculator {
 
   def calculate_score(): Unit = {
     val range = db_handler.get_db_lenght()
-    var result: Seq[List[String]] = List()
-    val f = new File("out2.csv")
     main.get_timestamp()
     for (i <- 1 to range){
       val a = db_handler.get_onto_service_termtype(i)
       val onto = a._1
       val tt = a._3
-      val onto_score = db_handler.get_onto_score(onto,tt)
-      val match_score = get_match_score(i, a._2)
+//      val onto_score = db_handler.get_onto_score(onto,tt)
+//      val match_score = get_match_score(i, a._2)
       val suitability = calculate_suitability_score(tt, onto)
 
-      var score = onto_score.toDouble * match_score.doubleValue
+//      var score = onto_score.toDouble * match_score.doubleValue
 
-      if (score<0)
-        score=0
+//      if (score<0)
+//        score=0
 
       db_handler.update_score(suitability,i)
     }

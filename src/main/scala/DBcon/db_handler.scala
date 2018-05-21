@@ -72,7 +72,7 @@ object db_handler {
     val db = Database.forConfig("mydb", conf)
     val q =
       sqlu"""update svr.apiresults2
-             set suitability = $suitability,
+             set suitability = $suitability
              where id = $id
           """
 
