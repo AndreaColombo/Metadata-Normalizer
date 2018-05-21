@@ -25,16 +25,12 @@ object main extends App {
 //
 //    db_handler.insert_best_ontos(ok)
 //
-    var t = ""
-    if (args.nonEmpty)
-      t= args(0)
 
     val d1 = System.currentTimeMillis()
 
-//    score_calculator.calculate_ontology_score()
-    score_calculator.calculate_score()
-
+    ontologies_set_calculator.calculate_ontology_set("yolo")
     val d2 = System.currentTimeMillis()
+
 
     get_elapsed_time(d1, d2)
   }
