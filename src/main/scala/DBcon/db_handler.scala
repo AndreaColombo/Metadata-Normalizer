@@ -72,9 +72,9 @@ object db_handler {
     val db = Database.forConfig("mydb", conf)
     val q =
       sqlu"""update svr.apiresults2
-             set match_score = $match_score
-             set suitability = $suitability
-             set onto_score = $onto_score
+             set match_score = $match_score,
+             set suitability = $suitability,
+             set onto_score = $onto_score,
              set score_num = $score
              where id = $id
           """
@@ -113,7 +113,7 @@ object db_handler {
     match_type
   }
 
-  def ontology_score_insert(rows: Seq[(String, String, String)]) = {
+  def ontology_score_insert(rows: Seq[(String, Double)]) = {
     val db = Database.forConfig("mydb", conf)
     val insertaction = OntologyScore ++= rows
     val result_future = db.run(insertaction)
@@ -130,6 +130,23 @@ object db_handler {
            select distinct ontology
            from svr.apiresults2
            where term_type ilike $term_type
+         """.as[String]
+    val result_future = db.run(q).map(_.foreach(
+      a => result :+= a
+    ))
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result.toList
+  }
+
+  def get_ontologies(): List[String] = {
+    var result: Seq[String] = List()
+    val db = Database.forConfig("mydb", conf)
+
+    val q =
+      sql"""
+           select distinct ontology
+           from svr.apiresults2
          """.as[String]
     val result_future = db.run(q).map(_.foreach(
       a => result :+= a
@@ -159,7 +176,7 @@ object db_handler {
     result.toList
   }
 
-  def get_parsed_by_ontology(ontology: String, term_type: String): List[String] = {
+  def get_parsed_by_ontology(ontology: String): List[String] = {
     var result: Seq[String] = List()
     val db = Database.forConfig("mydb", conf)
 
@@ -167,7 +184,7 @@ object db_handler {
       sql"""
            select distinct parsed_value
            from svr.apiresults2
-           where term_type ilike $term_type and ontology ilike $ontology
+           where ontology ilike $ontology
          """.as[String]
 
     val result_future = db.run(q).map(_.foreach(
@@ -186,11 +203,9 @@ object db_handler {
       sql"""
            select score
            from svr.ontologyscore
-           where ontology ilike $onto and term_type ilike $term_type
+           where ontology ilike $onto
          """.as[String]
-    val result_future = db.run(q).map(_.foreach(a =>
-      score = a
-    ))
+    val result_future = db.run(q).map(a => score = a.head)
     Await.result(result_future, Duration.Inf)
     db.close()
     score
@@ -283,7 +298,7 @@ object db_handler {
     val db = Database.forConfig("mydb", conf)
     val q =
       sql"""
-           select sum(matchscore)
+           select sum(match_score)
            from svr.apiresults2
            where ontology ilike $onto and term_type ilike $term_type
          """.as[String]

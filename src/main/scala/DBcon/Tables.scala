@@ -41,11 +41,10 @@ object Tables {
     def * = (service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
   }
 
-  class OntologyScore (tag: Tag) extends Table [(String, String, String)](tag, Some("svr"), "ontologyscore"){
+  class OntologyScore (tag: Tag) extends Table [(String, Double)](tag, Some("svr"), "ontologyscore"){
     def ontology = column[String]("ontology")
-    def term_type = column[String]("term_type")
-    def score = column[String]("score")
-    def * = (ontology,term_type,score)
+    def score = column[Double]("score")
+    def * = (ontology,score)
   }
 
   class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double)](tag, Some("svr"), "best_ontos"){

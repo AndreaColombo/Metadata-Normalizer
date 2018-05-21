@@ -57,23 +57,22 @@ object score_calculator {
     score
   }
 
-  def calculate_ontology_score(t:String): Unit = {
-    var ontologies: Seq[String] = List()
-    var insert: Seq[(String,String,String)] = List()
+  def calculate_ontology_score(): Unit = {
+    var insert: Seq[(String,Double)] = List()
     var score: Seq[Double] = List()
-    val onto_recsys = db_handler.get_ontology_by_type(t)
+    val onto_recsys = db_handler.get_ontologies()
 
     println("inizio")
     main.get_timestamp()
     for (onto <- onto_recsys) {
-      val terms = db_handler.get_parsed_by_ontology(onto, t)
+      val terms = db_handler.get_parsed_by_ontology(onto)
       var recsys_score = 0.0
 
       recsys_score = get_recommender_score(terms,onto)
 
-      insert :+= (onto,t,recsys_score.toString)
+      insert :+= (onto,recsys_score)
     }
-    println("ok "+t)
+    println("ok")
     main.get_timestamp()
     db_handler.ontology_score_insert(insert)
   }
