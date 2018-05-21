@@ -29,6 +29,7 @@ object main extends App {
     if (args.nonEmpty)
       t= args(0)
 
+    t = "disease"
     val d1 = System.currentTimeMillis()
 
     score_calculator.calculate_ontology_score(t)

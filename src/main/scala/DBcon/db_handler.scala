@@ -159,24 +159,24 @@ object db_handler {
     result.toList
   }
 
-  def get_parsed_by_ontology(ontology: String, term_type: String): String = {
-    var result = ""
+  def get_parsed_by_ontology(ontology: String, term_type: String): List[String] = {
+    var result: Seq[String] = List()
     val db = Database.forConfig("mydb", conf)
 
     val q =
       sql"""
            select distinct parsed_value
            from svr.apiresults2
-           where term_type ilike $term_type and ontology ilike $ontology and service = 'recommender'
+           where term_type ilike $term_type and ontology ilike $ontology
          """.as[String]
 
-    val result_future = db.run(q).map(a =>
-      result = a.head
-    )
+    val result_future = db.run(q).map(_.foreach(
+      a => result :+= a
+    ))
 
     Await.result(result_future, Duration.Inf)
     db.close()
-    result
+    result.toList
   }
 
   def get_onto_score(onto: String, term_type: String): String = {

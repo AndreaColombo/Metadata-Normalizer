@@ -10,10 +10,10 @@ object score_calculator {
   val apikey = "2338fb64-0246-4627-bf4d-4197bc8c9c64"
   val url = "http://data.bioontology.org/recommender"
 
-  def get_recommender_score (term: String, onto: String): Double = {
+  def get_recommender_score (term: List[String], onto: String): Double = {
     var score = 0.0
 
-    val params = Seq("apikey" -> apikey, "input" -> term, "input_type" -> "2", "output_type" -> "1", "display_context"->"false","display_links"->"false","ontologies"->onto.map(_.toUpper),
+    val params = Seq("apikey" -> apikey, "input" -> term.mkString(","), "input_type" -> "2", "output_type" -> "1", "display_context"->"false","display_links"->"false","ontologies"->onto.map(_.toUpper),
       "wc"->"0","wa"->"1","wd"->"0","ws"->"0")
     val response = Http(url).params(params).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
     val j = Json.parse(response) \\ "evaluationScore"
@@ -66,10 +66,10 @@ object score_calculator {
     println("inizio")
     main.get_timestamp()
     for (onto <- onto_recsys) {
-      val term = db_handler.get_parsed_by_ontology(onto, t)
+      val terms = db_handler.get_parsed_by_ontology(onto, t)
       var recsys_score = 0.0
 
-      recsys_score = get_recommender_score(term,onto)
+      recsys_score = get_recommender_score(terms,onto)
 
       insert :+= (onto,t,recsys_score.toString)
     }
