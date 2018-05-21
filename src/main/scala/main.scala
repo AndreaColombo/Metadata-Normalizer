@@ -13,7 +13,7 @@ object main extends App {
 
 
   override def main(args: Array[String]): Unit = {
-    val t = args(0).replace("_","-")
+//    val t = args(0).replace("_","-")
 //    val f = new File("best_onto_"+t+".csv")
 //    val reader = CSVReader.open(f)
 //    val insertvalue = reader.all()
@@ -25,10 +25,14 @@ object main extends App {
 //
 //    db_handler.insert_best_ontos(ok)
 //
+    var t = ""
+    if (args.nonEmpty)
+      t= args(0)
+
     val d1 = System.currentTimeMillis()
 
-    db_filler.fill_db(args(0))
-    db_filler.update_db(args(0))
+    score_calculator.calculate_ontology_score(t)
+//    score_calculator.calculate_score()
 
     val d2 = System.currentTimeMillis()
 

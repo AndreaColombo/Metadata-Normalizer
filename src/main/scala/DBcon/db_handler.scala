@@ -50,7 +50,7 @@ object db_handler {
   def update_raw_value(rawValue: String, parsed: String) = {
     val db = Database.forConfig("mydb", conf)
     val q =
-      sqlu"""update svr.apiresults1
+      sqlu"""update svr.apiresults2
              set raw_value = $rawValue
              where parsed_value = $parsed
           """
@@ -68,12 +68,15 @@ object db_handler {
     db.close()
   }
 
-  def update_score(score: Double, onto: String, term_type: String) = {
+  def update_score(score: Double, match_score: Int, onto_score: Double, suitability: Double, id: Int) = {
     val db = Database.forConfig("mydb", conf)
     val q =
-      sqlu"""update svr.apiresults1
-             set suitability = $score
-             where ontology = $onto and term_type = $term_type
+      sqlu"""update svr.apiresults2
+             set match_score = $match_score
+             set suitability = $suitability
+             set onto_score = $onto_score
+             set score_num = $score
+             where id = $id
           """
 
     val result_future = db.run(q)
@@ -83,7 +86,7 @@ object db_handler {
 
   def update_term_type(parsedValue: String, term_type: String): Unit = {
     val q =
-      sqlu"""update svr.apiresults1
+      sqlu"""update svr.apiresults2
             set term_type = $term_type
          where parsed_value ilike $parsedValue
           """
@@ -97,7 +100,7 @@ object db_handler {
     val q =
       sql"""
            select score
-           from svr.apiresults1
+           from svr.apiresults2
            where id = $id
            and service ilike $service
          """.as[String]
@@ -125,7 +128,7 @@ object db_handler {
     val q =
       sql"""
            select distinct ontology
-           from svr.apiresults1
+           from svr.apiresults2
            where term_type ilike $term_type
          """.as[String]
     val result_future = db.run(q).map(_.foreach(
@@ -143,7 +146,7 @@ object db_handler {
     val q =
       sql"""
            select distinct raw_value
-           from svr.apiresults1
+           from svr.apiresults2
            where term_type ilike $term_type and ontology ilike $ontology
          """.as[String]
 
@@ -154,6 +157,26 @@ object db_handler {
     Await.result(result_future, Duration.Inf)
     db.close()
     result.toList
+  }
+
+  def get_parsed_by_ontology(ontology: String, term_type: String): String = {
+    var result = ""
+    val db = Database.forConfig("mydb", conf)
+
+    val q =
+      sql"""
+           select distinct parsed_value
+           from svr.apiresults2
+           where term_type ilike $term_type and ontology ilike $ontology and service = 'recommender'
+         """.as[String]
+
+    val result_future = db.run(q).map(a =>
+      result = a.head
+    )
+
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result
   }
 
   def get_onto_score(onto: String, term_type: String): String = {
@@ -179,7 +202,7 @@ object db_handler {
     val q =
       sql"""
            select count(id)
-           from svr.apiresults1
+           from svr.apiresults2
          """.as[Int]
 
     val result_future = db.run(q).map(a => lenght = a.head)
@@ -194,7 +217,7 @@ object db_handler {
     val q =
       sql"""
            select ontology, service, term_type
-           from svr.apiresults1
+           from svr.apiresults2
            where id = $id
          """.as[(String, String, String)]
 
@@ -212,7 +235,7 @@ object db_handler {
     val q =
       sql"""
            select ontology, ontology_id
-           from svr.apiresults1
+           from svr.apiresults2
            where id = $id
          """.as[(String, String)]
 
@@ -228,7 +251,7 @@ object db_handler {
     val db = Database.forConfig("mydb", conf)
     val q =
       sqlu"""
-            update svr.apiresults1
+            update svr.apiresults2
             set deleted = "true"
             where id = $id
           """
@@ -242,8 +265,8 @@ object db_handler {
     val db = Database.forConfig("mydb", conf)
     val q =
       sql"""
-           select count(distinct(raw_value)) / (select count(distinct(raw_value)) from svr.apiresults1 where term_type ilike $term_type)::Float, count(distinct(raw_value))
-           from svr.apiresults1
+           select count(distinct(raw_value)) / (select count(distinct(raw_value)) from svr.apiresults2 where term_type ilike $term_type)::Float, count(distinct(raw_value))
+           from svr.apiresults2
            where ontology ilike $onto and term_type ilike $term_type
          """.as[(String, String)]
 
@@ -261,7 +284,7 @@ object db_handler {
     val q =
       sql"""
            select sum(matchscore)
-           from svr.apiresults1
+           from svr.apiresults2
            where ontology ilike $onto and term_type ilike $term_type
          """.as[String]
 

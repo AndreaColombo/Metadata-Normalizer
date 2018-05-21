@@ -14,7 +14,7 @@ object score_calculator {
     var score = 0.0
 
     val params = Seq("apikey" -> apikey, "input" -> term, "input_type" -> "2", "output_type" -> "1", "display_context"->"false","display_links"->"false","ontologies"->onto.map(_.toUpper),
-      "wc"->"0","wa"->"0","wd"->"0.4","ws"->"0.6")
+      "wc"->"0","wa"->"1","wd"->"0","ws"->"0")
     val response = Http(url).params(params).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
     val j = Json.parse(response) \\ "evaluationScore"
     if(j.nonEmpty)
@@ -57,57 +57,23 @@ object score_calculator {
     score
   }
 
-  def calculate_ontology_score(): Unit = {
+  def calculate_ontology_score(t:String): Unit = {
     var ontologies: Seq[String] = List()
     var insert: Seq[(String,String,String)] = List()
     var score: Seq[Double] = List()
-    val tissue_onto_recsys = db_handler.get_ontology_by_type("tissue")
-    val disease_onto_recsys = db_handler.get_ontology_by_type("disease")
-    val cellline_onto_recsys = db_handler.get_ontology_by_type("cell_line")
+    val onto_recsys = db_handler.get_ontology_by_type(t)
 
     println("inizio")
     main.get_timestamp()
-    for (onto <- tissue_onto_recsys) {
-      println("onto "+onto)
-      val terms = db_handler.get_term_by_ontology(onto, "tissue")
+    for (onto <- onto_recsys) {
+      val term = db_handler.get_parsed_by_ontology(onto, t)
       var recsys_score = 0.0
-      for (term <- terms){
-        println("term "+term)
-        recsys_score = get_recommender_score(term,onto)
-        if(recsys_score != 0.0)
-          score :+= recsys_score
-      }
-      val average = score.foldLeft((0.0, 1)) ((acc, i) => (acc._1 + (i - acc._1) / acc._2, acc._2 + 1))._1
-      println(average)
-      insert :+= (onto,"tissue",average.toString)
-    }
-    println("ok tissue")
-    main.get_timestamp()
-    db_handler.ontology_score_insert(insert)
 
-    insert = List()
-    for (onto <- disease_onto_recsys) {
-      val terms = db_handler.get_term_by_ontology(onto, "disease")
-      for (term <- terms){
-        score :+= get_recommender_score(term,onto)
-      }
-      val average = score.foldLeft((0.0, 1)) ((acc, i) => (acc._1 + (i - acc._1) / acc._2, acc._2 + 1))._1
-      insert :+= (onto,"disease",average.toString)
-    }
-    println("ok disease")
-    main.get_timestamp()
-    db_handler.ontology_score_insert(insert)
+      recsys_score = get_recommender_score(term,onto)
 
-    insert = List()
-    for (onto <- cellline_onto_recsys) {
-      val terms = db_handler.get_term_by_ontology(onto, "cell_line")
-      for (term <- terms){
-        score :+= get_recommender_score(term,onto)
-      }
-      val average = score.foldLeft((0.0, 1)) ((acc, i) => (acc._1 + (i - acc._1) / acc._2, acc._2 + 1))._1
-      insert :+= (onto,"cell_line",average.toString)
+      insert :+= (onto,t,recsys_score.toString)
     }
-    println("ok cell line")
+    println("ok "+t)
     main.get_timestamp()
     db_handler.ontology_score_insert(insert)
   }
@@ -119,77 +85,35 @@ object score_calculator {
     main.get_timestamp()
     for (i <- 1 to range){
       val a = db_handler.get_onto_service_termtype(i)
-      val onto_score = db_handler.get_onto_score(a._1, a._3)
+      val onto = a._1
+      val tt = a._3
+      val onto_score = db_handler.get_onto_score(onto,tt)
       val match_score = get_match_score(i, a._2)
+      val suitability = calculate_suitability_score(tt, onto)
 
-      var score = /*onto_score.toDouble */ match_score.doubleValue
+      var score = onto_score.toDouble * match_score.doubleValue
+
       if (score<0)
         score=0
 
-//      println(i+"\t"+onto_score+" + "+match_score+" = "+score)
-      result :+= List(i.toString, score.toString)
+      db_handler.update_score(score,match_score,onto_score.toDouble,suitability,i)
     }
     main.get_timestamp()
-    val writer = CSVWriter.open(f)
-    writer.writeAll(result)
-  }
-
-  def update_score_db(): Unit ={
-    val f = new File("suitability.csv")
-    val reader = CSVReader.open(f)
-
-    val res = reader.all()
-
-    for (i <- res.indices){
-      val onto = res(i)(0)
-      val t_type = res(i)(1)
-      var score = res(i)(2).toDouble
-
-      db_handler.update_score(score,onto,t_type)
-      println(i)
-    }
 
   }
 
-  def calculate_suitability_score(): Unit = {
-    val tissue = db_handler.get_ontology_by_type("tissue")
-    val disease = db_handler.get_ontology_by_type("disease")
-    val cell_line = db_handler.get_ontology_by_type("cell_line")
+
+  def calculate_suitability_score(t: String, o: String): Double = {
+    val ontos = db_handler.get_ontology_by_type(t)
     var result: Seq[List[String]] = List()
-    println(disease)
 
-    for (o <- tissue){
-      var score = 0.0
-      val tmp_coverage = db_handler.get_onto_coverage(o,"tissue")
-      val coverage = tmp_coverage._1.toDouble
-      val no_annotations = tmp_coverage._2.toInt
-      val matchscore = db_handler.get_onto_matchscore(o,"tissue").toInt
-      score = (matchscore/no_annotations) * coverage
-      result :+= List(o, "tissue", score.toString)
-    }
+    var suitability = 0.0
+    val tmp_coverage = db_handler.get_onto_coverage(o,"tissue")
+    val coverage = tmp_coverage._1.toDouble
+    val no_annotations = tmp_coverage._2.toInt
+    val matchscore = db_handler.get_onto_matchscore(o,"tissue").toInt
+    suitability = (matchscore/no_annotations) * coverage
 
-    for (o <- disease){
-      var score = 0.0
-      val tmp_coverage = db_handler.get_onto_coverage(o,"disease")
-      val coverage = tmp_coverage._1.toDouble
-      val no_annotations = tmp_coverage._2.toInt
-      val matchscore = db_handler.get_onto_matchscore(o,"disease").toInt
-      score = (matchscore/no_annotations) * coverage
-      result :+= List(o, "disease", score.toString)
-    }
-
-    for (o <- cell_line){
-      var score = 0.0
-      val tmp_coverage = db_handler.get_onto_coverage(o,"cell_line")
-      val coverage = tmp_coverage._1.toDouble
-      val no_annotations = tmp_coverage._2.toInt
-      val matchscore = db_handler.get_onto_matchscore(o,"cell_line").toInt
-      score = (matchscore/no_annotations) * coverage
-      result :+= List(o, "cell_line", score.toString)
-    }
-
-    val f = new File("suitability.csv")
-    val writer = CSVWriter.open(f)
-    writer.writeAll(result)
+    suitability
   }
 }
