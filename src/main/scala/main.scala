@@ -13,7 +13,7 @@ object main extends App {
 
 
   override def main(args: Array[String]): Unit = {
-//    val t = args(0).replace("_","-")
+    val t = args(0).replace("_","-")
 //    val f = new File("best_onto_"+t+".csv")
 //    val reader = CSVReader.open(f)
 //    val insertvalue = reader.all()
@@ -27,8 +27,8 @@ object main extends App {
 //
     val d1 = System.currentTimeMillis()
 
-    db_filler.fill_db("tissue")
-    db_filler.update_db("tissue")
+    db_filler.fill_db(args(0))
+    db_filler.update_db(args(0))
 
     val d2 = System.currentTimeMillis()
 
