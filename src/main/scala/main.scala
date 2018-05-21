@@ -28,7 +28,8 @@ object main extends App {
 
     val d1 = System.currentTimeMillis()
 
-    ontologies_set_calculator.calculate_ontology_set("yolo")
+//    ontologies_set_calculator.calculate_ontology_set("yolo")
+    score_calculator.calculate_score()
     val d2 = System.currentTimeMillis()
 
 
