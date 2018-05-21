@@ -88,14 +88,14 @@ object score_calculator {
       val tt = a._3
       val onto_score = db_handler.get_onto_score(onto,tt)
       val match_score = get_match_score(i, a._2)
-//      val suitability = calculate_suitability_score(tt, onto)
+      val suitability = calculate_suitability_score(tt, onto)
 
       var score = onto_score.toDouble * match_score.doubleValue
 
       if (score<0)
         score=0
 
-      db_handler.update_score(score,match_score,onto_score.toDouble,0.0,i)
+      db_handler.update_score(suitability,i)
     }
     main.get_timestamp()
 

@@ -68,14 +68,11 @@ object db_handler {
     db.close()
   }
 
-  def update_score(score: Double, match_score: Int, onto_score: Double, suitability: Double, id: Int) = {
+  def update_score(suitability: Double, id: Int) = {
     val db = Database.forConfig("mydb", conf)
     val q =
       sqlu"""update svr.apiresults2
-             set match_score = $match_score,
-             suitability = $suitability,
-             onto_score = $onto_score,
-             score_num = $score
+             set suitability = $suitability,
              where id = $id
           """
 
