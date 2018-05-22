@@ -24,7 +24,7 @@ object query_handler {
     val table = m.find(_._2.contains(t)).getOrElse(default)._1.toString
 
     val q =
-      sql"""select #$t
+      sql"""select distinct #$t
            from #$table
            where #$t IS NOT NULL
          """.as[String]
