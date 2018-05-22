@@ -35,30 +35,28 @@ object db_filler {
     val recsys4 = tmp2.splitAt(tmp2.length / 2)._2.mkString(",")
     //
     println("bioportal inizio")
-    db_handler.insert(bioportal.input(s))
+//    db_handler.insert(bioportal.input(s))
     println("bioportal fine")
     get_timestamp()
 
 
     println("recsys 1 inizio")
-    recommender.input(recsys1)
+//    db_handler.insert(recommender.input(recsys1))
     println("recsys 1 fine")
     get_timestamp()
 
     println("recsys 2 inizio")
-    db_handler.insert(recommender.input(recsys2))
+//    db_handler.insert(recommender.input(recsys2))
     println("recsys 2 fine")
     get_timestamp()
 
-    val recsys31 = recsys3.split(",").splitAt(recsys3.split(",").length / 2)._1.mkString(",")
-    val recsys32 = recsys3.split(",").splitAt(recsys3.split(",").length / 2)._2.mkString(",")
     println("recsys 3 inizio")
-    db_handler.insert(recommender.input(recsys3))
+//    db_handler.insert(recommender.input(recsys3))
     println("recsys 3 fine")
     get_timestamp()
 
     println("recsys 4 inizio")
-    db_handler.insert(recommender.input(recsys4))
+//    db_handler.insert(recommender.input(recsys4))
     println("recsys 4 fine")
     get_timestamp()
 
