@@ -21,12 +21,12 @@ object db_filler {
   def fill_db (a: String): Unit = {
 
     val s = parse(query_handler.run_q1(a))
-    val c = s.split(",").filterNot(sd => sd.equalsIgnoreCase("p12")).mkString(",")
-    val b = c.split(",").filterNot(sd => sd.equalsIgnoreCase("h54")).mkString(",")
+//    val c = s.split(",").filterNot(sd => sd.equalsIgnoreCase("p12")).mkString(",")
+//    val b = c.split(",").filterNot(sd => sd.equalsIgnoreCase("h54")).mkString(",")
     println(a)
     get_timestamp()
-    println(s)
-    val tmp = b.split(",")
+//    println(s)
+    val tmp = s.split(",")
     val tmp1 = tmp.splitAt(tmp.length / 2)._1.toList
     val tmp2 = tmp.splitAt(tmp.length / 2)._2.toList
     val recsys1 = tmp1.splitAt(tmp1.length / 2)._1.mkString(",")
@@ -35,7 +35,7 @@ object db_filler {
     val recsys4 = tmp2.splitAt(tmp2.length / 2)._2.mkString(",")
     //
     println("bioportal inizio")
-    db_handler.insert(bioportal.input(b))
+    db_handler.insert(bioportal.input(s))
     println("bioportal fine")
     get_timestamp()
 
@@ -64,12 +64,12 @@ object db_filler {
     get_timestamp()
 
     println("zooma inizio")
-    db_handler.insert(zooma.input(b))
+    db_handler.insert(zooma.input(s))
     println("zooma fine")
     get_timestamp()
     //
     println("ols inizio")
-    db_handler.insert(ols.input(b))
+    db_handler.insert(ols.input(s))
     println("ols fine")
     get_timestamp()
 

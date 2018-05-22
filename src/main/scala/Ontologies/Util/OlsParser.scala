@@ -45,7 +45,7 @@ object OlsParser {
       for (syn <- synonym_l){
         s3 = termAnnotated.replace("-"," ").map(_.toLower).r.findAllIn(syn.replace("-"," ").map(_.toLower)).mkString
         if (s3.nonEmpty) {
-          val diff = countWords(syn) - countWords(termAnnotated)
+          val diff = (countWords(syn) - countWords(termAnnotated))*2
           if(diff < diff_min){
             diff_min = diff
             syn_found = syn
@@ -54,13 +54,13 @@ object OlsParser {
       }
 
       if (s.nonEmpty){
-        val diff = countWords(prefLabel) - countWords(termAnnotated)
+        val diff = (countWords(prefLabel) - countWords(termAnnotated))*2
         if (diff > 0)
           score = "PREF - "+diff
         else score = "PREF"
       }
       else if (s3.nonEmpty){
-        val diff = countWords(syn_found) - countWords(termAnnotated)
+        val diff = (countWords(syn_found) - countWords(termAnnotated))*2
         if (diff > 0)
           score = "SYN - "+diff
         else score = "SYN"

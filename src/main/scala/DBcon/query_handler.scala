@@ -15,27 +15,19 @@ object query_handler {
   def run_q1(term_type: String): List[String] = {
     val db = Database.forConfig("mydb1", conf)
     var result: Seq[String]= List()
+    val t = term_type
 
-    var q = sql"".as[String]
 
-    if (term_type.equals("cell_line")) {
-      q = sql"""
-              select distinct cell_line
-              from biosample
-              where cell_line not like 'null'""".as[String]
-    }
-    else if (term_type.equals("disease")) {
-      q = sql"""
-            select distinct disease
-            from biosample
-            where disease not like 'null'""".as[String]
-    }
-    else if(term_type.equals("tissue")) {
-      q = sql"""
-            select distinct tissue
-            from biosample
-            where tissue IS NOT NULL""".as[String]
-    }
+    val m = Map("biosample" -> List("disease","tissue","cell_line"),"donor"->List("ethnicity","species"),"item"->List("platform"),"experiment_type"->List("technique","feature","target"),"container"->List("annotation"))
+
+    val default = (-1,"")
+    val table = m.find(_._2.contains(t)).getOrElse(default)._1.toString
+
+    val q =
+      sql"""select #$t
+           from #$table
+           where #$t IS NOT NULL
+         """.as[String]
     try {
       val result_future = db.run(q).map(_.foreach(a =>
         result:+=a))

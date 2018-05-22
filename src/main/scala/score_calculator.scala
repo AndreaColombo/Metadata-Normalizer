@@ -36,7 +36,6 @@ object score_calculator {
       if (matchType.startsWith("PREF")) {
         if (matchType.contains("-")) {
           val lscore = matchType.split("-")
-          println("dentro ols  "+matchType)
           score = 10 - lscore(1).drop(1).toInt
         }
         else score = 10
@@ -44,7 +43,6 @@ object score_calculator {
       else if (matchType.startsWith("SYN")) {
         if (matchType.contains("-")) {
           val lscore = matchType.split("-")
-          println("dentro ols  "+matchType)
           score = 5 - lscore(1).drop(1).toInt
         }
         else score = 5
@@ -84,16 +82,24 @@ object score_calculator {
       val a = db_handler.get_onto_service_termtype(i)
       val onto = a._1
       val tt = a._3
-//      val onto_score = db_handler.get_onto_score(onto,tt)
-//      val match_score = get_match_score(i, a._2)
-      val suitability = calculate_suitability_score(tt, onto)
+      val onto_score = db_handler.get_onto_score(onto,tt)
+      val match_score = get_match_score(i, a._2)
+//      val suitability = calculate_suitability_score(tt, onto)
 
-//      var score = onto_score.toDouble * match_score.doubleValue
+      val k1 = 2
+      val k2 = 2
 
-//      if (score<0)
-//        score=0
+      var score1 = onto_score.toDouble *(k1 + match_score.doubleValue)
+      var score2 = onto_score.toDouble +(k2 * match_score.doubleValue)
 
-      db_handler.update_score(suitability,i)
+      if (score1<0)
+        score1=0
+
+      if (score2<0)
+        score2=0
+
+      db_handler.update_score(score1,score2,onto_score.toDouble,match_score,i)
+
     }
     main.get_timestamp()
 

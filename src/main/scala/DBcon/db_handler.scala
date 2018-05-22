@@ -68,13 +68,17 @@ object db_handler {
     db.close()
   }
 
-  def update_score(suitability: Double, id: Int) = {
+  def update_score(score1: Double, score2: Double, ontoScore: Double, matchScore: Int, id: Int) = {
     val db = Database.forConfig("mydb", conf)
     val q =
-      sqlu"""update svr.apiresults2
-             set suitability = $suitability
+      sqlu"""
+             update svr.apiresults2
+             set score_num = $score1,
+             score_num2 = $score2,
+             onto_score = $ontoScore,
+             match_score = $matchScore
              where id = $id
-          """
+        """
 
     val result_future = db.run(q)
     Await.result(result_future, Duration.Inf)
