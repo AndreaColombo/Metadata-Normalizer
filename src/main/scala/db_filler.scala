@@ -40,7 +40,6 @@ object db_filler {
     get_timestamp()
 
 
-    println(recsys1)
     println("recsys 1 inizio")
     recommender.input(recsys1)
     println("recsys 1 fine")
