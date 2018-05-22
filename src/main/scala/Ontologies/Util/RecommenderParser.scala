@@ -63,11 +63,6 @@ object RecommenderParser {
           score = "SYN - "+diff
         else score = "SYN"
       }
-      println("kodio")
-      println(parsed_value)
-      println(prefLabel)
-      println(match_type)
-      println(score)
       if (prefLabel != "null") {
         val term_type = query_handler.get_term_type(raw_value)
         //      println(raw_value,parsed_value,ontology,ontology_id,prefLabel,synonym, parsed_value_type)
