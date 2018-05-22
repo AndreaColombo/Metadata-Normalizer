@@ -33,7 +33,7 @@ object main extends App {
     for (t<-term_type) {
       db_filler.fill_db(t)
       db_filler.update_db(t)
-      score_calculator.calculate_score()
+//      score_calculator.calculate_score()
     }
 
     val d2 = System.currentTimeMillis()
