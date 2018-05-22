@@ -35,41 +35,41 @@ object db_filler {
     val recsys4 = tmp2.splitAt(tmp2.length / 2)._2.mkString(",")
     //
     println("bioportal inizio")
-//    db_handler.insert(bioportal.input(s))
+    db_handler.insert(bioportal.input(s))
     println("bioportal fine")
     get_timestamp()
 
 
     println("recsys 1 inizio")
-//    db_handler.insert(recommender.input(recsys1))
+    db_handler.insert(recommender.input(recsys1))
     println("recsys 1 fine")
     get_timestamp()
 
     println("recsys 2 inizio")
-//    db_handler.insert(recommender.input(recsys2))
+    db_handler.insert(recommender.input(recsys2))
     println("recsys 2 fine")
     get_timestamp()
 
     println("recsys 3 inizio")
-//    db_handler.insert(recommender.input(recsys3))
+    db_handler.insert(recommender.input(recsys3))
     println("recsys 3 fine")
     get_timestamp()
 
     println("recsys 4 inizio")
-//    db_handler.insert(recommender.input(recsys4))
+    db_handler.insert(recommender.input(recsys4))
     println("recsys 4 fine")
     get_timestamp()
 
-    println("zooma inizio")
-    db_handler.insert(zooma.input(s))
-    println("zooma fine")
-    get_timestamp()
-    //
-    println("ols inizio")
-    db_handler.insert(ols.input(s))
-    println("ols fine")
-    get_timestamp()
+//    println("zooma inizio")
+//    db_handler.insert(zooma.input(s))
+//    println("zooma fine")
+//    get_timestamp()
 
+//    println("ols inizio")
+//    db_handler.insert(ols.input(s))
+//    println("ols fine")
+//    get_timestamp()
+//
   }
 
   def get_timestamp() = {
