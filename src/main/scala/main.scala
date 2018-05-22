@@ -29,7 +29,7 @@ object main extends App {
 
 
     val m = Map("biosample" -> List("disease","tissue","cell_line"),"donor"->List("ethnicity","species"),"item"->List("platform"),"experiment_type"->List("technique","feature","target"),"container"->List("annotation"))
-    val term_type = m.apply("biosample")
+    val term_type = m.apply(args(0))
     for (t<-term_type) {
       db_filler.fill_db(t)
       db_filler.update_db(t)
