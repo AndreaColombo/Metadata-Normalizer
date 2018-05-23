@@ -106,16 +106,18 @@ object score_calculator {
   }
 
 
-  def calculate_suitability_score(t: String, o: String): Double = {
+  def calculate_suitability_score(t: String): Double = {
     val ontos = db_handler.get_ontology_by_type(t)
-    var result: Seq[List[String]] = List()
 
     var suitability = 0.0
-    val tmp_coverage = db_handler.get_onto_coverage(o,t)
-    val coverage = tmp_coverage._1.toDouble
-    val no_annotations = tmp_coverage._2.toInt
-    val matchscore = db_handler.get_onto_matchscore(o,t).toInt
-    suitability = (matchscore/no_annotations) * coverage
+    for (o <- ontos) {
+      val tmp_coverage = db_handler.get_onto_coverage(o, t)
+      val coverage = tmp_coverage._1.toDouble
+      val no_annotations = tmp_coverage._2.toInt
+      val matchscore = db_handler.get_onto_matchscore(o, t).toInt
+      suitability = (matchscore / no_annotations) * coverage
+      db_handler.update_suitability(suitability, o, t)
+    }
 
     suitability
   }

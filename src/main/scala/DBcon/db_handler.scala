@@ -85,6 +85,20 @@ object db_handler {
     db.close()
   }
 
+  def update_suitability(suitability: Double, ontology: String, term_type: String) = {
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sqlu"""
+             update svr.apiresults2
+             set suitability = $suitability,
+             where ontology ilike $ontology and term_type ilike $term_type
+        """
+
+    val result_future = db.run(q)
+    Await.result(result_future, Duration.Inf)
+    db.close()
+  }
+
   def update_term_type(parsedValue: String, term_type: String): Unit = {
     val q =
       sqlu"""update svr.apiresults2

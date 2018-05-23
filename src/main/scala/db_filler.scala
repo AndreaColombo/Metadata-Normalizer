@@ -33,7 +33,14 @@ object db_filler {
     val recsys2 = tmp1.splitAt(tmp1.length / 2)._2.mkString(",")
     val recsys3 = tmp2.splitAt(tmp2.length / 2)._1.mkString(",")
     val recsys4 = tmp2.splitAt(tmp2.length / 2)._2.mkString(",")
-    //
+//    println(tmp1.length)
+//    println(tmp2.length)
+//    println(recsys1.split(",").length)
+//    println(recsys2.split(",").length)
+//    println(recsys3.split(",").length)
+//    println(recsys4.split(",").length)
+//
+
     println("bioportal inizio")
     db_handler.insert(bioportal.input(s))
     println("bioportal fine")
@@ -60,10 +67,10 @@ object db_filler {
     println("recsys 4 fine")
     get_timestamp()
 
-//    println("zooma inizio")
-//    db_handler.insert(zooma.input(s))
-//    println("zooma fine")
-//    get_timestamp()
+    println("zooma inizio")
+    db_handler.insert(zooma.input(s))
+    println("zooma fine")
+    get_timestamp()
 
 //    println("ols inizio")
 //    db_handler.insert(ols.input(s))

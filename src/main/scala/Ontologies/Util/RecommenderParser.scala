@@ -17,7 +17,6 @@ object RecommenderParser {
     val l_parsed_value = j \\ "text"
     val l_match_type = j \\ "matchType"
     val l_url = j \\ "self"
-    println(l_parsed_value.indices)
 
     for (i <- l_parsed_value.indices) {
       var score = ""
