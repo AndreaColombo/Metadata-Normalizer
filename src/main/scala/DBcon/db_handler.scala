@@ -90,7 +90,7 @@ object db_handler {
     val q =
       sqlu"""
              update svr.apiresults2
-             set suitability = $suitability,
+             set suitability = $suitability
              where ontology ilike $ontology and term_type ilike $term_type
         """
 
