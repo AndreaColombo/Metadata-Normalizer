@@ -33,12 +33,12 @@ object main extends App {
 //    score_calculator.calculate_ontology_score()
 //    score_calculator.calculate_score()
     var t = ""
-//    if(args.nonEmpty) {
-      t = "biosample"
+    if(args.nonEmpty) {
+      t = args(0)
       val term_type = m.apply(t)
       for (t <- term_type) {
         score_calculator.calculate_suitability_score(t)
-//      }
+      }
     }
     val d2 = System.currentTimeMillis()
 
