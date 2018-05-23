@@ -32,12 +32,12 @@ object main extends App {
 
 //    score_calculator.calculate_ontology_score()
 //    score_calculator.calculate_score()
-    var t = ""
+    var a = ""
     if(args.nonEmpty) {
-      t = args(0)
-      val term_type = m.apply(t)
+      a = args(0)
+      val term_type = m.apply(a)
       for (t <- term_type) {
-        score_calculator.calculate_suitability_score(t)
+        ontologies_set_calculator.calculate_ontology_set(t)
       }
     }
     val d2 = System.currentTimeMillis()

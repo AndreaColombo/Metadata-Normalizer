@@ -364,15 +364,15 @@ object db_handler {
     result
   }
 
-  def get_score_suitability(onto: String, term_type: String): (Double, Double) = {
-    var result: (Double, Double) = (0.0,0.0)
+  def get_score_suitability(onto: String, term_type: String): (Double, Double, Double) = {
+    var result: (Double, Double, Double) = (0.0,0.0,0.0)
     val db = Database.forConfig("mydb", conf)
     val q =
       sql"""
-           select avg_score, suitability
+           select avg_score1, avg_score2, suitability
            from svr.best_onto_per_term
            where term_type = $term_type and ontology = $onto
-         """.as[(Double, Double)]
+         """.as[(Double, Double, Double)]
 
     val result_future = db.run(q).map(a=>
       result = a.head
