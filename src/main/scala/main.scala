@@ -30,6 +30,7 @@ object main extends App {
 
     val m = Map("biosample" -> List("disease","tissue","cell_line"),"donor"->List("ethnicity","species"),"item"->List("platform"),"experiment_type"->List("technique","feature","target"),"container"->List("annotation"))
 
+    score_calculator.calculate_ontology_score()
     score_calculator.calculate_score()
     var t = ""
     if(args.nonEmpty) {
