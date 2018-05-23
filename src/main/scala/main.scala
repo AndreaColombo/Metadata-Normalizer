@@ -36,7 +36,7 @@ object main extends App {
       t = args(0)
       val term_type = m.apply(t)
       for (t <- term_type) {
-        score_calculator.calculate_suitability_score(t)
+//        score_calculator.calculate_suitability_score(t)
       }
     }
     val d2 = System.currentTimeMillis()
