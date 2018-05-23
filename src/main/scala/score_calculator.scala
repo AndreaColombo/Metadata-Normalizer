@@ -59,7 +59,6 @@ object score_calculator {
     var insert: Seq[(String,Double)] = List()
     var score: Seq[Double] = List()
     val onto_recsys = db_handler.get_ontologies()
-
     println("inizio")
     main.get_timestamp()
     for (onto <- onto_recsys) {
