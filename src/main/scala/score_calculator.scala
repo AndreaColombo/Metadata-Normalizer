@@ -67,7 +67,7 @@ object score_calculator {
       println(terms.length)
       var recsys_score = 0.0
 
-      recsys_score = get_recommender_score(terms,onto)
+      recsys_score = get_recommender_score(terms.take(50),onto)
 
       insert :+= (onto,recsys_score)
     }
