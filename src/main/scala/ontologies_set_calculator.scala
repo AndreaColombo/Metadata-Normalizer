@@ -19,7 +19,7 @@ object ontologies_set_calculator {
 //    val a = 5
     var terms = Set("")
     println(t + "\n")
-    for (i <- 0 to 20){
+    for (i <- 0 to 3){
       val onto = ontos(i)._2
       val terms1 = db_handler.get_term_by_ontology(onto, t).toSet
 //      val terms1 = ontos(i)._3
