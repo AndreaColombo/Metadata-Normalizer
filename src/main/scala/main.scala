@@ -30,23 +30,19 @@ object main extends App {
     val d1 = System.currentTimeMillis()
 
 
-//    val m = Map("biosample" -> List("disease","tissue","cell_line"),"donor"->List("ethnicity","species"),"item"->List("platform"),"experiment_type"->List("technique","feature","target"),"container"->List("annotation"))
+    val m = Map("biosample" -> List("disease","tissue","cell_line"),"donor"->List("ethnicity","species"),"item"->List("platform"),"experiment_type"->List("technique","feature","target"),"container"->List("annotation"))
 
 //    score_calculator.calculate_ontology_score()
 //    score_calculator.calculate_score()
-//    var a = ""
-//    if(args.nonEmpty) {
-//      a = args(0)
-//      val term_type = m.apply(a)
-//      for (t <- term_type) {
-//        ontologies_set_calculator.calculate_ontology_set(t)
-//      }
-//    }
+    var a = ""
+    if(args.nonEmpty) {
+      a = args(0)
+      val term_type = m.apply(a)
+      for (t <- term_type) {
+        ontologies_set_calculator.calculate_ontology_set(t)
+      }
+    }
     val d2 = System.currentTimeMillis()
-    val a = Set("a","b","c")
-    val b = Set("d","e","a")
-
-    println(a++b)
     get_elapsed_time(d1, d2)
   }
 
