@@ -19,7 +19,7 @@ object main extends App {
     val m = Map("biosample" -> List("disease","tissue","cell_line"),"donor"->List("ethnicity","species"),"item"->List("platform"),"experiment_type"->List("technique","feature","target"),"container"->List("annotation"))
     val term_type = m.apply(args(0))
     for (t <- term_type) {
-            val f = new File("best_onto_"+t+".csv")
+            val f = new File("best_onto_"+t.replace("_","-")+".csv")
             val reader = CSVReader.open(f)
             val insertvalue = reader.all()
             var ok: Seq[(String, String, Double, Double, Double)] = List()
