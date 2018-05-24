@@ -19,7 +19,7 @@ object ontologies_set_calculator {
 //    val a = 5
     var terms = Set("")
     println(t + "\n")
-    for (i <- 0 to 3){
+    for (i <- 0 to 1){
       val onto = ontos(i)._2
       val terms1 = db_handler.get_term_by_ontology(onto, t).toSet
 //      val terms1 = ontos(i)._3
@@ -33,7 +33,7 @@ object ontologies_set_calculator {
 //        val terms2 = ontos(j)._3
         terms = terms1 ++ terms2
         val scores = db_handler.get_score_suitability(onto2, t)
-        val terms2good = terms.filterNot(terms1.toSet)
+        val terms2good = terms.filterNot(terms1)
         val weight2_sc1 = terms2good.size * scores._1
         val weight2_sc2 = terms2good.size * scores._2
         val weight2_suit = terms2good.size * scores._3
@@ -41,7 +41,7 @@ object ontologies_set_calculator {
           val onto3 = ontos(k)._2
           val terms3 = db_handler.get_term_by_ontology(onto3, t)
 //          val terms3 = ontos(k)._3
-          if (terms.equals(terms ++ terms3)) {
+          if (terms.size.equals((terms ++ terms3).size)) {
             val tot_count = terms.size
             val coverage: Double = tot_count.toDouble / a.toDouble
             suitability = (weight1_suit + weight2_suit) / terms.size
@@ -63,7 +63,7 @@ object ontologies_set_calculator {
             val tot_count = terms.size
             val coverage: Double = tot_count.toDouble / a.toDouble
             val scores = db_handler.get_score_suitability(onto3, t)
-            val terms3good = terms.filterNot(terms12.toSet)
+            val terms3good = terms.filterNot(terms12)
             val weight3_sc1 = terms3good.size * scores._1
             val weight3_sc2 = terms3good.size * scores._2
             val weight3_suit = terms3good.size * scores._3
