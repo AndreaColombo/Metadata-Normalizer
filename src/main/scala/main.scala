@@ -12,9 +12,9 @@ object main extends App {
   override def main(args: Array[String]): Unit = {
 
     val m = Map("biosample" -> List("disease","tissue","cell_line"),"donor"->List("ethnicity","species"),"item"->List("platform"),"experiment_type"->List("technique","feature","target"),"container"->List("annotation"))
-    val term_type = m.apply(args(0))
 
-    if(args.length>1 && args(1).equalsIgnoreCase("insert")) {
+    if(args.nonEmpty && args.length>1 && args(1).equalsIgnoreCase("insert")) {
+      val term_type = m.apply(args(0))
       for (t <- term_type) {
         val f = new File("best_onto_" + t.replace("_", "-") + ".csv")
         val reader = CSVReader.open(f)
@@ -28,9 +28,12 @@ object main extends App {
     }
     val d1 = System.currentTimeMillis()
 
+    var a = List("1","2","3")
+    a = a.filterNot(s => s == a.apply(1))
+    println(a)
 
-
-    if(args.nonEmpty) {
+    if(args.nonEmpty && args.length<2) {
+      val term_type = m.apply(args(0))
       for (t <- term_type) {
         ontologies_set_calculator.calculate_ontology_set(t)
       }
