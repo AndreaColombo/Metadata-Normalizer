@@ -22,9 +22,9 @@ object main extends App {
             val f = new File("best_onto_"+t.replace("_","-")+".csv")
             val reader = CSVReader.open(f)
             val insertvalue = reader.all()
-            var ok: Seq[(String, String, Double, Double, Double)] = List()
+            var ok: Seq[(String, String, Double, Double, Double, Double)] = List()
             for (l <- insertvalue){
-              ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble)
+              ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble, l(5).toDouble)
             }
             db_handler.insert_best_ontos(ok)
     }

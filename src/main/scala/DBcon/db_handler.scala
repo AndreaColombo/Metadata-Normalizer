@@ -60,7 +60,7 @@ object db_handler {
     db.close()
   }
 
-  def insert_best_ontos(rows: Iterable[(String, String, Double, Double, Double)]) = {
+  def insert_best_ontos(rows: Iterable[(String, String, Double, Double, Double, Double)]) = {
     val db = Database.forConfig("mydb", conf)
     val insertAction = BestOntos ++= rows
     val insert = db.run(insertAction)

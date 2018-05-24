@@ -46,14 +46,15 @@ object Tables {
     def score = column[Double]("score")
     def * = (ontology,score)
   }
-
-  class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double)](tag, Some("svr"), "best_ontos2"){
+1
+  class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double, Double)](tag, Some("svr"), "best_ontos2"){
     def term_type = column[String]("term_type")
     def ontology_set = column[String]("ontologies set")
     def coverage = column[Double]("set_coverage")
-    def score = column[Double]("set_score")
+    def score = column[Double]("set_score1")
+    def score2 = column[Double]("set_score2")
     def suitability = column[Double]("set_suitability")
-    def * = (term_type,ontology_set,coverage,score,suitability)
+    def * = (term_type,ontology_set,coverage,score,score2,suitability)
   }
 
   class ApiResults2(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String)](tag, Some("svr"), "apiresults2"){
