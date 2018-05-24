@@ -36,6 +36,13 @@ object ontologies_set_calculator {
           result :+= List(t, onto1, coverage.toString, scores._1.toString, scores._2.toString, scores._3.toString)
           break()
         }
+
+        //IF ONTO1 COVERS ENOUGH TERMS SAVE IT
+        if((terms1.size.toDouble / a.toDouble)>=threshold){
+          val coverage: Double = terms1.size.toDouble / a.toDouble
+          result :+= List(t, onto1, coverage.toString, (weight1_sc1/terms1.size).toString,(weight1_sc2/terms1.size).toString,(weight1_suit/terms1.size).toString)
+        }
+
         for (j <- i + 1 until ontos.length/3) {
           val onto2 = ontos(j)._2
           val terms2 = db_handler.get_term_by_ontology(onto2, t).toSet
@@ -47,12 +54,8 @@ object ontologies_set_calculator {
             val weight2_suit = terms2good.size * scores._3
             val terms = terms1 ++ terms2
 
-            //IF ONTO2 DOESN'T ADD ANYTHING TO ONTO1 AND ONTO1 COVERS ENOUGH TERMS, SAVE ONTO1 THEN CONTINUE TO NEXT ONTOLOGY
+            //IF ONTO2 DOESN'T ADD ANYTHING TO ONTO1 CONTINUE TO NEXT ONTOLOGY
             if (terms1.size.equals(terms.size)){
-              if((terms1.size.toDouble / a.toDouble)>=threshold){
-                val coverage: Double = terms1.size.toDouble / a.toDouble
-                result :+= List(t, onto1, coverage.toString, (weight1_sc1/terms1.size).toString,(weight1_sc2/terms1.size).toString,(weight1_suit/terms1.size).toString)
-              }
               break()
             }
 
@@ -65,6 +68,13 @@ object ontologies_set_calculator {
               result :+= List(t, onto1 + "," + onto2, coverage.toString, score1.toString, score2.toString, suitability.toString)
               break()
             }
+
+            //IF (ONTO1,ONTO2) COVER ENOUGH TERMS SAVE IT
+            if((terms.size.toDouble/a.toDouble)>=threshold){
+              val coverage: Double = terms.size.toDouble/a.toDouble
+              result :+= List(t, onto1+","+onto2, coverage.toString, ((weight1_sc1+weight2_sc1)/terms.size).toString,((weight1_sc2+weight2_sc2)/terms1.size).toString,((weight1_suit+weight2_suit)/terms.size).toString)
+            }
+
             for (k <- j + 1 until ontos.length/3) {
               val onto3 = ontos(k)._2
               val terms3 = db_handler.get_term_by_ontology(onto3, t)
@@ -72,12 +82,8 @@ object ontologies_set_calculator {
                 val terms12 = terms1 ++ terms2
                 val terms = terms12 ++ terms3
 
-                //IF ONTO3 DOESN'T ADD ANYTHING TO (ONTO1,ONTO2) AND (ONTO1,ONTO2) COVER ENOUGH TERMS, SAVE (ONTO1,ONTO2) THEN CONTINUE TO NEXT ONTOLOGY
+                //IF ONTO3 DOESN'T ADD ANYTHING TO (ONTO1,ONTO2) CONTINUE TO NEXT ONTOLOGY
                 if (terms12.size.equals(terms.size)) {
-                  if((terms12.size.toDouble/a.toDouble)>=threshold){
-                    val coverage: Double = terms12.size.toDouble/a.toDouble
-                    result :+= List(t, onto1+","+onto2, coverage.toString, ((weight1_sc1+weight2_sc1)/terms12.size).toString,((weight1_sc2+weight2_sc2)/terms12.size).toString,((weight1_suit+weight2_suit)/terms12.size).toString)
-                  }
                   break()
                 }
 
