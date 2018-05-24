@@ -34,7 +34,7 @@ object ontologies_set_calculator {
           result :+= List(t, onto1, coverage.toString, scores._1.toString, scores._2.toString, scores._3.toString)
           break()
         }
-        for (j <- i + 1 until 10) {
+        for (j <- i + 1 until ontos.length/3) {
           val onto2 = ontos(j)._2
           val terms2 = db_handler.get_term_by_ontology(onto2, t).toSet
           breakable {
@@ -55,7 +55,7 @@ object ontologies_set_calculator {
               result :+= List(t, onto1 + "," + onto2, coverage.toString, score1.toString, score2.toString, suitability.toString)
               break()
             }
-            for (k <- j + 1 until 10) {
+            for (k <- j + 1 until ontos.length/3) {
               val onto3 = ontos(k)._2
               val terms3 = db_handler.get_term_by_ontology(onto3, t)
               breakable {
