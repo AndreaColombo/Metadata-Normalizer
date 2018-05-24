@@ -2,12 +2,7 @@ import java.io.File
 import java.util.{Calendar, Date}
 
 import DBcon._
-import Ontologies.Ontology
-import Utils.Preprocessing.{lookup, parse}
 import com.github.tototoshi.csv._
-import score_calculator.get_recommender_score
-
-import scala.util.Random
 
 
 object main extends App {
@@ -18,26 +13,28 @@ object main extends App {
 
     val m = Map("biosample" -> List("disease","tissue","cell_line"),"donor"->List("ethnicity","species"),"item"->List("platform"),"experiment_type"->List("technique","feature","target"),"container"->List("annotation"))
     val term_type = m.apply(args(0))
-    for (t <- term_type) {
-            val f = new File("best_onto_"+t.replace("_","-")+".csv")
-            val reader = CSVReader.open(f)
-            val insertvalue = reader.all()
-            var ok: Seq[(String, String, Double, Double, Double, Double)] = List()
-            for (l <- insertvalue){
-              ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble, l(5).toDouble)
-            }
-            db_handler.insert_best_ontos(ok)
+
+    if(args.length>1 && args(1).equalsIgnoreCase("insert")) {
+      for (t <- term_type) {
+        val f = new File("best_onto_" + t.replace("_", "-") + ".csv")
+        val reader = CSVReader.open(f)
+        val insertvalue = reader.all()
+        var ok: Seq[(String, String, Double, Double, Double, Double)] = List()
+        for (l <- insertvalue) {
+          ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble, l(5).toDouble)
+        }
+        db_handler.insert_best_ontos(ok)
+      }
     }
-    println("kodio")
     val d1 = System.currentTimeMillis()
 
 
 
-//    if(args.nonEmpty) {
-//      for (t <- term_type) {
-//        ontologies_set_calculator.calculate_ontology_set(t)
-//      }
-//    }
+    if(args.nonEmpty) {
+      for (t <- term_type) {
+        ontologies_set_calculator.calculate_ontology_set(t)
+      }
+    }
     val d2 = System.currentTimeMillis()
     get_elapsed_time(d1, d2)
   }
