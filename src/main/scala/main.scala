@@ -28,10 +28,6 @@ object main extends App {
     }
     val d1 = System.currentTimeMillis()
 
-    var a = List("1","2","3")
-    a = a.filterNot(s => s == a.apply(1))
-    println(a)
-
     if(args.nonEmpty && args.length<2) {
       val term_type = m.apply(args(0))
       for (t <- term_type) {
