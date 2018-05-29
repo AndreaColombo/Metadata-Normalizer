@@ -345,6 +345,27 @@ object db_handler {
     result
   }
 
+  def get_best_ontos_per_term(term_type: String): Seq[(String, String, String, String,String)] = {
+    var result = Seq(("", "", "", "",""))
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sql"""
+           select ontologies_set, set_score1, set_coverage, set_suitability, (char_length(ontologies_set)-char_length(replace(ontologies_set,',',''))+1) as num_ontos
+           from svr.best_ontos2
+           where term_type ilike $term_type
+           order by term_type, set_coverage desc, num_ontos asc, set_score1 desc, set_suitability desc
+         """.as[(String, String, String, String, String)]
+
+    val result_future = db.run(q).map(a=>
+      result = a
+    )
+
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result
+  }
+
+
   def get_nrv(term_type: String): Int = {
     var result = 0
     val db = Database.forConfig("mydb", conf)
@@ -380,6 +401,21 @@ object db_handler {
 
     Await.result(result_future, Duration.Inf)
     db.close()
+    result
+  }
+
+  def get_onto_id(rv: String, onto:String): String = {
+    val q =
+      sql"""
+            select term_type, raw_value as rv, ontology as onto, ontology_id, service, match_score
+           	from svr.apiresults2
+           	where match_score = (select max(match_score) from svr.apiresults2 where raw_value ilike $rv and ontology ilike $onto)
+           	and raw_value ilike $rv and ontology ilike $onto
+           	order by service
+            limit 1
+         """.as[String]
+    var result = ""
+
     result
   }
 }

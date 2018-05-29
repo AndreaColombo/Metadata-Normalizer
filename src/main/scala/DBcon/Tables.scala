@@ -49,7 +49,7 @@ object Tables {
 1
   class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double, Double)](tag, Some("svr"), "best_ontos2"){
     def term_type = column[String]("term_type")
-    def ontology_set = column[String]("ontologies set")
+    def ontology_set = column[String]("ontologies_set")
     def coverage = column[Double]("set_coverage")
     def score = column[Double]("set_score1")
     def score2 = column[Double]("set_score2")

@@ -20,16 +20,18 @@ object ontologies_set_calculator {
 //    val a = 5
     println(t + "\n")
 
-    val threshold = 0.95
+    val threshold = 0.90
 
     for (i <- 0 until ontos.length/3){
       val onto1 = ontos(i)._2
       val terms1 = db_handler.get_term_by_ontology(onto1, t).toSet
       breakable {
+
         val scores = db_handler.get_score_suitability(onto1, t)
         val weight1_sc1 = terms1.size * scores._1
         val weight1_sc2 = terms1.size * scores._2
         val weight1_suit = terms1.size * scores._3
+
         //IF ONTO1 COVERS ALL TERMS NO NEED TO GO FURTHER
         if((terms1.size.toDouble / a.toDouble)==1.0){
           val coverage: Double = terms1.size.toDouble / a.toDouble
@@ -46,7 +48,9 @@ object ontologies_set_calculator {
         for (j <- i + 1 until ontos.length/3) {
           val onto2 = ontos(j)._2
           val terms2 = db_handler.get_term_by_ontology(onto2, t).toSet
+
           breakable {
+
             val scores = db_handler.get_score_suitability(onto2, t)
             val terms2good = (terms1 ++ terms2).filterNot(terms1)
             val weight2_sc1 = terms2good.size * scores._1
@@ -78,7 +82,9 @@ object ontologies_set_calculator {
             for (k <- j + 1 until ontos.length/3) {
               val onto3 = ontos(k)._2
               val terms3 = db_handler.get_term_by_ontology(onto3, t)
+
               breakable {
+
                 val terms12 = terms1 ++ terms2
                 val terms = terms12 ++ terms3
 
@@ -106,6 +112,7 @@ object ontologies_set_calculator {
         }
       }
     }
+
     var result_true: Seq[List[String]] = List()
     for (i <- result.indices){
       val l = result(i)
