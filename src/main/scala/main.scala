@@ -51,7 +51,6 @@ object main extends App {
         val onto_sets = db_handler.get_onto_sets(t)
         println(t)
         for (onto_set <- onto_sets) {
-          println(onto_set)
           var terms_full = Set("")
           var acc = 0.0
           for (o <- onto_set.split(",")) {
@@ -60,20 +59,18 @@ object main extends App {
             val termsgood = (terms_full ++ terms).filterNot(terms_full)
             val weight_suit = termsgood.size * scores._3
             acc += weight_suit
-            println("suit: "+scores._3)
-            println("term: "+terms.size)
-            println("weight: "+weight_suit)
-            println("acc: "+acc)
             terms_full ++= terms
           }
           val new_suit = acc/terms_full.size.toDouble
 
           db_handler.update_suitability_sets(new_suit,onto_set,t)
         }
+        val d2 = System.currentTimeMillis()
+        get_elapsed_time(d1, d2)
       }
     }
-    val d2 = System.currentTimeMillis()
-    get_elapsed_time(d1, d2)
+    val d3 = System.currentTimeMillis()
+    get_elapsed_time(d1, d3)
 
   }
   def get_elapsed_time(d1: Long, d2: Long) = {
