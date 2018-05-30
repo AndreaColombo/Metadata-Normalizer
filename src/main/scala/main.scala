@@ -57,9 +57,13 @@ object main extends App {
           for (o <- onto_set.split(",")) {
             val scores = db_handler.get_score_suitability(o, t)
             val terms = db_handler.get_term_by_ontology(o, t).toSet
-            val termsgood = (terms_full ++ terms).filterNot(terms)
+            val termsgood = (terms_full ++ terms).filterNot(terms_full)
             val weight_suit = termsgood.size * scores._3
             acc += weight_suit
+            println("suit: "+scores._3)
+            println("term: "+terms.size)
+            println("weight: "+weight_suit)
+            println("acc: "+acc)
             terms_full ++= terms
           }
           val new_suit = acc/terms_full.size.toDouble
