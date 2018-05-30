@@ -48,6 +48,7 @@ object main extends App {
 
     for (tt <- m.keys.toList) {
       for (t <- m.apply(tt)) {
+        println(t)
         score_calculator.calculate_suitability_score(t)
       }
     }

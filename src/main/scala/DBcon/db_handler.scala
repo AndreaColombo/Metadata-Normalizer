@@ -403,22 +403,21 @@ object db_handler {
     db.close()
     result
   }
+
   def get_max_score(rv: String, onto:String): String = {
     val db = Database.forConfig("mydb", conf)
+    val a = "%"+rv+"%"
     val q =
       sql"""
             select match_score
            	from svr.apiresults2
-           	where match_score = (select max(match_score) from svr.apiresults2 where raw_value ilike $rv and ontology ilike $onto)
-           	and raw_value ilike $rv and ontology ilike $onto
+           	where match_score = (select max(match_score) from svr.apiresults2 where replace(replace(raw_value,'"',''),'\','') ilike $rv and ontology ilike $onto)
+           	and replace(replace(raw_value,'"',''),'\','') ilike $rv and ontology ilike $onto
            	order by service
             limit 1
          """.as[String]
     var result = ""
-
-    val result_future = db.run(q).map(a=>
-      result = a.head
-    )
+    val result_future = db.run(q).map(a => result = a.head)
 
     Await.result(result_future, Duration.Inf)
     db.close()

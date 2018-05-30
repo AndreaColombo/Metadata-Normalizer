@@ -118,7 +118,7 @@ object score_calculator {
       val terms = db_handler.get_term_by_ontology(o,t)
       var matchscore = 0.0
       for (rv<-terms){
-        val score = db_handler.get_max_score(rv,o).toDouble
+        val score = db_handler.get_max_score(rv.replace(""""""","").replace("""\""",""),o).toDouble
         matchscore += score
       }
       suitability = (matchscore / no_annotations) * coverage
