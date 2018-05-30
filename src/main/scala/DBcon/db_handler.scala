@@ -99,6 +99,20 @@ object db_handler {
     db.close()
   }
 
+  def update_suitability_sets(suitability: Double, ontology: String, term_type: String) = {
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sqlu"""
+             update svr.best_ontos2
+             set set_suitability = $suitability
+             where ontologies_set ilike $ontology and term_type ilike $term_type
+        """
+
+    val result_future = db.run(q)
+    Await.result(result_future, Duration.Inf)
+    db.close()
+  }
+
   def update_term_type(parsedValue: String, term_type: String): Unit = {
     val q =
       sqlu"""update svr.apiresults2
@@ -392,7 +406,7 @@ object db_handler {
       sql"""
            select avg_score1, avg_score2, suitability
            from svr.best_onto_per_term
-           where term_type = $term_type and ontology = $onto
+           where term_type ilike $term_type and ontology ilike $onto
          """.as[(Double, Double, Double)]
     val result_future = db.run(q).map(a=>
       result = a.head
@@ -418,6 +432,23 @@ object db_handler {
          """.as[String]
     var result = ""
     val result_future = db.run(q).map(a => result = a.head)
+
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result
+  }
+
+  def get_onto_sets(t: String): List[String] = {
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sql"""
+            select ontologies_set
+           	from svr.best_ontos2
+           	where term_type ilike $t
+         """.as[String]
+    var result = List("")
+
+    val result_future = db.run(q).map(a => result = a.toList)
 
     Await.result(result_future, Duration.Inf)
     db.close()

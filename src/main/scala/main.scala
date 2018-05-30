@@ -48,8 +48,24 @@ object main extends App {
 
     for (tt <- m.keys.toList) {
       for (t <- m.apply(tt)) {
+        val onto_sets = db_handler.get_onto_sets(t)
         println(t)
-        score_calculator.calculate_suitability_score(t)
+        for (onto_set <- onto_sets) {
+          println(onto_set)
+          var terms_full = Set("")
+          var acc = 0.0
+          for (o <- onto_set.split(",")) {
+            val scores = db_handler.get_score_suitability(o, t)
+            val terms = db_handler.get_term_by_ontology(o, t).toSet
+            val termsgood = (terms_full ++ terms).filterNot(terms)
+            val weight_suit = termsgood.size * scores._3
+            acc += weight_suit
+            terms_full ++= terms
+          }
+          val new_suit = acc/terms_full.size.toDouble
+
+          db_handler.update_suitability_sets(new_suit,onto_set,t)
+        }
       }
     }
     val d2 = System.currentTimeMillis()
