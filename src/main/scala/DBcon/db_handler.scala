@@ -353,7 +353,7 @@ object db_handler {
            select ontologies_set, set_score1, set_coverage, set_suitability, (char_length(ontologies_set)-char_length(replace(ontologies_set,',',''))+1) as num_ontos
            from svr.best_ontos2
            where term_type ilike $term_type
-           order by term_type, set_coverage desc, num_ontos asc, set_score1 desc, set_suitability desc
+           order by term_type, set_coverage desc, num_ontos asc, set_suitability desc
          """.as[(String, String, String, String, String)]
 
     val result_future = db.run(q).map(a=>
@@ -404,10 +404,10 @@ object db_handler {
     result
   }
 
-  def get_onto_id(rv: String, onto:String): String = {
+  def get_max_score(rv: String, onto:String): String = {
     val q =
       sql"""
-            select term_type, raw_value as rv, ontology as onto, ontology_id, service, match_score
+            select match_score
            	from svr.apiresults2
            	where match_score = (select max(match_score) from svr.apiresults2 where raw_value ilike $rv and ontology ilike $onto)
            	and raw_value ilike $rv and ontology ilike $onto
@@ -416,6 +416,12 @@ object db_handler {
          """.as[String]
     var result = ""
 
+    val result_future = db.run(q).map(a=>
+      result = a.head
+    )
+
+    Await.result(result_future, Duration.Inf)
+    db.close()
     result
   }
 }

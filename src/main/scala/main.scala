@@ -11,13 +11,12 @@ object main extends App {
 
   override def main(args: Array[String]): Unit = {
 
-    val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity", "species"), "item" -> List("platform"), "experiment_type" -> List("technique"), "container" -> List("annotation"))
+    val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity", "species"), "item" -> List("platform"), "experiment_type" -> List("technique","target","feature"))//, "container" -> List("annotation"))
 
     val d1 = System.currentTimeMillis()
     //try {
     //  if (args.nonEmpty) {
     //    if (args.length > 1 && args(1).equalsIgnoreCase("insert")) {
-    val term_type = m.apply(args(0))
     //      for (t <- term_type) {
     //        val f = new File("best_onto_" + t.replace("_", "-") + ".csv")
     //        val reader = CSVReader.open(f)
@@ -43,11 +42,17 @@ object main extends App {
     //        e.printStackTrace()
     //        e.getCause.printStackTrace()
     //    }
-    //    val d2 = System.currentTimeMillis()
-    //    get_elapsed_time(d1, d2)
+
     //  }
-    for (t <- term_type)
-      report_writer.write_report(t)
+
+
+    for (tt <- m.keys.toList) {
+      for (t <- m.apply(tt)) {
+        score_calculator.calculate_suitability_score(t)
+      }
+    }
+    val d2 = System.currentTimeMillis()
+    get_elapsed_time(d1, d2)
 
   }
   def get_elapsed_time(d1: Long, d2: Long) = {

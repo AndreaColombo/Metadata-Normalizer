@@ -115,7 +115,12 @@ object score_calculator {
       val tmp_coverage = db_handler.get_onto_coverage(o, t)
       val coverage = tmp_coverage._1.toDouble
       val no_annotations = tmp_coverage._2.toInt
-      val matchscore = db_handler.get_onto_matchscore(o, t).toInt
+      val terms = db_handler.get_term_by_ontology(o,t)
+      var matchscore = 0.0
+      for (rv<-terms){
+        val score = db_handler.get_max_score(rv,o).toDouble
+        matchscore += score
+      }
       suitability = (matchscore / no_annotations) * coverage
       db_handler.update_suitability(suitability, o, t)
     }
