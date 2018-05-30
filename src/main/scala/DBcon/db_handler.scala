@@ -394,17 +394,17 @@ object db_handler {
            from svr.best_onto_per_term
            where term_type = $term_type and ontology = $onto
          """.as[(Double, Double, Double)]
-
     val result_future = db.run(q).map(a=>
       result = a.head
     )
+
 
     Await.result(result_future, Duration.Inf)
     db.close()
     result
   }
-
   def get_max_score(rv: String, onto:String): String = {
+    val db = Database.forConfig("mydb", conf)
     val q =
       sql"""
             select match_score
@@ -424,4 +424,5 @@ object db_handler {
     db.close()
     result
   }
+
 }
