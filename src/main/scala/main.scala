@@ -47,7 +47,7 @@ object main extends App {
 
 
     for (tt <- m.keys.toList) {
-      for (t <- m.apply("donor")) {
+      for (t <- m.apply(tt)) {
         val onto_sets = db_handler.get_onto_sets(t)
         println(t)
         for (onto_set <- onto_sets) {
