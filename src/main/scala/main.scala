@@ -11,7 +11,7 @@ object main extends App {
 
   override def main(args: Array[String]): Unit = {
 
-    val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity", "species"), "item" -> List("platform"), "experiment_type" -> List("technique","target","feature"))//, "container" -> List("annotation"))
+    val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity","species"), "item" -> List("platform"), "experiment_type" -> List("technique","target","feature"))//, "container" -> List("annotation"))
 
     val d1 = System.currentTimeMillis()
     //try {
@@ -47,11 +47,11 @@ object main extends App {
 
 
     for (tt <- m.keys.toList) {
-      for (t <- m.apply(tt)) {
+      for (t <- m.apply("donor")) {
         val onto_sets = db_handler.get_onto_sets(t)
         println(t)
         for (onto_set <- onto_sets) {
-          var terms_full = Set("")
+          var terms_full: Set[String] = Set()
           var acc = 0.0
           for (o <- onto_set.split(",")) {
             val scores = db_handler.get_score_suitability(o, t)
@@ -69,8 +69,6 @@ object main extends App {
         get_elapsed_time(d1, d2)
       }
     }
-    val d3 = System.currentTimeMillis()
-    get_elapsed_time(d1, d3)
 
   }
   def get_elapsed_time(d1: Long, d2: Long) = {
