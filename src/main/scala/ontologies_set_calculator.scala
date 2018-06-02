@@ -143,8 +143,11 @@ object ontologies_set_calculator {
     val terms2 = db_handler.get_term_by_ontology(ontos(1),t).toSet
     terms_full = terms1 ++ terms2
     val coverage = terms_full.size.toDouble / db_handler.get_nrv(t).toDouble
+    val terms = db_handler.get_term_by_type(t).toSet
 
-    println(ontos(0)+"\t"+ontos(1)+"\t"+coverage)
+    val missing = terms.filterNot(terms_full)
+    println(ontos(0)+"\t"+ontos(1)+"\t"+coverage+"\n")
+    println(missing)
 
   }
 }

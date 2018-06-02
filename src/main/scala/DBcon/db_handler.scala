@@ -205,6 +205,26 @@ object db_handler {
     result.toList
   }
 
+  def get_term_by_type(term_type: String): List[String] = {
+    var result: Seq[String] = List()
+    val db = Database.forConfig("mydb", conf)
+
+    val q =
+      sql"""
+           select distinct raw_value
+           from svr.apiresults2
+           where term_type ilike $term_type
+         """.as[String]
+
+    val result_future = db.run(q).map(_.foreach(
+      a => result :+= a
+    ))
+
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result.toList
+  }
+
   def get_parsed_by_ontology(ontology: String): List[String] = {
     var result: Seq[String] = List()
     val db = Database.forConfig("mydb", conf)
