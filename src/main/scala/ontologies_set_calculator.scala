@@ -136,4 +136,17 @@ object ontologies_set_calculator {
 //    println("end " + t + " \n")
 //    result
   }
+
+  def get_set_coverage(ontos: List[String], t: String) = {
+    var terms_full: Set[String] = Set()
+    val terms1 = db_handler.get_term_by_ontology(ontos(0),t).toSet
+    val terms2 = db_handler.get_term_by_ontology(ontos(1),t).toSet
+    terms_full = terms1 ++ terms2
+    val coverage = terms_full.size.toDouble / db_handler.get_nrv(t).toDouble
+
+    println(ontos(0)+"\t"+ontos(1)+"\t"+coverage)
+
+  }
 }
+
+

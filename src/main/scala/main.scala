@@ -45,32 +45,36 @@ object main extends App {
 
     //  }
 
+    if(args.nonEmpty && args(0).equals("get")){
+      ontologies_set_calculator.get_set_coverage(args.slice(1,3).toList, args(3))
+    }
+    else {
+      for (tt <- m.keys.toList) {
+        for (t <- m.apply(tt)) {
+          val onto_sets = db_handler.get_onto_sets(t)
+          println(t)
+          for (onto_set <- onto_sets) {
+            var terms_full: Set[String] = Set()
+            var acc = 0.0
+            for (o <- onto_set.split(",")) {
+              val scores = db_handler.get_score_suitability(o, t)
+              val terms = db_handler.get_term_by_ontology(o, t).toSet
+              val termsgood = (terms_full ++ terms).filterNot(terms_full)
+              val weight_suit = termsgood.size * scores._3
+              acc += weight_suit
+              terms_full ++= terms
+            }
+            val new_suit = acc / terms_full.size.toDouble
 
-    for (tt <- m.keys.toList) {
-      for (t <- m.apply(tt)) {
-        val onto_sets = db_handler.get_onto_sets(t)
-        println(t)
-        for (onto_set <- onto_sets) {
-          var terms_full: Set[String] = Set()
-          var acc = 0.0
-          for (o <- onto_set.split(",")) {
-            val scores = db_handler.get_score_suitability(o, t)
-            val terms = db_handler.get_term_by_ontology(o, t).toSet
-            val termsgood = (terms_full ++ terms).filterNot(terms_full)
-            val weight_suit = termsgood.size * scores._3
-            acc += weight_suit
-            terms_full ++= terms
+            db_handler.update_suitability_sets(new_suit, onto_set, t)
           }
-          val new_suit = acc/terms_full.size.toDouble
-
-          db_handler.update_suitability_sets(new_suit,onto_set,t)
+          val d2 = System.currentTimeMillis()
+          get_elapsed_time(d1, d2)
         }
-        val d2 = System.currentTimeMillis()
-        get_elapsed_time(d1, d2)
       }
     }
-
   }
+
   def get_elapsed_time(d1: Long, d2: Long) = {
     val elapsed:Double = (d2-d1).toDouble / 1000
     val min: Double = (elapsed / 60).intValue()
@@ -84,6 +88,3 @@ object main extends App {
     println(now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+":"+now.get(Calendar.SECOND))
   }
 }
-
-
-
