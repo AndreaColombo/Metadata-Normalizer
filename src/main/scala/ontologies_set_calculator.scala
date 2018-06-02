@@ -146,10 +146,12 @@ object ontologies_set_calculator {
     val terms = db_handler.get_term_by_type(t).toSet
 
     val missing = terms.filterNot(terms_full)
+
+    println()
     println(ontos(0)+"\t"+ontos(1)+"\t"+coverage+"\n")
     println(missing.size)
     missing.foreach(println(_))
-
+    println()
   }
 }
 
