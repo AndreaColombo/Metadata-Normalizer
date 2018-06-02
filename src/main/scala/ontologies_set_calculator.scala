@@ -147,7 +147,8 @@ object ontologies_set_calculator {
 
     val missing = terms.filterNot(terms_full)
     println(ontos(0)+"\t"+ontos(1)+"\t"+coverage+"\n")
-    println(missing)
+    println(missing.size)
+    missing.foreach(println(_))
 
   }
 }
