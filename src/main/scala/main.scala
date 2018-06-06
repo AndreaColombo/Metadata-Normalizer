@@ -1,78 +1,124 @@
 import java.io.File
+import java.net.URLDecoder
 import java.util.{Calendar, Date}
 
 import DBcon._
 import com.github.tototoshi.csv._
+import play.api.libs.json.Json
+import scalaj.http.{Http, HttpOptions}
 
 
 object main extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
 
+  var res: List[Map[String,String]] = List()
+
+  var i = 0
 
   override def main(args: Array[String]): Unit = {
 
     val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity","species"), "item" -> List("platform"), "experiment_type" -> List("technique","target","feature"))//, "container" -> List("annotation"))
 
     val d1 = System.currentTimeMillis()
-    //try {
-    //  if (args.nonEmpty) {
-    //    if (args.length > 1 && args(1).equalsIgnoreCase("insert")) {
-    //      for (t <- term_type) {
-    //        val f = new File("best_onto_" + t.replace("_", "-") + ".csv")
-    //        val reader = CSVReader.open(f)
-    //        val insertvalue = reader.all()
-    //        var ok: Seq[(String, String, Double, Double, Double, Double)] = List()
-    //        for (l <- insertvalue) {
-    //          ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble, l(5).toDouble)
-    //        }
-    //        db_handler.insert_best_ontos(ok)
-    //      }
-    //    }
-    //
-    //    if (args.length < 2) {
-    //      val term_type = m.apply(args(0))
-    //      for (t <- term_type) {
-    //        ontologies_set_calculator.calculate_ontology_set(t)
-    //      }
-    //    }
-    //  }
-    //}
-    //    catch {
-    //      case e: Exception => println(e)
-    //        e.printStackTrace()
-    //        e.getCause.printStackTrace()
-    //    }
 
-    //  }
 
-    if(args.nonEmpty && args(0).equals("get")){
-      ontologies_set_calculator.get_set_coverage(args.slice(1,3).toList, args(3))
+    val term = "liver"
+    res = annotator.get_annotation(term,"uberon")
+    for (elem <- res)
+      insert_cose(elem)
+    get_parents()
+  }
+
+  def insert(elem: List[List[String]], table: String, append: Boolean=true) = {
+    val f = new File(""+table+".csv")
+    val writer = CSVWriter.open(f, append)
+    writer.writeAll(elem)
+  }
+
+  def read(table: String): List[List[String]] = {
+    val f = new File(""+table+".csv")
+    val reader = CSVReader.open(f)
+    var elem: List[List[String]] = reader.all()
+    elem
+  }
+
+  def insert_cose (elem: Map[String,String]) = {
+    var insert_elem: List[List[String]] = List()
+    var insert_xref: List[List[String]] = List()
+    var insert_syn: List[List[String]] = List()
+    var insert_parents: List[List[String]] = List()
+
+    val source = elem.apply("source")
+    val code = elem.apply("code")
+    val label = elem.apply("label")
+    var tid = get_tid()
+
+    insert_elem ++= List(List(tid, source, code, label))
+
+
+    //XREF
+    var xref_l:List[String] = List()
+    if (elem.apply("xref") != "null")
+      xref_l = elem.apply("xref").split(",").toList
+
+    insert_xref ++= List(List(tid, source, code))
+
+    for (xref <- xref_l if xref_l.nonEmpty) {
+      val source = xref.split(":").head
+      val code = xref
+      insert_xref ++= List(List(tid, source, code))
     }
-    else {
-      for (tt <- m.keys.toList) {
-        for (t <- m.apply(tt)) {
-          val onto_sets = db_handler.get_onto_sets(t)
-          println(t)
-          for (onto_set <- onto_sets) {
-            var terms_full: Set[String] = Set()
-            var acc = 0.0
-            for (o <- onto_set.split(",")) {
-              val scores = db_handler.get_score_suitability(o, t)
-              val terms = db_handler.get_term_by_ontology(o, t).toSet
-              val termsgood = (terms_full ++ terms).filterNot(terms_full)
-              val weight_suit = termsgood.size * scores._3
-              acc += weight_suit
-              terms_full ++= terms
-            }
-            val new_suit = acc / terms_full.size.toDouble
 
-            db_handler.update_suitability_sets(new_suit, onto_set, t)
-          }
-          val d2 = System.currentTimeMillis()
-          get_elapsed_time(d1, d2)
+    //SYN
+    var syn_l:List[String] = List()
+    if (elem.apply("syn") != "null")
+      syn_l = elem.apply("syn").split(",").toList
+
+    insert_syn ++= List(List(tid, label))
+
+    for (syn <- syn_l if syn_l.nonEmpty) {
+      val label = syn
+      insert_syn ++= List(List(tid, label))
+    }
+
+    insert(insert_elem, "cv_support")
+    insert(insert_xref, "cv_support_xref")
+    insert(insert_syn, "cv_support_syn")
+  }
+
+  def get_parents() = {
+    val elems = read("cv_support")
+    var result: List[List[String]] = List()
+    for(elem <- elems){
+      val child_tid = elem.head
+      val child_code = elem(2)
+      val default:Map[String,String] = Map()
+
+      var parents = res.find(a => a.apply("code")==child_code).get.apply("parents")
+      if(parents!=null) {
+        for(parent <- parents.split(",")) {
+          val parent_tid = elems.find(a => a(2) == parent).getOrElse(List("null")).head
+          if(parent_tid != "null")
+          result :+= List(parent_tid, child_tid, "is_a")
+        }
+      }
+
+      parents = res.find(a => a.apply("code")==child_code).get.apply("part_of")
+      if(parents!=null) {
+        for(parent <- parents.split(",")) {
+          val parent_tid = elems.find(a => a(2) == parent).getOrElse(List("null")).head
+          if(parent_tid != "null")
+            result :+= List(parent_tid, child_tid, "part_of")
         }
       }
     }
+    insert(result,"onto_support_hyp",false)
+  }
+
+  def get_tid(): String = {
+    val tmp = i
+    i += 1
+    tmp.toString
   }
 
   def get_elapsed_time(d1: Long, d2: Long) = {

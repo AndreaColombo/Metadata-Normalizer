@@ -46,7 +46,7 @@ object Tables {
     def score = column[Double]("score")
     def * = (ontology,score)
   }
-1
+
   class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double, Double)](tag, Some("svr"), "best_ontos2"){
     def term_type = column[String]("term_type")
     def ontology_set = column[String]("ontologies_set")
