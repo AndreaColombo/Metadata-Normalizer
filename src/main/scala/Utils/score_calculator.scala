@@ -1,9 +1,8 @@
-import java.io.File
+package Utils
 
-import DBcon.{db_handler, query_handler}
+import DBcon.db_handler
 import play.api.libs.json.Json
 import scalaj.http.{Http, HttpOptions}
-import com.github.tototoshi.csv._
 
 object score_calculator {
 
@@ -54,13 +53,43 @@ object score_calculator {
 
     score
   }
+  def get_match_score (matchType: String, service: String): Int = {
+    var score = 0
+
+    if (service.equalsIgnoreCase("zooma")) {
+      if (matchType.equalsIgnoreCase("HIGH")) score = 10
+      else if (matchType.equalsIgnoreCase("GOOD")) score = 7
+      else if (matchType.equalsIgnoreCase("MEDIUM")) score = 5
+      else if (matchType.equalsIgnoreCase("LOW")) score = 3
+    }
+    else {
+      if (matchType.startsWith("PREF")) {
+        if (matchType.contains("-")) {
+          val lscore = matchType.split("-")
+          score = 10 - lscore(1).drop(1).toInt
+        }
+        else score = 10
+      }
+      else if (matchType.startsWith("SYN")) {
+        if (matchType.contains("-")) {
+          val lscore = matchType.split("-")
+          score = 5 - lscore(1).drop(1).toInt
+        }
+        else score = 5
+      }
+      else score = 1
+    }
+    if(score<0)
+      score = 0
+
+    score
+  }
 
   def calculate_ontology_score(): Unit = {
     var insert: Seq[(String,Double)] = List()
     var score: Seq[Double] = List()
     val onto_recsys = db_handler.get_ontologies()
     println("inizio")
-    main.get_timestamp()
     for (onto <- onto_recsys) {
       val terms = db_handler.get_parsed_by_ontology(onto)
       println(terms.length)
@@ -71,13 +100,11 @@ object score_calculator {
       insert :+= (onto,recsys_score)
     }
     println("ok")
-    main.get_timestamp()
     db_handler.ontology_score_insert(insert)
   }
 
   def calculate_score(): Unit = {
     val range = db_handler.get_db_lenght()
-    main.get_timestamp()
     for (i <- 1 to range){
       val a = db_handler.get_onto_service_termtype(i)
       val onto = a._1
@@ -102,7 +129,6 @@ object score_calculator {
       db_handler.update_score(score1,score2,onto_score.toDouble,match_score,i)
 
     }
-    main.get_timestamp()
 
   }
 

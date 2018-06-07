@@ -39,7 +39,7 @@ object query_handler {
 
     def get_term_type (term: String): String = {
 
-      val db = Database.forConfig("mydb1",conf)
+      val db = Database.forConfig("mydb",conf)
       var term_type = "unknown"
       val query_term = term
       val tissue = sql"""select distinct tissue
@@ -54,7 +54,7 @@ object query_handler {
                 where exists
                 (select *
                 from biosample
-                where disease ilike $query_term)""".as[String]
+                where disease = $query_term)""".as[String]
 
       val cell_line = sql"""select distinct cell_line
                 from biosample

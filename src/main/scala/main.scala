@@ -17,15 +17,14 @@ object main extends App {
 
   override def main(args: Array[String]): Unit = {
 
-    val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity","species"), "item" -> List("platform"), "experiment_type" -> List("technique","target","feature"))//, "container" -> List("annotation"))
 
-    val d1 = System.currentTimeMillis()
+    val term = "b cell lymphoma"
+    res = annotator.get_annotation(term,Utils.Utils.get_ontologies_by_type("disease"))
 
-
-    val term = "liver"
-    res = annotator.get_annotation(term,"uberon")
+    println(res.isEmpty)
     for (elem <- res)
       insert_cose(elem)
+
     get_parents()
   }
 

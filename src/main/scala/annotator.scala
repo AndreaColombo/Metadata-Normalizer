@@ -14,26 +14,30 @@ object annotator {
 
     val response = Http(url).param("q",value).param("fieldList","label,short_form,synonym,ontology_name,iri").param("ontology",ontos).param("rows","5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
     val tmp = OlsParser.parse(response,value,true)
-    val onto = tmp.head(0)
-    val parents = tmp.head(5)
-    val children = tmp.head(6)
-    res :+= (tmp.head.head, tmp.head(1),tmp.head(2),tmp.head(3),tmp.head(4),tmp.head(5),tmp.head(6),tmp.head(7))
+    if (tmp.head.length>5) {
+      val onto = tmp.head(0)
+      val parents = tmp.head(5)
+      val children = tmp.head(6)
+      res :+= (tmp.head.head, tmp.head(1), tmp.head(2), tmp.head(3), tmp.head(4), tmp.head(5), tmp.head(6), tmp.head(7))
 
-    val desc = get_desc(children,onto,0)
-    val anc = get_hyp(parents,onto,0)
+      val desc = get_desc(children, onto, 0)
+      val anc = get_hyp(parents, onto, 0)
 
-    result :+= Map("source"->onto,"code"->tmp.head(1),"label"->tmp.head(2),"xref"->tmp.head(3),"syn"->tmp.head(4),"parents"->tmp.head(5),"part_of"->tmp.head(7))
+      result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7))
 
-    //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
-    //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
+      //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
+      //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
 
-    for (tmp <- anc){
-      result :+= Map("source"->tmp._1,"code"->tmp._2,"label"->tmp._3,"xref"->tmp._4,"syn"->tmp._5,"parents"->tmp._6,"part_of"->tmp._8)
+      for (tmp <- anc) {
+        result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8)
+      }
+
+      for (elem <- desc)
+        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8)
     }
-
-    for(elem<- desc)
-      result :+= Map("source"->elem._1,"code"->elem._2,"label"->elem._3,"xref"->elem._4,"syn"->elem._5,"parents"->elem._6,"part_of"->elem._8)
-
+    else {
+      //insert into table user feedback
+    }
     result
   }
 

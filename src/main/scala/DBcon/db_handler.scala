@@ -205,6 +205,25 @@ object db_handler {
     result.toList
   }
 
+  def get_term_type(term: String): String = {
+    var result = ""
+    val db = Database.forConfig("mydb", conf)
+    val q =
+      sql"""
+           select term_type
+           from svr.apiresults2
+           where raw_value ilike $term
+         """.as[String]
+
+    val result_future = db.run(q).map(
+      a => result = a.head
+    )
+
+    Await.result(result_future, Duration.Inf)
+    db.close()
+    result
+  }
+
   def get_term_by_type(term_type: String): List[String] = {
     var result: Seq[String] = List()
     val db = Database.forConfig("mydb", conf)
