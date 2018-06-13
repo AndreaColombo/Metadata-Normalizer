@@ -1,6 +1,6 @@
 import java.util.Calendar
 
-import DBcon.{db_handler, query_handler}
+import DBcon.{db_handler, gecotest_handler}
 import Ontologies.Ontology
 import Utils.Preprocessing.parse
 
@@ -12,7 +12,7 @@ object db_filler {
   val ols = Ontology.apply("ols")
 
   def update_db (a: String): Unit = {
-    val b = parse(query_handler.run_q1(a)).split(",")
+    val b = parse(gecotest_handler.get_raw_values(a)).split(",")
     for (parsed <- b){
       db_handler.update_term_type(parsed, a)
     }
@@ -20,7 +20,7 @@ object db_filler {
 
   def fill_db (a: String): Unit = {
 
-    val s = parse(query_handler.run_q1(a))
+    val s = parse(gecotest_handler.get_raw_values(a))
 //    val c = s.split(",").filterNot(sd => sd.equalsIgnoreCase("p12")).mkString(",")
 //    val b = c.split(",").filterNot(sd => sd.equalsIgnoreCase("h54")).mkString(",")
     println(a)

@@ -1,5 +1,6 @@
 package DBcon
 
+import javafx.css.ParsedValue
 import slick.jdbc.PostgresProfile.api._
 
 object Tables {
@@ -70,4 +71,42 @@ object Tables {
     def id = column[Int]("id")
     def * = (service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
   }
+
+  class cv_support(tag: Tag) extends Table[(String,String,String)](tag, Some("public"), "cv_support"){
+    def tid = column[Int]("tid")
+    def source = column[String]("source")
+    def code = column[String]("code")
+    def label = column[String]("pref_label")
+    def * = (source,code,label)
+  }
+
+  class cv_support_syn(tag: Tag) extends Table[(Int,String,String)](tag,Some("public"), "cv_support_syn"){
+    def tid = column[Int]("tid")
+    def label = column[String]("label")
+    def ttype = column[String]("type")
+    def * = (tid, label,ttype)
+  }
+
+  class cv_support_xref(tag: Tag) extends Table[(Int,String,String)](tag, Some("public"), "cv_support_xref"){
+    def tid = column[Int]("tid")
+    def source = column[String]("source")
+    def code = column[String]("code")
+    def * = (tid, source, code)
+  }
+
+  class onto_support_hyp(tag: Tag) extends Table[(Int,Int,String)](tag, Some("public"), "onto_support_hyp"){
+    def tid_p = column[Int]("tid_parent")
+    def tid_c = column[Int]("tid_child")
+    def ttype = column[String]("type")
+    def * = (tid_p, tid_c, ttype)
+  }
+
+  class user_feedback(tag: Tag) extends Table[(String, String, String, String)](tag, "user_feedback"){
+    def raw_value = column[String]("raw_value")
+    def parsed_value = column[String]("parsed_value")
+    def label = column[String]("label")
+    def id = column[String]("id")
+    def * = (raw_value, parsed_value, label, id)
+  }
+
 }

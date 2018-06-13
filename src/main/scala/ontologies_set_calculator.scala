@@ -15,9 +15,7 @@ object ontologies_set_calculator {
     var score2 = 0.0
     var suitability = 0.0
     val ontos = db_handler.get_best_onto_per_term(t)
-//    val ontos = Seq(("t1","onto1",List("a","b","c")),("t1","onto2",List("b","c","d","e")),("t1","onto3",List("e")),("t1","onto4",List("c","a","d")))
     val a = db_handler.get_nrv(t)
-//    val a = 5
     println(t + "\n")
 
     val threshold = 0.90

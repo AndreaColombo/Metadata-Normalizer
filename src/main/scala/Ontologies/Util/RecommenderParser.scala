@@ -1,6 +1,6 @@
 package Ontologies.Util
 
-import DBcon.query_handler
+import DBcon.gecotest_handler
 import Ontologies.Util.OlsParser.countWords
 import play.api.libs.json._
 import Utils.Preprocessing.lookup
@@ -63,7 +63,7 @@ object RecommenderParser {
         else score = "SYN"
       }
       if (prefLabel != "null") {
-        val term_type = query_handler.get_term_type(raw_value)
+        val term_type = ""
         //      println(raw_value,parsed_value,ontology,ontology_id,prefLabel,synonym, parsed_value_type)
         rows :+= List(service, raw_value, parsed_value, ontology.map(_.toLower), ontology_id, prefLabel, synonym, score,term_type)
       }

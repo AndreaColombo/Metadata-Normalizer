@@ -1,6 +1,6 @@
 package Ontologies.Util
 
-import DBcon.query_handler
+import DBcon.gecotest_handler
 import play.api.libs.json._
 import scalaj.http.{Http, HttpOptions}
 import Utils.Preprocessing.lookup
@@ -32,7 +32,7 @@ object ZoomaParser {
             val ontology_id = (j4 \ "short_form").validate[String].get
             val id = ontology_id.substring(ontology_id.lastIndexOf("_") + 1)
             val synonym = (j4 \ "synonyms").validate[List[String]].getOrElse(List("null")).mkString(",")
-            val term_type = query_handler.get_term_type(raw_value)
+            val term_type = ""
             //          println(raw_value, parsed_value, ontology, id, prefLabel, synonym, score)
             rows :+= List(service, raw_value, parsed_value, ontology.map(_.toLower), id, prefLabel, synonym, score, term_type)
           }
