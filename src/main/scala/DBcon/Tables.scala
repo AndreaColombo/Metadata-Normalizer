@@ -101,12 +101,17 @@ object Tables {
     def * = (tid_p, tid_c, ttype)
   }
 
-  class user_feedback(tag: Tag) extends Table[(String, String, String, String)](tag, "user_feedback"){
+  class user_feedback(tag: Tag) extends Table[(Int, Boolean, String, String, String, Option[String], Option[String], Option[String], Option[String])](tag, "user_feedback"){
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+    def table_name = column[String]("table_name")
+    def column_name = column[String]("column_name")
     def raw_value = column[String]("raw_value")
-    def parsed_value = column[String]("parsed_value")
-    def label = column[String]("label")
-    def id = column[String]("id")
-    def * = (raw_value, parsed_value, label, id)
+    def parsed_value = column[Option[String]]("parsed_value")
+    def label = column[Option[String]]("label")
+    def source = column[Option[String]]("source")
+    def code = column[Option[String]]("code")
+    def resolved = column[Boolean]("resolved", O.Default(false))
+    def * = (id, resolved, table_name, column_name, raw_value, parsed_value, label, source, code)
   }
 
 }

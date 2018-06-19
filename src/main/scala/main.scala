@@ -23,7 +23,7 @@ object main extends App {
       for (term <- term_l) {
         println(term)
         var cv_support: List[List[String]] = List()
-        res = annotator.get_annotation(term, term_type)
+        res = annotator.get_annotation(term, args(0), term_type)
         if(res.nonEmpty){
           for (elem <- res) {
             cv_support ++= insert_cose(elem, term)

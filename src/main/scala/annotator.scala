@@ -1,3 +1,5 @@
+import java.sql.BatchUpdateException
+
 import DBcon.gecotest_handler
 import Ontologies.Util.OlsParser
 import Utils.Preprocessing
@@ -9,12 +11,13 @@ object annotator {
   val max_depth = 2
   val url = "https://www.ebi.ac.uk/ols/api/search"
 
-  def get_annotation(value: String, term_type: String): List[Map[String,String]] = {
+  def get_annotation(value: String, type_table_name: String, term_type: String): List[Map[String,String]] = {
     var res: List[(String, String, String, String, String, String, String, String)] = List()
     var result: List[Map[String, String]] = List()
     val ontos = Utils.Utils.get_ontologies_by_type(term_type)
     val response = Http(url).param("q", value).param("fieldList", "label,short_form,synonym,ontology_name,iri").param("ontology", ontos).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-    val tmp = OlsParser.annotate(response, value, ontos.contains("ncit"), term_type)
+    val tmp = OlsParser.annotate(response, value, type_table_name, term_type)
+
     if (tmp.nonEmpty) {
       if (tmp.head.last == "GOOD") {
         println("good")
@@ -42,7 +45,13 @@ object annotator {
         println("user feedback")
       }
     }
-    else println("non trovato")
+    else {
+      println("non trovato")
+      try gecotest_handler.user_feedback(List(List(type_table_name,term_type,value,null,null,null,null)))
+      catch {
+        case e: BatchUpdateException => e.getNextException.printStackTrace()
+      }
+    }
     result.distinct
   }
 
@@ -51,8 +60,7 @@ object annotator {
     var result: List[(String, String, String, String, String, String, String, String)] = List()
     for(value <- children.split(",")) {
       if (value != "null") {
-        val response = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$onto/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F"+value).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-        val res = OlsParser.annotate(response)
+        val res = OlsParser.enrich(value,onto)
         result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5),res.head(6), res.head(7))
         val n = depth + 1
         if (n != max_depth)
@@ -67,8 +75,7 @@ object annotator {
     var result: List[(String, String, String, String, String, String, String, String)] = List()
     for(value <- parents.split(",")) {
       if (value != "null") {
-        val response = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$onto/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F"+value).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-        val res = OlsParser.annotate(response)
+        val res = OlsParser.enrich(value,onto)
         result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5),res.head(6), res.head(7))
         val n = depth + 1
         if (n != max_depth)

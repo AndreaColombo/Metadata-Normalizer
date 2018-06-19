@@ -3,8 +3,10 @@ package DBcon
 import scala.concurrent._
 import slick.jdbc.PostgresProfile.api._
 import java.io._
+import java.util.Spliterator.OfPrimitive
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import Tables.{cv_support,cv_support_syn,cv_support_xref,onto_support_hyp, user_feedback}
+import Tables.{cv_support, cv_support_syn, cv_support_xref, onto_support_hyp, user_feedback}
 
 import scala.concurrent.duration.Duration
 import com.typesafe.config.ConfigFactory
@@ -21,7 +23,7 @@ object gecotest_handler {
 
   val db = Database.forConfig("gecotest1", conf)
   val setup_user_fb = user_feedback.schema.create
-  db.run(setup_user_fb)
+  Await.result(db.run(setup_user_fb), Duration.Inf)
 
   def cv_support_insert(rows: List[List[String]]): Unit = {
 
@@ -91,13 +93,14 @@ object gecotest_handler {
   }
 
   def user_feedback(rows: List[List[String]]): Unit = {
-    var ok: Seq[(String, String, String, String)] = Seq()
+    var ok: Seq[(String, String, String, Option[String], Option[String], Option[String], Option[String])] = Seq()
 
     for (l <- rows) {
-      ok :+= (l(0), l(1), l(2), l(3))
+      ok :+= (l(0), l(1), l(2), Option(l(3)), Option(l(4)), Option(l(5)), Option(l(6)))
     }
     val db = Database.forConfig("gecotest1", conf)
-    val insertAction = user_feedback ++= ok
+    val insertAction = user_feedback.map(a=>(a.column_name,a.table_name,a.raw_value,a.parsed_value,a.label,a.source,a.code))++=ok
+
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
     db.close()
@@ -107,7 +110,6 @@ object gecotest_handler {
     val db = Database.forConfig("gecotest1", conf)
     var result: Seq[String]= List()
     val t = term_type
-
 
     val m = Map("biosample" -> List("disease","tissue","cell_line"),"donor"->List("ethnicity","species"),"item"->List("platform"),"experiment_type"->List("technique","feature","target"),"container"->List("annotation"))
 
