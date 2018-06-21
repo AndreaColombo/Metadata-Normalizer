@@ -114,4 +114,15 @@ object Tables {
     def * = (id, resolved, table_name, column_name, raw_value, parsed_value, label, source, code)
   }
 
+  class user_changes(tag: Tag) extends Table[(Int, String, String, String, String, String, String)](tag, "user_requested_changes"){
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+    def table_name = column[String]("table_name")
+    def column_name = column[String]("column_name")
+    def raw_value = column[String]("raw_value")
+    def source = column[String]("source")
+    def code = column[String]("code")
+    def label = column[String]("label")
+    def * = (id, table_name, column_name, raw_value, source, code, label)
+  }
+
 }

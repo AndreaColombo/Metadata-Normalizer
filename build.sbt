@@ -13,3 +13,4 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" %% "slick-hikaricp" % "3.2.1"
 )
 libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.3.5"
+libraryDependencies += "com.github.wookietreiber" %% "scala-cli-tools" % "0.2.0"

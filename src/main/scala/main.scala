@@ -4,6 +4,7 @@ import java.sql.BatchUpdateException
 import java.util.{Calendar, Date}
 
 import DBcon._
+import user_selection._
 import com.github.tototoshi.csv._
 import play.api.libs.json.Json
 import scalaj.http.{Http, HttpOptions}
@@ -11,27 +12,31 @@ import scalaj.http.{Http, HttpOptions}
 
 object main extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
-
   var i = 0
 
   override def main(args: Array[String]): Unit = {
+    gecotest_handler.init()
     val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity", "species"), "item" -> List("platform"), "experiment_type" -> List("technique", "target", "feature"))
     var res: List[Map[String, String]] = List()
-    val t = m.apply(args(0))
-    for (term_type <- t) {
-      val term_l = gecotest_handler.get_raw_values(term_type)
-      for (term <- term_l) {
-        println(term)
-        var cv_support: List[List[String]] = List()
-        res = annotator.get_annotation(term, args(0), term_type)
-        if(res.nonEmpty){
-          for (elem <- res) {
-            cv_support ++= insert_cose(elem, term)
+    if(args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))
+      user_selection.get_user_selection()
+    else {
+      val t = m.apply(args(0))
+      for (term_type <- t) {
+        val term_l = gecotest_handler.get_raw_values(term_type)
+        for (term <- term_l) {
+          println(term)
+          var cv_support: List[List[String]] = List()
+          res = annotator.get_annotation(term, args(0), term_type)
+          if (res.nonEmpty) {
+            for (elem <- res) {
+              cv_support ++= insert_cose(elem, term)
+            }
+            val label = res.head.apply("label")
+            val tid = gecotest_handler.get_tid(label)
+            gecotest_handler.syn_insert(List(List(tid.toString, term, "raw")))
+            get_parents(cv_support, res)
           }
-          val label = res.head.apply("label")
-          val tid = gecotest_handler.get_tid(label)
-          gecotest_handler.syn_insert(List(List(tid.toString, term, "raw")))
-          get_parents(cv_support, res)
         }
       }
     }
