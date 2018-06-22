@@ -14,3 +14,5 @@ libraryDependencies ++= Seq(
 )
 libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.3.5"
 libraryDependencies += "com.github.wookietreiber" %% "scala-cli-tools" % "0.2.0"
+libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.11.0"
+libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.11.0"

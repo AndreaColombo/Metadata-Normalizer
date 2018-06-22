@@ -1,4 +1,5 @@
 import DBcon.gecotest_handler
+import Enrichment_engine.annotator
 import scalaj.http.{Http, HttpOptions}
 
 import scala.io._
@@ -29,7 +30,7 @@ object user_selection {
             val user_choice = input_source_code()
             val source = user_choice._1
             val code = user_choice._2
-            val prefLabel = annotator.get_info(code,source).head(2)
+            val prefLabel = annotator.ols_get_info(code,source).head(2)
             //INSERT IN USER REQUESTED CHOICE
             gecotest_handler.insert_user_changes(table_name, column_name, rv, source, code, prefLabel)
           }
@@ -42,7 +43,7 @@ object user_selection {
               val user_choice = input_source_code()
               val source = user_choice._1
               val code = user_choice._2
-              val prefLabel = annotator.get_info(code,source).head(2)
+              val prefLabel = annotator.ols_get_info(code,source).head(2)
               //INSERT IN USER REQUESTED CHOICE
               gecotest_handler.insert_user_changes(table_name, column_name, rv, source, code, prefLabel)
             }

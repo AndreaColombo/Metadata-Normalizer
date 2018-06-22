@@ -1,60 +1,99 @@
+package Enrichment_engine
+
 import java.net.URLEncoder
 import java.sql.BatchUpdateException
 
 import DBcon.gecotest_handler
-import Ontologies.Util.OlsParser
 import Ontologies.Util.OlsParser.get_score
 import Utils.Preprocessing
 import Utils.score_calculator.get_match_score
 import play.api.libs.json.Json
 import scalaj.http._
-import com.github.tototoshi.csv._
+import util.control.Breaks._
 
 object annotator {
   val max_depth = 2
   val url = "https://www.ebi.ac.uk/ols/api/search"
 
-  def get_annotation(value: String, type_table_name: String, term_type: String): List[Map[String, String]] = {
-    var res: List[(String, String, String, String, String, String, String, String)] = List()
+  def get_info(source: String, code: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
-    val ontos = Utils.Utils.get_ontologies_by_type(term_type)
-    val response = Http(url).param("q", value).param("fieldList", "label,short_form,synonym,ontology_name,iri").param("ontology", ontos).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-    val tmp = search_term(response, value, type_table_name, term_type)
-
+    var res: List[(String, String, String, String, String, String, String, String)] = List()
+    val tmp = ols_get_info(code,source)
     if (tmp.nonEmpty) {
-      if (tmp.head.last == "GOOD") {
-        println("good")
-        val onto = tmp.head(0)
-        val parents = tmp.head(5)
-        val children = tmp.head(6)
-        res :+= (tmp.head.head, tmp.head(1), tmp.head(2), tmp.head(3), tmp.head(4), tmp.head(5), tmp.head(6), tmp.head(7))
+      println("good")
+      val onto = tmp.head(0)
+      val parents = tmp.head(5)
+      val children = tmp.head(6)
+      res :+= (tmp.head.head, tmp.head(1), tmp.head(2), tmp.head(3), tmp.head(4), tmp.head(5), tmp.head(6), tmp.head(7))
 
-        val desc = get_desc(children, onto, 0)
-        val anc = get_hyp(parents, onto, 0)
-        result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7))
+      val desc = get_desc(children, onto, 0)
+      val anc = get_hyp(parents, onto, 0)
+      result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7))
 
         //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
         //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
 
-        for (tmp <- anc) {
-          result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8)
-        }
+      for (tmp <- anc) {
+        result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8)
+      }
 
-        for (elem <- desc)
-          result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8)
+      for (elem <- desc)
+        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8)
+    }
+
+    result.distinct
+  }
+
+  def search_term(raw_value: String, type_table_name: String, term_type: String): List[Map[String, String]] = {
+    var res: List[(String, String, String, String, String, String, String, String)] = List()
+    var result: List[Map[String, String]] = List()
+    val ontos = Utils.Utils.get_ontologies_by_type(term_type).split(",")
+
+    for (onto <- ontos){
+      val response = Http(url).param("q", raw_value).param("fieldList", "label,short_form,synonym,ontology_name,iri").param("ontology", ontos.mkString(",")).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+      val tmp = ols_search_term(response, raw_value, type_table_name, term_type)
+      breakable {
+        if (tmp.isEmpty)
+          break()
+        if (tmp.head.last != "GOOD")
+          break()
+        else {
+          println("good")
+          val onto = tmp.head(0)
+          val parents = tmp.head(5)
+          val children = tmp.head(6)
+          res :+= (tmp.head.head, tmp.head(1), tmp.head(2), tmp.head(3), tmp.head(4), tmp.head(5), tmp.head(6), tmp.head(7))
+
+          val desc = get_desc(children, onto, 0)
+          val anc = get_hyp(parents, onto, 0)
+          result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7))
+
+          //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
+          //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
+
+          for (tmp <- anc) {
+            result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8)
+          }
+
+          for (elem <- desc) {
+            result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8)
+          }
+        }
+      }
+    }
+
+    if(result.isEmpty) {
+      var user_feedback: List[List[String]] = List()
+      if ({user_feedback = get_user_feedback(raw_value, term_type, type_table_name); user_feedback.nonEmpty}) {
+        println("user feedback")
+        gecotest_handler.user_feedback(user_feedback)
       }
       else {
-        gecotest_handler.user_feedback(tmp)
-        println("user feedback")
+        println("not found")
+        gecotest_handler.user_feedback(List(List(type_table_name, term_type, raw_value, null, null, null, null)))
       }
     }
-    else {
-      println("non trovato")
-      try gecotest_handler.user_feedback(List(List(type_table_name, term_type, value, null, null, null, null)))
-      catch {
-        case e: BatchUpdateException => e.getNextException.printStackTrace()
-      }
-    }
+
     result.distinct
   }
 
@@ -62,7 +101,7 @@ object annotator {
     var result: List[(String, String, String, String, String, String, String, String)] = List()
     for (value <- children.split(",")) {
       if (value != "null") {
-        val res = get_info(value, onto)
+        val res = ols_get_info(value, onto)
         result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7))
         val n = depth + 1
         if (n != max_depth)
@@ -78,7 +117,7 @@ object annotator {
     var result: List[(String, String, String, String, String, String, String, String)] = List()
     for (value <- parents.split(",")) {
       if (value != "null") {
-        val res = get_info(value, onto)
+        val res = ols_get_info(value, onto)
         result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7))
         val n = depth + 1
         if (n != max_depth)
@@ -90,7 +129,7 @@ object annotator {
     result
   }
 
-  def get_info(value: String, onto: String): List[List[String]] = {
+  def ols_get_info(value: String, onto: String): List[List[String]] = {
     var rows: Seq[List[String]] = List()
     val response = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$onto/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F" + value).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
     if (!response.header("status").get.contains("200")) {
@@ -139,7 +178,7 @@ object annotator {
     rows.toList.distinct
   }
 
-  def search_term(response: String, term: String, type_table_name: String, term_type: String): List[List[String]] = {
+  def ols_search_term(response: String, term: String, type_table_name: String, term_type: String): List[List[String]] = {
     var max_score = 0
     var rows: Seq[List[String]] = List()
     val j = (Json.parse(response) \ "response").get("docs")
@@ -158,26 +197,28 @@ object annotator {
       if (score_num > 6 && score_num > max_score) {
         ok = true
         max_score = score_num
-        rows = get_info(ontology_id, ontology)
-      }
-    }
-    //USER FEEDBACK
-    if (!ok) {
-      val parsed = Preprocessing.parse(List(term)).split(",")
-      for (value <- parsed) {
-        val ontologies = Utils.Utils.get_ontologies_by_type(term_type)
-        val url = "https://www.ebi.ac.uk/ols/api/search"
-        val response = Http(url).param("q", value).param("fieldList", "label,short_form,ontology_name").param("ontology", ontologies).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-        val json = (Json.parse(response) \ "response").get("docs")
-        for (k <- (json \\ "label").indices) {
-          val jj = json(k)
-          val label = (jj \ "label").validate[String].get
-          val id = (jj \ "short_form").validate[String].get
-          val onto = (jj \ "ontology_name").validate[String].get
-          rows :+= List(type_table_name, term_type, term, value, label, onto, id)
-        }
+        rows = ols_get_info(ontology_id, ontology)
       }
     }
     rows.toList
+  }
+
+  def get_user_feedback(raw_value: String, term_type: String, table_name: String): List[List[String]] = {
+    var rows: List[List[String]] = List()
+    val parsed = Preprocessing.parse(List(raw_value)).split(",")
+    for (value <- parsed) {
+      val ontologies = Utils.Utils.get_ontologies_by_type(term_type)
+      val url = "https://www.ebi.ac.uk/ols/api/search"
+      val response = Http(url).param("q", value).param("fieldList", "label,short_form,ontology_name").param("ontology", ontologies).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+      val json = (Json.parse(response) \ "response").get("docs")
+      for (k <- (json \\ "label").indices) {
+        val jj = json(k)
+        val label = (jj \ "label").validate[String].get
+        val id = (jj \ "short_form").validate[String].get
+        val onto = (jj \ "ontology_name").validate[String].get
+        rows :+= List(table_name, term_type, raw_value, value, label, onto, id)
+      }
+    }
+    rows.distinct
   }
 }

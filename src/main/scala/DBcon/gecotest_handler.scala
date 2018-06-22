@@ -14,7 +14,7 @@ import slick.jdbc.meta.MTable
 
 object gecotest_handler {
   private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/DBcon/application.conf"))
-  private val conf= ConfigFactory.load(parsedConfig)
+  private val conf = ConfigFactory.load(parsedConfig)
 
   private val cv_support = TableQuery[cv_support]
   private val cv_support_syn = TableQuery[cv_support_syn]
@@ -24,16 +24,16 @@ object gecotest_handler {
   private val user_changes = TableQuery[user_changes]
 
   def init(): Unit = {
-    val db = Database.forConfig("gecotest1", conf)
+    val db = get_db()
     val tables = List(user_changes, user_feedback)
     val existing = db.run(MTable.getTables)
-    val f = existing.flatMap( v => {
+    val f = existing.flatMap(v => {
       val names = v.map(mt => mt.name.name)
-      val createIfNotExist = tables.filter( table =>
+      val createIfNotExist = tables.filter(table =>
         (!names.contains(table.baseTableRow.tableName))).map(_.schema.create)
       db.run(DBIO.sequence(createIfNotExist))
     })
-    Await.result(f,Duration.Inf)
+    Await.result(f, Duration.Inf)
 
     db.close()
   }
@@ -44,7 +44,7 @@ object gecotest_handler {
     for (l <- rows) {
       ok :+= (l(0), l(1), l(2))
     }
-    val db = Database.forConfig("gecotest1", conf)
+    val db = get_db()
     val insertAction = cv_support ++= ok
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
@@ -57,7 +57,7 @@ object gecotest_handler {
     for (l <- rows) {
       ok :+= (l(0).toInt, l(1), l(2))
     }
-    val db = Database.forConfig("gecotest1", conf)
+    val db = get_db()
     val insertAction = cv_support_syn ++= ok
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
@@ -70,7 +70,7 @@ object gecotest_handler {
     for (l <- rows) {
       ok :+= (l(0).toInt, l(1), l(2))
     }
-    val db = Database.forConfig("gecotest1", conf)
+    val db = get_db()
     val insertAction = cv_support_xref ++= ok
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
@@ -83,7 +83,7 @@ object gecotest_handler {
     for (l <- rows) {
       ok :+= (l(0).toInt, l(1).toInt, l(2))
     }
-    val db = Database.forConfig("gecotest1", conf)
+    val db = get_db()
     val insertAction = onto_support_hyp ++= ok
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
@@ -93,10 +93,10 @@ object gecotest_handler {
 
   def get_tid(label: String): Int = {
 
-    val db = Database.forConfig("gecotest1", conf)
+    val db = get_db()
 
     var tid = 0
-    val q = cv_support.filter(_.label===label).map(_.tid)
+    val q = cv_support.filter(_.label === label).map(_.tid)
 
     val resultfuture = db.run(q.result).map(a => tid = a.head)
 
@@ -106,10 +106,10 @@ object gecotest_handler {
   }
 
   def get_user_feedback_raw_values(table_name: String, column_name: String): List[String] = {
-    val db = Database.forConfig("gecotest1", conf)
-    var result: List[String]= List()
+    val db = get_db()
+    var result: List[String] = List()
 
-    val q = user_feedback.filter(t => t.table_name===table_name && t.column_name===column_name).map(_.raw_value).result
+    val q = user_feedback.filter(t => t.table_name === table_name && t.column_name === column_name).map(_.raw_value).result
 
 
     val result_future = db.run(q).map(a => result = a.toList.distinct)
@@ -120,10 +120,10 @@ object gecotest_handler {
   }
 
   def get_user_feedback_infos(raw_value: String): List[(String, String, String, String, String, String, String)] = {
-    val db = Database.forConfig("gecotest1", conf)
-    var result: List[(String, String, String, String, String, String, String)]= List()
+    val db = get_db()
+    var result: List[(String, String, String, String, String, String, String)] = List()
 
-    val q = user_feedback.filter(t => t.raw_value===raw_value && t.code != null).map(t => (t.table_name, t.column_name, t.raw_value, t.parsed_value.getOrElse("null"), t.label.getOrElse("null"), t.source.getOrElse("null"), t.code.getOrElse("null"))).result
+    val q = user_feedback.filter(t => t.raw_value === raw_value && t.code != null).map(t => (t.table_name, t.column_name, t.raw_value, t.parsed_value.getOrElse("null"), t.label.getOrElse("null"), t.source.getOrElse("null"), t.code.getOrElse("null"))).result
 
 
     val result_future = db.run(q).map(a => result = a.toList)
@@ -140,8 +140,8 @@ object gecotest_handler {
     for (l <- rows) {
       ok :+= (l(0), l(1), l(2), Option(l(3)), Option(l(4)), Option(l(5)), Option(l(6)))
     }
-    val db = Database.forConfig("gecotest1", conf)
-    val insertAction = user_feedback.map(a=>(a.table_name,a.column_name,a.raw_value,a.parsed_value,a.label,a.source,a.code))++=ok
+    val db = get_db()
+    val insertAction = user_feedback.map(a => (a.table_name, a.column_name, a.raw_value, a.parsed_value, a.label, a.source, a.code)) ++= ok
 
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
@@ -149,23 +149,25 @@ object gecotest_handler {
   }
 
   def get_raw_values(term_type: String): List[String] = {
-    val db = Database.forConfig("gecotest1", conf)
-    var result: Seq[String]= List()
+    val db = get_db()
+    var result: Seq[String] = List()
     val t = term_type
 
-    val m = Map("biosample" -> List("disease","tissue","cell_line"),"donor"->List("ethnicity","species"),"item"->List("platform"),"experiment_type"->List("technique","feature","target"),"container"->List("annotation"))
+    val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity", "species"), "item" -> List("platform"), "experiment_type" -> List("technique", "feature", "target"), "container" -> List("annotation"))
 
-    val default = (-1,"")
+    val default = (-1, "")
     val table = m.find(_._2.contains(t)).getOrElse(default)._1.toString
+    val type_tid = t + "_tid"
 
     val q =
-    sql"""select distinct #$t
+      sql"""select distinct #$t
            from #$table
-           where #$t IS NOT NULL
+           where #$t IS NOT NULL AND
+           #$type_tid IS NULL
          """.as[String]
     try {
       val result_future = db.run(q).map(_.foreach(a =>
-      result:+=a))
+        result :+= a))
       Await.result(result_future, Duration.Inf)
     }
     finally db.close()
@@ -173,12 +175,43 @@ object gecotest_handler {
   }
 
   def insert_user_changes(rows: (String, String, String, String, String, String)): Unit = {
-    val db = Database.forConfig("gecotest1", conf)
-    val insertAction = user_changes.map(a=>(a.table_name,a.column_name,a.raw_value,a.source,a.code,a.label))++=Seq(rows)
-
+    val db = get_db()
+    val insertAction = user_changes.map(a => (a.table_name, a.column_name, a.raw_value, a.source, a.code, a.label)) ++= Seq(rows)
     val insert = db.run(insertAction)
+
     Await.result(insert, Duration.Inf)
     db.close()
   }
+
+
+  def get_raw_in_cv_support_syn(raw_value: String): Int = {
+    var result = -1
+    val db = get_db()
+    val q = cv_support_syn.filter(a => (a.label === raw_value && a.ttype === "raw")).map(_.tid)
+    val f = db.run(q.result).map(a =>
+      if (a.nonEmpty)
+        result = a.head
+    )
+    Await.result(f, Duration.Inf)
+    db.close()
+    result
+  }
+
+  def update_tid(raw_value: String): Unit = ???
+
+  def get_raw_user_changes(table_name: String, column_name: String, raw_value: String): (String, String) = {
+    val db = get_db()
+    var result = ("null","null")
+    val q = user_changes.filter(a=>(a.table_name===table_name && a.column_name===column_name && a.raw_value===raw_value)).map(a=>(a.source,a.code))
+    val f = db.run(q.result).map(a=>
+      if(a.nonEmpty)
+        result=a.head
+    )
+    Await.result(f, Duration.Inf)
+    db.close()
+    result
+  }
+
+  protected def get_db(): Database = Database.forConfig("gecotest1",conf)
 
 }
