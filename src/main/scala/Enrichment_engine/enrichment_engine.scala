@@ -20,7 +20,9 @@ object enrichment_engine {
         if(tid != -1)
           gecotest_handler.update_tid(raw_value)
         else if({tuple=gecotest_handler.get_raw_user_changes(table_name,term_type,raw_value); !tuple._1.equals("null")}) {
+          //CERCA
           db_interface(annotator.get_info(tuple._1,tuple._2))
+
         }
         else {
           db_interface(annotator.search_term(raw_value,table_name,term_type),raw_value)

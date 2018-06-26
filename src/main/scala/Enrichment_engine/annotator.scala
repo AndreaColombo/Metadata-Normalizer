@@ -30,8 +30,8 @@ object annotator {
       val anc = get_hyp(parents, onto, 0)
       result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7))
 
-        //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
-        //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
+      //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
+      //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
 
       for (tmp <- anc) {
         result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8)
@@ -40,7 +40,6 @@ object annotator {
       for (elem <- desc)
         result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8)
     }
-
     result.distinct
   }
 
@@ -81,7 +80,6 @@ object annotator {
         }
       }
     }
-
     if(result.isEmpty) {
       var user_feedback: List[List[String]] = List()
       if ({user_feedback = get_user_feedback(raw_value, term_type, type_table_name); user_feedback.nonEmpty}) {
