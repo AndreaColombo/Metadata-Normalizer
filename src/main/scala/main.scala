@@ -2,15 +2,13 @@ import java.util.{Calendar, Date}
 
 import DBcon.gecotest_handler
 import Enrichment_engine.enrichment_engine
-import org.apache.logging.log4j.Logger
 
 object main extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
   var i = 0
 
   override def main(args: Array[String]): Unit = {
-    var tuple = ("", "")
-
+    gecotest_handler.init()
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))
         user_selection.get_user_selection()
@@ -21,7 +19,7 @@ object main extends App {
     }
   }
 
-  def get_elapsed_time(d1: Long, d2: Long) = {
+  def get_elapsed_time(d1: Long, d2: Long): Unit = {
     val elapsed:Double = (d2-d1).toDouble / 1000
     val min: Double = (elapsed / 60).intValue()
     val sec: Double = (((elapsed / 60) - min) * 60).intValue
@@ -29,7 +27,7 @@ object main extends App {
     println(min.toInt + ":" + sec.toInt + ":" + millis.toInt)
   }
 
-  def get_timestamp() = {
+  def get_timestamp(): Unit = {
     val now = Calendar.getInstance()
     println(now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+":"+now.get(Calendar.SECOND))
   }

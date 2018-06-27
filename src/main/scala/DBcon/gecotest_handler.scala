@@ -3,34 +3,34 @@ package DBcon
 import scala.concurrent._
 import slick.jdbc.PostgresProfile.api._
 import java.io._
-import java.util.Spliterator.OfPrimitive
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import Tables._
+import Tables.{cv_support,cv_support_syn,cv_support_xref,onto_support_hyp,user_changes,user_feedback}
 
 import scala.concurrent.duration.Duration
 import com.typesafe.config.ConfigFactory
 import slick.jdbc.meta.MTable
 
+
 object gecotest_handler {
   private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/DBcon/application.conf"))
   private val conf = ConfigFactory.load(parsedConfig)
 
-  private val cv_support = TableQuery[cv_support]
-  private val cv_support_syn = TableQuery[cv_support_syn]
-  private val cv_support_xref = TableQuery[cv_support_xref]
-  private val onto_support_hyp = TableQuery[onto_support_hyp]
-  private val user_feedback = TableQuery[user_feedback]
-  private val user_changes = TableQuery[user_changes]
+  private var _db_name = "gecotest1"
+  def db_name: String = _db_name
+  def set_db_name(value: String): Unit = _db_name = value
+
+  protected def get_db(): Database = Database.forConfig(_db_name, conf)
 
   def init(): Unit = {
     val db = get_db()
-    val tables = List(user_changes, user_feedback)
+    val tables = List(cv_support,cv_support_syn,cv_support_xref,onto_support_hyp,user_changes, user_feedback)
     val existing = db.run(MTable.getTables)
     val f = existing.flatMap(v => {
       val names = v.map(mt => mt.name.name)
       val createIfNotExist = tables.filter(table =>
-        (!names.contains(table.baseTableRow.tableName))).map(_.schema.create)
+        !names.contains(table.baseTableRow.tableName)
+      ).map(_.schema.create)
       db.run(DBIO.sequence(createIfNotExist))
     })
     Await.result(f, Duration.Inf)
@@ -45,7 +45,7 @@ object gecotest_handler {
       ok :+= (l(0), l(1), l(2))
     }
     val db = get_db()
-    val insertAction = cv_support ++= ok
+    val insertAction = cv_support.map(a=> (a.source,a.code,a.label)) ++= ok
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
     db.close()
@@ -134,7 +134,7 @@ object gecotest_handler {
   }
 
 
-  def user_feedback(rows: List[List[String]]): Unit = {
+  def user_feedback_insert(rows: List[List[String]]): Unit = {
     var ok: Seq[(String, String, String, Option[String], Option[String], Option[String], Option[String])] = Seq()
 
     for (l <- rows) {
@@ -160,14 +160,14 @@ object gecotest_handler {
     val type_tid = t + "_tid"
 
     val q =
-      sql"""select distinct #$t
+    sql"""select distinct #$t
            from #$table
            where #$t IS NOT NULL AND
            #$type_tid IS NULL
          """.as[String]
     try {
       val result_future = db.run(q).map(_.foreach(a =>
-        result :+= a))
+      result :+= a))
       Await.result(result_future, Duration.Inf)
     }
     finally db.close()
@@ -187,31 +187,30 @@ object gecotest_handler {
   def get_raw_in_cv_support_syn(raw_value: String): Int = {
     var result = -1
     val db = get_db()
-    val q = cv_support_syn.filter(a => (a.label === raw_value && a.ttype === "raw")).map(_.tid)
+    val q = cv_support_syn.filter(a => a.label === raw_value && a.ttype === "raw").map(_.tid)
     val f = db.run(q.result).map(a =>
-      if (a.nonEmpty)
-        result = a.head
+    if (a.nonEmpty)
+    result = a.head
     )
     Await.result(f, Duration.Inf)
     db.close()
     result
   }
 
-  def update_tid(raw_value: String): Unit = ???
+  def update_tid(raw_value: String): Unit = print()
 
   def get_raw_user_changes(table_name: String, column_name: String, raw_value: String): (String, String) = {
     val db = get_db()
     var result = ("null","null")
-    val q = user_changes.filter(a=>(a.table_name===table_name && a.column_name===column_name && a.raw_value===raw_value)).map(a=>(a.source,a.code))
+    val q = user_changes.filter(a=>a.table_name===table_name && a.column_name===column_name && a.raw_value===raw_value).map(a=>(a.source,a.code))
     val f = db.run(q.result).map(a=>
-      if(a.nonEmpty)
-        result=a.head
+    if(a.nonEmpty)
+    result=a.head
     )
     Await.result(f, Duration.Inf)
     db.close()
     result
   }
 
-  protected def get_db(): Database = Database.forConfig("gecotest1",conf)
 
 }

@@ -84,11 +84,11 @@ object annotator {
       var user_feedback: List[List[String]] = List()
       if ({user_feedback = get_user_feedback(raw_value, term_type, type_table_name); user_feedback.nonEmpty}) {
         println("user feedback")
-        gecotest_handler.user_feedback(user_feedback)
+        gecotest_handler.user_feedback_insert(user_feedback)
       }
       else {
         println("not found")
-        gecotest_handler.user_feedback(List(List(type_table_name, term_type, raw_value, null, null, null, null)))
+        gecotest_handler.user_feedback_insert(List(List(type_table_name, term_type, raw_value, null, null, null, null)))
       }
     }
 

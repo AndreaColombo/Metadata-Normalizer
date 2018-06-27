@@ -1,6 +1,7 @@
 package DBcon
 
 import javafx.css.ParsedValue
+import slick.ast.ColumnOption.Unique
 import slick.jdbc.PostgresProfile.api._
 
 object Tables {
@@ -72,34 +73,55 @@ object Tables {
     def * = (service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
   }
 
-  class cv_support(tag: Tag) extends Table[(String,String,String)](tag, Some("public"), "cv_support"){
-    def tid = column[Int]("tid")
+  class cv_support(tag: Tag) extends Table[(Int, String,String,String)](tag, Some("public"), "cv_support"){
+    def tid = column[Int]("tid", O.AutoInc, O.PrimaryKey)
     def source = column[String]("source")
     def code = column[String]("code")
     def label = column[String]("pref_label")
-    def * = (source,code,label)
+
+    def idx = index("cv_support_source_code_key",(source,code),unique = true)
+
+    def * = (tid, source,code,label)
   }
+  val cv_support = TableQuery[cv_support]
 
   class cv_support_syn(tag: Tag) extends Table[(Int,String,String)](tag,Some("public"), "cv_support_syn"){
     def tid = column[Int]("tid")
     def label = column[String]("label")
     def ttype = column[String]("type")
+
+    def pk = primaryKey("cv_support_syn_pkey", (tid,label,ttype))
+    def fk = foreignKey("cv_cvs_fk",tid, cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
+    def idx = index("syn_label_idx", label)
+
     def * = (tid, label,ttype)
   }
+  val cv_support_syn = TableQuery[cv_support_syn]
 
   class cv_support_xref(tag: Tag) extends Table[(Int,String,String)](tag, Some("public"), "cv_support_xref"){
     def tid = column[Int]("tid")
     def source = column[String]("source")
     def code = column[String]("code")
+
+    def pk = primaryKey("cv_support_xref_pley", (tid, source, code))
+    def fk = foreignKey("cv_cvx_fk",tid, cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
+
     def * = (tid, source, code)
   }
+  val cv_support_xref = TableQuery[cv_support_xref]
 
   class onto_support_hyp(tag: Tag) extends Table[(Int,Int,String)](tag, Some("public"), "onto_support_hyp"){
     def tid_p = column[Int]("tid_parent")
     def tid_c = column[Int]("tid_child")
     def ttype = column[String]("type")
+
+    def pk = primaryKey("onto_support_hyp_pkey",(tid_p,tid_c,ttype))
+    def fk_p = foreignKey("cv_ohp_fk",tid_p,cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
+    def fk_c = foreignKey("cv_ohc_fk",tid_c,cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
+
     def * = (tid_p, tid_c, ttype)
   }
+  val onto_support_hyp = TableQuery[onto_support_hyp]
 
   class user_feedback(tag: Tag) extends Table[(Int, Boolean, String, String, String, Option[String], Option[String], Option[String], Option[String])](tag, "user_feedback"){
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
@@ -113,6 +135,7 @@ object Tables {
     def resolved = column[Boolean]("resolved", O.Default(false))
     def * = (id, resolved, table_name, column_name, raw_value, parsed_value, label, source, code)
   }
+  val user_feedback = TableQuery[user_feedback]
 
   class user_changes(tag: Tag) extends Table[(Int, String, String, String, String, String, String)](tag, "user_requested_changes"){
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
@@ -124,5 +147,6 @@ object Tables {
     def label = column[String]("label")
     def * = (id, table_name, column_name, raw_value, source, code, label)
   }
+  val user_changes = TableQuery[user_changes]
 
 }
