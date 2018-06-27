@@ -201,6 +201,8 @@ object annotator {
     rows.toList
   }
 
+  def ols_exist(source: String, code: String): Boolean = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F" + code).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get.contains("200")
+
   def get_user_feedback(raw_value: String, term_type: String, table_name: String): List[List[String]] = {
     var rows: List[List[String]] = List()
     val parsed = Preprocessing.parse(List(raw_value)).split(",")

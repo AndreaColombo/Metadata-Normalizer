@@ -9,9 +9,10 @@ object main extends App {
 
   override def main(args: Array[String]): Unit = {
     gecotest_handler.init()
+    gecotest_handler.get_value_info("b cell lymphoma")
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))
-        user_selection.get_user_selection()
+        user_interface.get_user_feedback()
       else {
         gecotest_handler.init()
         enrichment_engine.controller(args(0))

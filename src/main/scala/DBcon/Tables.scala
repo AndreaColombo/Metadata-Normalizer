@@ -6,28 +6,6 @@ import slick.jdbc.PostgresProfile.api._
 
 object Tables {
 
-  class t1(tag: Tag) extends Table[(String, String, String)](tag, Some("svr"),"t1") {
-    def s_id = column[String]("s_id", O.PrimaryKey)
-    def key = column[String]("key")
-    def value = column[String]("value")
-    def * = (s_id, key, value)
-  }
-  val t1 = TableQuery[t1]
-
-  class t2(tag: Tag) extends Table[(String, String, String)](tag, "t2") {
-    def s_id = column[String]("s_id")
-    def key = column[String]("key")
-    def value = column[String]("value")
-    def * = (s_id, key, value)
-  }
-
-  class prova(tag: Tag) extends Table[(String, String, String)](tag, Some("svr"), "prova") {
-    def s_id = column[String]("s_id")
-    def key = column[String]("key")
-    def value = column[String]("value")
-    def * = (s_id, key, value)
- }
-
   class ApiResults(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String)](tag, Some("svr"), "apiresults1"){
     def service = column[String]("service")
     def raw_value = column[String]("raw_value")
@@ -137,15 +115,14 @@ object Tables {
   }
   val user_feedback = TableQuery[user_feedback]
 
-  class user_changes(tag: Tag) extends Table[(Int, String, String, String, String, String, String)](tag, "user_requested_changes"){
+  class user_changes(tag: Tag) extends Table[(Int, String, String, String, String, String)](tag, "user_requested_changes"){
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def table_name = column[String]("table_name")
     def column_name = column[String]("column_name")
     def raw_value = column[String]("raw_value")
     def source = column[String]("source")
     def code = column[String]("code")
-    def label = column[String]("label")
-    def * = (id, table_name, column_name, raw_value, source, code, label)
+    def * = (id, table_name, column_name, raw_value, source, code)
   }
   val user_changes = TableQuery[user_changes]
 

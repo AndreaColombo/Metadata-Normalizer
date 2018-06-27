@@ -18,7 +18,7 @@ object enrichment_engine {
         val tid = gecotest_handler.get_raw_in_cv_support_syn(raw_value)
         var tuple = ("","")
         if(tid != -1)
-          gecotest_handler.update_tid(raw_value)
+          gecotest_handler.update_tid(raw_value,tid)
         else if({tuple=gecotest_handler.get_raw_user_changes(table_name,term_type,raw_value); !tuple._1.equals("null")}) {
           //CERCA
           db_interface(annotator.get_info(tuple._1,tuple._2))

@@ -15,6 +15,7 @@ import slick.jdbc.meta.MTable
 object gecotest_handler {
   private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/DBcon/application.conf"))
   private val conf = ConfigFactory.load(parsedConfig)
+  val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity", "species"), "item" -> List("platform"), "experiment_type" -> List("technique", "feature", "target"), "container" -> List("annotation"))
 
   private var _db_name = "gecotest1"
   def db_name: String = _db_name
@@ -29,7 +30,7 @@ object gecotest_handler {
     val f = existing.flatMap(v => {
       val names = v.map(mt => mt.name.name)
       val createIfNotExist = tables.filter(table =>
-        !names.contains(table.baseTableRow.tableName)
+      !names.contains(table.baseTableRow.tableName)
       ).map(_.schema.create)
       db.run(DBIO.sequence(createIfNotExist))
     })
@@ -153,7 +154,6 @@ object gecotest_handler {
     var result: Seq[String] = List()
     val t = term_type
 
-    val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity", "species"), "item" -> List("platform"), "experiment_type" -> List("technique", "feature", "target"), "container" -> List("annotation"))
 
     val default = (-1, "")
     val table = m.find(_._2.contains(t)).getOrElse(default)._1.toString
@@ -174,9 +174,9 @@ object gecotest_handler {
     result.toList
   }
 
-  def insert_user_changes(rows: (String, String, String, String, String, String)): Unit = {
+  def insert_user_changes(rows: (String, String, String, String, String)): Unit = {
     val db = get_db()
-    val insertAction = user_changes.map(a => (a.table_name, a.column_name, a.raw_value, a.source, a.code, a.label)) ++= Seq(rows)
+    val insertAction = user_changes.map(a => (a.table_name, a.column_name, a.raw_value, a.source, a.code)) ++= Seq(rows)
     val insert = db.run(insertAction)
 
     Await.result(insert, Duration.Inf)
@@ -197,7 +197,46 @@ object gecotest_handler {
     result
   }
 
-  def update_tid(raw_value: String): Unit = print()
+  def update_tid(value: String, new_tid: Int): List[(String,String)] = {
+    val result = get_value_info(value)
+    for((table_name, column_name) <- result) {
+      val tid = column_name + "_tid"
+      val q =
+        sqlu"""
+             update #$table_name
+             set #$tid = $new_tid
+             where #$column_name = $value
+        """
+      val db = get_db()
+      val f = db.run(q)
+      Await.result(f, Duration.Inf)
+      db.close()
+    }
+    result
+  }
+
+  def get_value_info(value: String): List[(String,String)] = {
+    var result: List[(String,String)] = List()
+    for (table_name <- m.keys){
+      for(column_name <- m.apply(table_name)){
+        val q =
+          sql"""
+                 select distinct #$column_name
+                 from #$table_name
+                 where #$column_name ilike $value
+            """.as[String]
+        val db = get_db()
+        val f = db.run(q).map(a =>
+          if(a.nonEmpty){
+            a.foreach(b => result:+= (table_name,column_name))
+          }
+        )
+        Await.result(f, Duration.Inf)
+        db.close()
+      }
+    }
+    result
+  }
 
   def get_raw_user_changes(table_name: String, column_name: String, raw_value: String): (String, String) = {
     val db = get_db()
@@ -211,6 +250,8 @@ object gecotest_handler {
     db.close()
     result
   }
+
+
 
 
 }

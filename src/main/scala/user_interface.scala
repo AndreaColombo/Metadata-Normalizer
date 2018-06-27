@@ -6,11 +6,46 @@ import scala.io._
 import scalax.cli._
 import shapeless._
 
-object user_selection {
+object user_interface {
 
   val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity", "species"), "item" -> List("platform"), "experiment_type" -> List("technique", "target", "feature"))
 
-  def get_user_selection(): Unit = {
+  def revision_routine(): Unit = {
+    var flag = true
+    while (flag) {
+      val source_code = input_source_code()
+      println("Input value to update")
+      var value = StdIn.readLine()
+      while (gecotest_handler.get_value_info(value).isEmpty) {
+        println("Value not valid")
+        println("Input valid value")
+        value = StdIn.readLine()
+      }
+      val tuples = gecotest_handler.update_tid(value, null)
+      for ((table_name, column_name) <- tuples) {
+        gecotest_handler.insert_user_changes(table_name, column_name, value, source_code._1, source_code._2)
+      }
+
+      println("Do you wish to update another value?")
+      println("y/n")
+
+      var choice = StdIn.readLine()
+      while (!choice.equalsIgnoreCase("y") && !choice.equalsIgnoreCase("n")){
+        println("unknown command")
+        println("type y/n")
+
+        choice = StdIn.readLine()
+      }
+
+      if(choice.equalsIgnoreCase("y")){
+        flag = true
+      }
+      else if(choice.equalsIgnoreCase("n"))
+        flag = false
+    }
+  }
+
+  def get_user_feedback(): Unit = {
     for (table_name <- m.keys){
       for (column_name <- m.apply(table_name)){
         val raw_values = gecotest_handler.get_user_feedback_raw_values(table_name,column_name)
@@ -32,7 +67,7 @@ object user_selection {
             val code = user_choice._2
             val prefLabel = annotator.ols_get_info(code,source).head(2)
             //INSERT IN USER REQUESTED CHOICE
-            gecotest_handler.insert_user_changes(table_name, column_name, rv, source, code, prefLabel)
+            gecotest_handler.insert_user_changes(table_name, column_name, rv, source, code)
           }
           //CASE RAW VALUE FOUND BUT NOT BEST MATCH
           else {
@@ -45,11 +80,11 @@ object user_selection {
               val code = user_choice._2
               val prefLabel = annotator.ols_get_info(code,source).head(2)
               //INSERT IN USER REQUESTED CHOICE
-              gecotest_handler.insert_user_changes(table_name, column_name, rv, source, code, prefLabel)
+              gecotest_handler.insert_user_changes(table_name, column_name, rv, source, code)
             }
             else {
               val a = options(user_choice.toInt)
-              gecotest_handler.insert_user_changes(a._1,a._2,a._3,a._6,a._7,a._5)
+              gecotest_handler.insert_user_changes(a._1,a._2,a._3,a._6,a._7)
             }
           }
         }
