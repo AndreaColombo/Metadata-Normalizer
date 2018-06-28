@@ -15,20 +15,42 @@ object enrichment_engine {
       for (raw_value <- raw_values) {
         println(raw_value)
         //CHECK IF RAW_VALUE IS IN CV_SUPPORT_SYN WITH RAW
-        val tid = gecotest_handler.get_raw_in_cv_support_syn(raw_value)
+        val tid = is_complete(raw_value)
         var tuple = ("","")
         if(tid != -1)
           gecotest_handler.update_tid(raw_value,tid)
-        else if({tuple=gecotest_handler.get_raw_user_changes(table_name,term_type,raw_value); !tuple._1.equals("null")}) {
-          //CERCA
-          db_interface(annotator.get_info(tuple._1,tuple._2))
 
+        //CHECK IF SOURCE_CODE EXIST IN USER CHANGES
+        else if({tuple=gecotest_handler.get_raw_user_changes(table_name,term_type,raw_value); !tuple._1.equals("null")}) {
+          //CHECK IF TERM IS COMPLETE
+          //TRUE: UPDATE TID
+          val tid = is_complete(raw_value)
+          if(tid != -1) {
+            gecotest_handler.update_tid(raw_value, tid)
+          }
+          //FALSE: GET INFO AND INSERT IN GCM
+          else {
+            db_interface(annotator.get_info(tuple._1,tuple._2),raw_value)
+          }
         }
         else {
-          db_interface(annotator.search_term(raw_value,table_name,term_type),raw_value)
+          val source_code = annotator.search_term(raw_value,term_type)
+          if(source_code._1 == ""){
+            annotator.get_user_feedback(raw_value,table_name,term_type)
+          }
+          else {
+            val result = annotator.get_info(source_code._1, source_code._2)
+            db_interface(result, raw_value)
+          }
         }
       }
     }
+  }
+
+  //RETURNS tid IF VALUE IS COMPLETE
+  //-1 IF NOT
+  def is_complete (value: String): Int = {
+    gecotest_handler.get_raw_in_cv_support_syn(value)
   }
 
   def db_interface(res: List[Map[String, String]], raw_value: String = ""): Unit = {
@@ -59,7 +81,7 @@ object enrichment_engine {
     insert_elem ++= List(List(source, code, label))
     gecotest_handler.cv_support_insert(insert_elem)
     val tid = gecotest_handler.get_tid(label).toString
-    support :+= List(tid, source,code,label)
+    support :+= List(tid,source,code,label)
 
     //XREF
     var xref_l:List[String] = List()
