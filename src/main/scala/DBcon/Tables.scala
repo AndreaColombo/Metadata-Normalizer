@@ -91,15 +91,28 @@ object Tables {
   class onto_support_hyp(tag: Tag) extends Table[(Int,Int,String)](tag, Some("public"), "onto_support_hyp"){
     def tid_p = column[Int]("tid_parent")
     def tid_c = column[Int]("tid_child")
-    def ttype = column[String]("type")
+    def rel_type = column[String]("rel_type")
 
-    def pk = primaryKey("onto_support_hyp_pkey",(tid_p,tid_c,ttype))
+    def pk = primaryKey("onto_support_hyp_pkey",(tid_p,tid_c,rel_type))
     def fk_p = foreignKey("cv_ohp_fk",tid_p,cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
     def fk_c = foreignKey("cv_ohc_fk",tid_c,cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
 
-    def * = (tid_p, tid_c, ttype)
+    def * = (tid_p, tid_c, rel_type)
   }
   val onto_support_hyp = TableQuery[onto_support_hyp]
+
+  class onto_support_hyp_unfolded(tag: Tag) extends  Table[(Int,Int,Int,String)](tag, Some("public"),"onto_support_hyp_unfolded"){
+    def tid_a = column[Int]("tid_ancestor")
+    def tid_d = column[Int]("tid_descendant")
+    def distance = column[Int]("distance")
+    def rel_type = column[String]("rel_type")
+
+    def pk = primaryKey("onto_support_hyp_unfolded_pk",(tid_a,tid_d,distance,rel_type))
+    def fk_a = foreignKey("cv_oha_unfolded",tid_a,cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
+    def fk_d = foreignKey("cv_ohd_unfolded",tid_d,cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
+
+    def * = (tid_a,tid_d,distance,rel_type)
+  }
 
   class user_feedback(tag: Tag) extends Table[(Int, Boolean, String, String, String, Option[String], Option[String], Option[String], Option[String])](tag, "user_feedback"){
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)

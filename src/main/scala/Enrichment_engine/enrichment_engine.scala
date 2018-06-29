@@ -63,8 +63,9 @@ object enrichment_engine {
         val label = res.head.apply("label")
         val tid = gecotest_handler.get_tid(label)
         gecotest_handler.syn_insert(List(List(tid.toString, raw_value, "raw")))
+        gecotest_handler.update_tid(raw_value,tid)
       }
-      get_parents(cv_support, res)
+      insert_hyp(cv_support, res)
     }
   }
 
@@ -119,7 +120,7 @@ object enrichment_engine {
     support
   }
 
-  def get_parents(elems: List[List[String]],res:List[Map[String,String]]): Unit = {
+  def insert_hyp(elems: List[List[String]], res:List[Map[String,String]]): Unit = {
     var result: List[List[String]] = List()
     for(elem <- elems){
       val child_tid = elem.head
@@ -159,5 +160,9 @@ object enrichment_engine {
     catch  {
       case e: BatchUpdateException => e.getNextException.printStackTrace()
     }
+  }
+
+  def unfold_hyp(): Unit = {
+
   }
 }

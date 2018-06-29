@@ -251,7 +251,21 @@ object gecotest_handler {
     result
   }
 
+//  INPUT SOURCE, CODE
+//  RETURNS TRUE IF SOURCE, CODE EXIST IN cv_support
 
+  def is_duplicate(source: String, code: String): Boolean = {
+    val db = get_db()
+    var result = false
+    val q = cv_support.filter(a=> a.source===source && a.code===code).map(a=>(a.source,a.code))
+    val f = db.run(q.result).map(a=>
+      result = a.nonEmpty
+    )
+
+    Await.result(f, Duration.Inf)
+    db.close()
+    result
+  }
 
 
 }

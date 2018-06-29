@@ -21,7 +21,7 @@ object user_interface {
         println("Input valid value")
         value = StdIn.readLine()
       }
-      val tuples = gecotest_handler.update_tid(value, null)
+      val tuples = gecotest_handler.update_tid(value,-1)
       for ((table_name, column_name) <- tuples) {
         gecotest_handler.insert_user_changes(table_name, column_name, value, source_code._1, source_code._2)
       }

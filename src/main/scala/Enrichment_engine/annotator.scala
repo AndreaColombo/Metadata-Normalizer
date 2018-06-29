@@ -18,7 +18,7 @@ object annotator {
   def get_info(source: String, code: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
     var res: List[(String, String, String, String, String, String, String, String)] = List()
-    val tmp = ols_get_info(code,source)
+    val tmp = ols_get_info(source,code)
     if (tmp.nonEmpty) {
       println("good")
       val onto = tmp.head(0)
@@ -28,17 +28,22 @@ object annotator {
 
       val desc = get_desc(children, onto, 0)
       val anc = get_hyp(parents, onto, 0)
-      result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7))
+
+      if(!gecotest_handler.is_duplicate(onto,tmp.head(1)))
+        result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7))
 
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
 
       for (tmp <- anc) {
-        result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8)
+        if(!gecotest_handler.is_duplicate(tmp._1,tmp._2))
+          result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8)
       }
 
-      for (elem <- desc)
-        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8)
+      for (elem <- desc) {
+        if (!gecotest_handler.is_duplicate(elem._1, elem._2))
+          result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8)
+      }
     }
     result.distinct
   }
@@ -73,9 +78,9 @@ object annotator {
 
   def get_desc(children: String, onto: String, depth: Int): List[(String, String, String, String, String, String, String, String)] = {
     var result: List[(String, String, String, String, String, String, String, String)] = List()
-    for (value <- children.split(",")) {
-      if (value != "null") {
-        val res = ols_get_info(value, onto)
+    for (code <- children.split(",")) {
+      if (code != "null") {
+        val res = ols_get_info(onto,code)
         result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7))
         val n = depth + 1
         if (n != max_depth)
@@ -89,9 +94,9 @@ object annotator {
 
   def get_hyp(parents: String, onto: String, depth: Int): List[(String, String, String, String, String, String, String, String)] = {
     var result: List[(String, String, String, String, String, String, String, String)] = List()
-    for (value <- parents.split(",")) {
-      if (value != "null") {
-        val res = ols_get_info(value, onto)
+    for (code <- parents.split(",")) {
+      if (code != "null") {
+        val res = ols_get_info(onto,code)
         result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7))
         val n = depth + 1
         if (n != max_depth)
@@ -105,12 +110,9 @@ object annotator {
 
   def ols_get_info(source: String, code: String): List[List[String]] = {
     var rows: Seq[List[String]] = List()
-    val response = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F" + code).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
-    if (!response.header("status").get.contains("200")) {
-      println("Error 500")
-      //log
-    }
-    else {
+    val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F" + code
+    if(ols_exist(source, code)) {
+      val response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
       val j = Json.parse(response.body)
       val prefLabel = (j \ "label").validate[String].get
       val ontology = source
@@ -158,8 +160,6 @@ object annotator {
     var result: (String, String)  = ("null", "null")
     val j = (Json.parse(response) \ "response").get("docs")
     val service = "Ols"
-    var ok = false
-
     val range = j \\ "label"
     for (i <- range.indices) {
       val j2 = j(i)
@@ -170,9 +170,9 @@ object annotator {
       val score_num = get_match_score(get_score(term, prefLabel), service)
 
       if (score_num > 6 && score_num > max_score) {
-        ok = true
         max_score = score_num
-        result = (ontology, ontology_id)
+        if(ols_exist(ontology,ontology_id))
+          result = (ontology, ontology_id)
       }
     }
     result
