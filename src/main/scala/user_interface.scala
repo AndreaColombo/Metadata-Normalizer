@@ -13,15 +13,16 @@ object user_interface {
   def revision_routine(): Unit = {
     var flag = true
     while (flag) {
-      val source_code = input_source_code()
       println("Input value to update")
       var value = StdIn.readLine()
-      while (gecotest_handler.get_value_info(value).isEmpty) {
+      while (gecotest_handler.get_value_info(value).isEmpty){
         println("Value not valid")
         println("Input valid value")
         value = StdIn.readLine()
       }
-      val tuples = gecotest_handler.update_tid(value,-1)
+      val source_code = input_source_code()
+      val tuples = gecotest_handler.update_tid(value,null)
+
       for ((table_name, column_name) <- tuples) {
         gecotest_handler.insert_user_changes(table_name, column_name, value, source_code._1, source_code._2)
       }
@@ -78,7 +79,7 @@ object user_interface {
               val user_choice = input_source_code()
               val source = user_choice._1
               val code = user_choice._2
-              val prefLabel = annotator.ols_get_info(code,source).head(2)
+              val prefLabel = annotator.ols_get_info(source,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
               gecotest_handler.insert_user_changes(table_name, column_name, rv, source, code)
             }
@@ -87,6 +88,7 @@ object user_interface {
               gecotest_handler.insert_user_changes(a._1,a._2,a._3,a._6,a._7)
             }
           }
+          gecotest_handler.set_resolved(rv)
         }
       }
     }

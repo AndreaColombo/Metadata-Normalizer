@@ -1,7 +1,7 @@
 import java.util.{Calendar, Date}
 
 import DBcon.gecotest_handler
-import Enrichment_engine.enrichment_engine
+import Enrichment_engine.{annotator, enrichment_engine}
 
 object main extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
@@ -9,7 +9,6 @@ object main extends App {
 
   override def main(args: Array[String]): Unit = {
     gecotest_handler.init()
-    gecotest_handler.get_value_info("b cell lymphoma")
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))
         user_interface.get_user_feedback()

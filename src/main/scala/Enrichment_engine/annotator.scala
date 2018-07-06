@@ -17,32 +17,30 @@ object annotator {
 
   def get_info(source: String, code: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
-    var res: List[(String, String, String, String, String, String, String, String)] = List()
     val tmp = ols_get_info(source,code)
     if (tmp.nonEmpty) {
       println("good")
       val onto = tmp.head(0)
       val parents = tmp.head(5)
       val children = tmp.head(6)
-      res :+= (tmp.head.head, tmp.head(1), tmp.head(2), tmp.head(3), tmp.head(4), tmp.head(5), tmp.head(6), tmp.head(7))
 
       val desc = get_desc(children, onto, 0)
       val anc = get_hyp(parents, onto, 0)
 
       if(!gecotest_handler.is_duplicate(onto,tmp.head(1)))
-        result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7))
+        result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8))
 
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
 
       for (tmp <- anc) {
         if(!gecotest_handler.is_duplicate(tmp._1,tmp._2))
-          result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8)
+          result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8,"description"->tmp._9)
       }
 
       for (elem <- desc) {
         if (!gecotest_handler.is_duplicate(elem._1, elem._2))
-          result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8)
+          result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9)
       }
     }
     result.distinct
@@ -76,12 +74,12 @@ object annotator {
     }
   }
 
-  def get_desc(children: String, onto: String, depth: Int): List[(String, String, String, String, String, String, String, String)] = {
-    var result: List[(String, String, String, String, String, String, String, String)] = List()
+  def get_desc(children: String, onto: String, depth: Int): List[(String, String, String, String, String, String, String, String,String)] = {
+    var result: List[(String, String, String, String, String, String, String, String, String)] = List()
     for (code <- children.split(",")) {
       if (code != "null") {
         val res = ols_get_info(onto,code)
-        result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7))
+        result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7),res.head(8))
         val n = depth + 1
         if (n != max_depth)
           result ++= get_desc(res.head(6), res.head(0), n)
@@ -92,12 +90,12 @@ object annotator {
     result
   }
 
-  def get_hyp(parents: String, onto: String, depth: Int): List[(String, String, String, String, String, String, String, String)] = {
-    var result: List[(String, String, String, String, String, String, String, String)] = List()
+  def get_hyp(parents: String, onto: String, depth: Int): List[(String, String, String, String, String, String, String, String,String)] = {
+    var result: List[(String, String, String, String, String, String, String, String, String)] = List()
     for (code <- parents.split(",")) {
       if (code != "null") {
         val res = ols_get_info(onto,code)
-        result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7))
+        result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7),res.head(8))
         val n = depth + 1
         if (n != max_depth)
           result ++= get_hyp(res.head(5), res.head(0), n)
@@ -117,6 +115,7 @@ object annotator {
       val prefLabel = (j \ "label").validate[String].get
       val ontology = source
       val ontology_id = code
+      val description = (j \ "description").validate[List[String]].get.head
       val synonym_l = (j \ "synonym").validate[List[String]].getOrElse(List("null"))
       val synonym = synonym_l.mkString(",")
       val xref = (j \ "annotation" \ "database_cross_reference").validate[List[String]].getOrElse(List("null"))
@@ -149,7 +148,7 @@ object annotator {
         ((Json.parse(Http(children_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => children :+= a.validate[String].getOrElse("null"))
       else children = List("null")
 
-      rows :+= List(ontology, ontology_id, prefLabel, xref.mkString(","), synonym, parents.mkString(","), children.mkString(","), part_of.mkString(","), "GOOD")
+      rows :+= List(ontology, ontology_id, prefLabel, xref.mkString(","), synonym, parents.mkString(","), children.mkString(","), part_of.mkString(","),description)
     }
     rows.toList.distinct
   }
@@ -170,9 +169,10 @@ object annotator {
       val score_num = get_match_score(get_score(term, prefLabel), service)
 
       if (score_num > 6 && score_num > max_score) {
-        max_score = score_num
-        if(ols_exist(ontology,ontology_id))
+        if(ols_exist(ontology,ontology_id)) {
+          max_score = score_num
           result = (ontology, ontology_id)
+        }
       }
     }
     result

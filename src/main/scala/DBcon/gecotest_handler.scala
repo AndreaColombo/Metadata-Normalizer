@@ -5,7 +5,7 @@ import slick.jdbc.PostgresProfile.api._
 import java.io._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import Tables.{cv_support,cv_support_syn,cv_support_xref,onto_support_hyp,user_changes,user_feedback}
+import Tables.{cv_support,cv_support_syn,cv_support_xref,cv_support_raw,onto_support_hyp,user_changes,user_feedback}
 
 import scala.concurrent.duration.Duration
 import com.typesafe.config.ConfigFactory
@@ -25,7 +25,7 @@ object gecotest_handler {
 
   def init(): Unit = {
     val db = get_db()
-    val tables = List(cv_support,cv_support_syn,cv_support_xref,onto_support_hyp,user_changes, user_feedback)
+    val tables = List(cv_support,cv_support_syn,cv_support_xref,cv_support_raw,onto_support_hyp,user_changes, user_feedback)
     val existing = db.run(MTable.getTables)
     val f = existing.flatMap(v => {
       val names = v.map(mt => mt.name.name)
@@ -41,12 +41,12 @@ object gecotest_handler {
 
   def cv_support_insert(rows: List[List[String]]): Unit = {
 
-    var ok: Seq[(String, String, String)] = Seq()
+    var ok: Seq[(String, String, String, String)] = Seq()
     for (l <- rows) {
-      ok :+= (l(0), l(1), l(2))
+      ok :+= (l(0), l(1), l(2), l(3))
     }
     val db = get_db()
-    val insertAction = cv_support.map(a=> (a.source,a.code,a.label)) ++= ok
+    val insertAction = cv_support.map(a=> (a.source,a.code,a.label,a.description)) ++= ok
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
     db.close()
@@ -77,6 +77,21 @@ object gecotest_handler {
     Await.result(insert, Duration.Inf)
     db.close()
   }
+
+  case class cv_support_raw_type(tid: Int, label: String, table_name: String, column_name: String, method: Char)
+
+  def raw_insert(rows: List[cv_support_raw_type]): Unit = {
+    var ok: Seq[(Int, String, String, String, Char)] = Seq()
+
+    for (l <- rows){
+      ok :+= (l.tid, l.label, l.table_name, l.column_name, l.method)
+    }
+
+    val db = get_db()
+    Await.result(db.run(cv_support_raw ++= ok),Duration.Inf)
+    db.close()
+  }
+
 
   def hyp_insert(rows: List[List[String]]): Unit = {
     var ok: Seq[(Int, Int, String)] = Seq()
@@ -110,7 +125,7 @@ object gecotest_handler {
     val db = get_db()
     var result: List[String] = List()
 
-    val q = user_feedback.filter(t => t.table_name === table_name && t.column_name === column_name).map(_.raw_value).result
+    val q = user_feedback.filter(t => t.table_name === table_name && t.column_name === column_name && t.resolved === false).map(_.raw_value).result
 
 
     val result_future = db.run(q).map(a => result = a.toList.distinct)
@@ -197,17 +212,28 @@ object gecotest_handler {
     result
   }
 
-  def update_tid(value: String, new_tid: Int): List[(String,String)] = {
+  def update_tid(value: String, new_tid: Option[Int]): List[(String,String)] = {
     val result = get_value_info(value)
     for((table_name, column_name) <- result) {
       val tid = column_name + "_tid"
+
       val q =
-        sqlu"""
+        if(new_tid.isDefined) {
+          sqlu"""
              update #$table_name
-             set #$tid = $new_tid
+             set #$tid = ${new_tid.get}
              where #$column_name = $value
-        """
+            """
+        }
+        else {
+          sqlu"""
+             update #$table_name
+             set #$tid = null
+            where #$column_name = $value
+            """
+        }
       val db = get_db()
+
       val f = db.run(q)
       Await.result(f, Duration.Inf)
       db.close()
@@ -267,5 +293,13 @@ object gecotest_handler {
     result
   }
 
+  def set_resolved(raw_value: String): Unit = {
+    val q = user_feedback.filter(_.raw_value===raw_value).map(_.resolved)
+    val update = q.update(true)
+    val db = get_db()
+    val f = db.run(update)
+    Await.result(f,Duration.Inf)
+    db.close()
+  }
 
 }
