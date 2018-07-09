@@ -24,6 +24,7 @@ object db_interface {
     }
   }
 
+  //INSERT ELEMENTS IN cv_support, syn, xref
   def db_insert (elem: Map[String,String]): List[cv_support]= {
     var insert_elem: List[List[String]] = List()
     var insert_xref: List[List[String]] = List()
@@ -38,8 +39,7 @@ object db_interface {
     insert_elem ++= List(List(source, code, label, description))
     gecotest_handler.cv_support_insert(insert_elem)
     val tid = gecotest_handler.get_tid(label).toString
-    support :+= List(cv_support(tid,source,code,label))
-
+    support :+= cv_support(tid,source,code,label)
 
     //XREF
     var xref_l:List[String] = List()
@@ -58,7 +58,7 @@ object db_interface {
       gecotest_handler.xref_insert(insert_xref)
     }
     catch {
-      case e: BatchUpdateException => e.getNextException.printStackTrace()
+      case e: BatchUpdateException => insert_xref.foreach(println)
     }
 
     //SYN

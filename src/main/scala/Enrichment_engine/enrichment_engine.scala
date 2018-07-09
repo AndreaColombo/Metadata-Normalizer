@@ -13,47 +13,39 @@ object enrichment_engine {
       val raw_values = gecotest_handler.get_raw_values(term_type)
       for (raw_value <- raw_values) {
         println(raw_value)
-        //CHECK IF RAW_VALUE IS IN CV_SUPPORT_SYN WITH RAW
-        val tid = is_complete(raw_value)
-        var tuple = ("","")
-        if(tid != -1)
-          gecotest_handler.update_tid(raw_value,Some(tid))
+        val result_syn = gecotest_handler.get_raw_in_cv_support_syn(raw_value)
+        val result_user_changes = gecotest_handler.get_raw_user_changes(table_name,term_type,raw_value)
 
-        //CHECK IF SOURCE_CODE EXIST IN USER CHANGES
-        else if({tuple=gecotest_handler.get_raw_user_changes(table_name,term_type,raw_value); !tuple._1.equals("null")}) {
-          //CHECK IF TERM IS COMPLETE
-          //TRUE: UPDATE TID
-          val tid = is_complete(raw_value)
-          if(tid != -1) {
-            gecotest_handler.update_tid(raw_value, Some(tid))
+        //LOCAL KB LOOKUP
+        if(result_syn.tid != -1 || result_user_changes._1 != "null") {
+          //CHECK IF TYPE IS RAW
+          if (result_syn.ttype == "raw")
+            gecotest_handler.update_tid(raw_value, Some(result_syn.tid))
+          //CHECK IF RAW VALUE EXIST IN USER CHANGES
+          else if (result_syn.ttype == "syn" || result_syn.ttype == "pref"){
+            val suggestion = gecotest_handler.get_cv_support_by_tid(result_syn.tid)
+            gecotest_handler.user_feedback_insert(List(gecotest_handler.user_feedback_type(table_name,term_type,Some(result_syn.tid), raw_value,null,null,Some(suggestion.source),Some(suggestion.code))))
           }
-          //FALSE: GET INFO AND INSERT IN GCM
           else {
-            db_interface.db_interface(annotator.get_info(tuple._1,tuple._2),raw_value,table_name,term_type, 'U')
+            //GET INFO AND INSERT IN GCM
+            db_interface.db_interface(annotator.get_info(result_user_changes._1, result_user_changes._2), raw_value, table_name, term_type, 'U')
           }
         }
-        //NOT FOUND IN USER CHANGES
+
+        //ONLINE KB LOOKUP
         else {
-          val source_code = annotator.search_term(raw_value,term_type)
+          val source_code = annotator.search_term(raw_value, term_type)
           //BEST MATCH NOT FOUND
-          if(source_code._1 == ""){
-            annotator.get_user_feedback(raw_value,table_name,term_type)
+          if (source_code._1 == "") {
+            annotator.get_user_feedback(raw_value, table_name, term_type)
           }
           //BEST MATCH FOUND
           else {
             val result = annotator.get_info(source_code._1, source_code._2)
-            db_interface.db_interface(result, raw_value,table_name,term_type,'O')
+            db_interface.db_interface(result, raw_value, table_name, term_type, 'O')
           }
         }
       }
     }
   }
-
-  //RETURNS tid IF VALUE IS COMPLETE
-  //-1 IF NOT
-  def is_complete (value: String): Int = {
-    gecotest_handler.get_raw_in_cv_support_syn(value)
-  }
-
-
 }

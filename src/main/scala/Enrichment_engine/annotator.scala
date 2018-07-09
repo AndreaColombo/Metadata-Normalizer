@@ -4,6 +4,7 @@ import java.net.URLEncoder
 import java.sql.BatchUpdateException
 
 import DBcon.gecotest_handler
+import DBcon.gecotest_handler.user_feedback_type
 import Ontologies.Util.OlsParser.get_score
 import Utils.Preprocessing
 import Utils.score_calculator.get_match_score
@@ -50,14 +51,15 @@ object annotator {
     var res: List[(String, String, String, String, String, String, String, String)] = List()
     var result: (String, String) = ("","")
     val ontos = Utils.Utils.get_ontologies_by_type(term_type).split(",")
-
-    for (onto <- ontos){
+    var ok = false
+    for (onto <- ontos if !ok){
       val tmp = ols_search_term(raw_value,onto)
       breakable {
         if (tmp._1 == "null")
           break()
         else {
           result = (tmp._1,tmp._2)
+          ok = true
         }
       }
     }
@@ -65,12 +67,19 @@ object annotator {
   }
 
   def get_user_feedback(value: String,table_name: String, term_type: String): Unit = {
-    var user_feedback: List[List[String]] = List()
+    var user_feedback: List[user_feedback_type] = List()
     if ({user_feedback = ols_get_user_feedback(value, term_type, table_name); user_feedback.nonEmpty}) {
-      gecotest_handler.user_feedback_insert(user_feedback)
+      try {
+        gecotest_handler.user_feedback_insert(user_feedback)
+      }
+      catch {
+        case e: BatchUpdateException => e.getNextException.printStackTrace()
+          user_feedback.foreach(println)
+          sys.exit(-1)
+      }
     }
     else {
-      gecotest_handler.user_feedback_insert(List(List(table_name, term_type, value, null, null, null, null)))
+      gecotest_handler.user_feedback_insert(List(user_feedback_type(table_name, term_type, null, value, null, null, null, null)))
     }
   }
 
@@ -115,7 +124,7 @@ object annotator {
       val prefLabel = (j \ "label").validate[String].get
       val ontology = source
       val ontology_id = code
-      val description = (j \ "description").validate[List[String]].get.head
+      val description = (j \ "description").validate[List[String]].getOrElse(List("null")).head
       val synonym_l = (j \ "synonym").validate[List[String]].getOrElse(List("null"))
       val synonym = synonym_l.mkString(",")
       val xref = (j \ "annotation" \ "database_cross_reference").validate[List[String]].getOrElse(List("null"))
@@ -180,8 +189,8 @@ object annotator {
 
   def ols_exist(source: String, code: String): Boolean = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F" + code).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get.contains("200")
 
-  def ols_get_user_feedback(raw_value: String, term_type: String, table_name: String): List[List[String]] = {
-    var rows: List[List[String]] = List()
+  def ols_get_user_feedback(raw_value: String, term_type: String, table_name: String): List[user_feedback_type] = {
+    var rows: List[user_feedback_type] = List()
     val parsed = Preprocessing.parse(List(raw_value)).split(",")
     for (value <- parsed) {
       val ontologies = Utils.Utils.get_ontologies_by_type(term_type)
@@ -193,7 +202,8 @@ object annotator {
         val label = (jj \ "label").validate[String].get
         val id = (jj \ "short_form").validate[String].get
         val onto = (jj \ "ontology_name").validate[String].get
-        rows :+= List(table_name, term_type, raw_value, value, label, onto, id)
+        if (!rows.exists(_.code.get==id))
+          rows :+= user_feedback_type(table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id))
       }
     }
     rows.distinct

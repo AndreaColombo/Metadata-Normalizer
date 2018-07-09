@@ -54,8 +54,8 @@ object Tables {
 
   class cv_support(tag: Tag) extends Table[(Int, String,String,String, String)](tag, Some("public"), "cv_support"){
     def tid = column[Int]("tid", O.AutoInc, O.PrimaryKey)
-    def source = column[String]("source", O.SqlType("VARCHAR(8)"))
-    def code = column[String]("code",O.SqlType("VARCHAR(16)"))
+    def source = column[String]("source", O.SqlType("VARCHAR(32)"))
+    def code = column[String]("code",O.SqlType("VARCHAR(32)"))
     def label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
     def description = column[String]("description")
 
@@ -80,8 +80,8 @@ object Tables {
 
   class cv_support_xref(tag: Tag) extends Table[(Int,String,String)](tag, Some("public"), "cv_support_xref"){
     def tid = column[Int]("tid")
-    def source = column[String]("source", O.SqlType("VARCHAR(8)"))
-    def code = column[String]("code",O.SqlType("VARCHAR(8)"))
+    def source = column[String]("source", O.SqlType("VARCHAR(32)"))
+    def code = column[String]("code",O.SqlType("VARCHAR(32)"))
 
     def pk = primaryKey("cv_support_xref_pley", (tid, source, code))
     def fk = foreignKey("cv_cvx_fk",tid, cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
@@ -95,8 +95,8 @@ object Tables {
   class cv_support_raw(tag: Tag) extends Table[(Int, String, String, String, Char)](tag, Some("public"),"cv_support_raw"){
     def tid = column[Int]("tid")
     def label = column[String]("label", O.SqlType("VARCHAR(128)"))
-    def table_name = column[String]("table_name", O.SqlType("VARCHAR(16)"))
-    def column_name = column[String]("column_name", O.SqlType("VARCHAR(16)"))
+    def table_name = column[String]("table_name", O.SqlType("VARCHAR(32)"))
+    def column_name = column[String]("column_name", O.SqlType("VARCHAR(32)"))
     def method = column[Char]("method")
 
     def pk = primaryKey("cv_support_raw_pkey",(label,table_name,column_name))
@@ -136,11 +136,12 @@ object Tables {
     def * = (tid_a,tid_d,distance,rel_type)
   }
 
-  class user_feedback(tag: Tag) extends Table[(Int, Boolean, String, String, String, Option[String], Option[String], Option[String], Option[String])](tag, "user_feedback"){
+  class user_feedback(tag: Tag) extends Table[(Int, Boolean, String, String, Option[Int], String, Option[String], Option[String], Option[String], Option[String])](tag, "user_feedback"){
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def table_name = column[String]("table_name")
     def column_name = column[String]("column_name")
     def raw_value = column[String]("raw_value")
+    def tid = column[Option[Int]]("tid")
     def parsed_value = column[Option[String]]("parsed_value")
     def label = column[Option[String]]("label")
     def source = column[Option[String]]("source")
@@ -149,7 +150,7 @@ object Tables {
 
     def idx = index("user_feedback_idx",(raw_value,source,code),unique = true)
 
-    def * = (id, resolved, table_name, column_name, raw_value, parsed_value, label, source, code)
+    def * = (id, resolved, table_name, column_name, tid, raw_value, parsed_value, label, source, code)
   }
   val user_feedback = TableQuery[user_feedback]
 

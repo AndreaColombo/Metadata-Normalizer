@@ -23,6 +23,11 @@ object gecotest_handler {
 
   protected def get_db(): Database = Database.forConfig(_db_name, conf)
 
+  case class cv_support_type(tid: Int, source: String, code: String, label: String, description: String)
+  case class cv_support_syn_type (tid: Int, label: String, ttype: String)
+  case class cv_support_raw_type(tid: Int, label: String, table_name: String, column_name: String, method: Char)
+  case class user_feedback_type (table: String, column: String, tid: Option[Int], raw_value: String, parsed_value: Option[String], label: Option[String], source: Option[String], code: Option[String])
+
   def init(): Unit = {
     val db = get_db()
     val tables = List(cv_support,cv_support_syn,cv_support_xref,cv_support_raw,onto_support_hyp,user_changes, user_feedback)
@@ -78,7 +83,6 @@ object gecotest_handler {
     db.close()
   }
 
-  case class cv_support_raw_type(tid: Int, label: String, table_name: String, column_name: String, method: Char)
 
   def raw_insert(rows: List[cv_support_raw_type]): Unit = {
     var ok: Seq[(Int, String, String, String, Char)] = Seq()
@@ -150,14 +154,14 @@ object gecotest_handler {
   }
 
 
-  def user_feedback_insert(rows: List[List[String]]): Unit = {
-    var ok: Seq[(String, String, String, Option[String], Option[String], Option[String], Option[String])] = Seq()
+  def user_feedback_insert(rows: List[user_feedback_type]): Unit = {
+    var ok: Seq[(String, String, Option[Int], String, Option[String], Option[String], Option[String], Option[String])] = Seq()
 
     for (l <- rows) {
-      ok :+= (l(0), l(1), l(2), Option(l(3)), Option(l(4)), Option(l(5)), Option(l(6)))
+      ok :+= (l.table, l.column, l.tid, l.raw_value, l.parsed_value, l.label, l.source, l.code)
     }
     val db = get_db()
-    val insertAction = user_feedback.map(a => (a.table_name, a.column_name, a.raw_value, a.parsed_value, a.label, a.source, a.code)) ++= ok
+    val insertAction = user_feedback.map(a => (a.table_name, a.column_name, a.tid, a.raw_value, a.parsed_value, a.label, a.source, a.code)) ++= ok
 
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
@@ -199,16 +203,27 @@ object gecotest_handler {
   }
 
 
-  def get_raw_in_cv_support_syn(raw_value: String): Int = {
-    var result = -1
+  def get_raw_in_cv_support_syn(raw_value: String): cv_support_syn_type = {
+    var result = cv_support_syn_type(-1,"","")
     val db = get_db()
-    val q = cv_support_syn.filter(a => a.label === raw_value && a.ttype === "raw").map(_.tid)
+    val q = cv_support_syn.filter(a => a.label === raw_value).map(_.*)
     val f = db.run(q.result).map(a =>
-    if (a.nonEmpty)
-    result = a.head
-    )
+      if(a.nonEmpty)
+        result = cv_support_syn_type(a.head._1,a.head._2,a.head._3))
     Await.result(f, Duration.Inf)
     db.close()
+    result
+  }
+
+  def check_completeness(raw_value: String): Boolean = {
+    var result = false
+
+    val q = cv_support_syn.filter(a => a.label === raw_value && a.ttype === "raw").exists
+
+    val db = get_db()
+
+    Await.result(db.run(q.result).map(a => result = a),Duration.Inf)
+
     result
   }
 
@@ -300,6 +315,16 @@ object gecotest_handler {
     val f = db.run(update)
     Await.result(f,Duration.Inf)
     db.close()
+  }
+
+
+  def get_cv_support_by_tid(tid: Int): cv_support_type = {
+    val db = get_db()
+    var result = cv_support_type(-1,"","","","")
+    val q = cv_support.filter(_.tid===tid).map(_.*)
+    Await.result(db.run(q.result).map(a=> result = cv_support_type(a.head._1,a.head._2,a.head._3,a.head._4,a.head._5)),Duration.Inf)
+    db.close()
+    result
   }
 
 }
