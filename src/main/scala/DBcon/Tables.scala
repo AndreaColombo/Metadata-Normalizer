@@ -1,9 +1,20 @@
 package DBcon
 
-import javafx.css.ParsedValue
-import slick.ast.ColumnOption.Unique
 import slick.jdbc.PostgresProfile.api._
-import slick.sql.SqlProfile.ColumnOption.SqlType
+
+object default_values{
+  val int = -1
+  val string = "null"
+  val char = 'n'
+}
+
+case class cv_support_type(tid: Int = default_values.int, source: String = default_values.string, code: String = default_values.string, label: String = default_values.string, description: String = default_values.string)
+case class cv_support_syn_type (tid: Int = default_values.int, label: String = default_values.string, ttype: String = default_values.string)
+case class cv_support_raw_type(tid: Int = default_values.int, label: String = default_values.string, table_name: String = default_values.string, column_name: String = default_values.string, method: Char = default_values.char)
+case class user_feedback_type (table: String, column: String, tid: Option[Int], raw_value: String, parsed_value: Option[String], label: Option[String], source: Option[String], code: Option[String])
+case class ontology_type(source: String, title: Option[String], description: Option[String], url: String)
+case class onto_support_hyp_type (tid_p: Int = default_values.int, tid_c: Int = default_values.int, rel_type:String = default_values.string)
+case class onto_support_hyp_unfolded_type (tid_a: Int = default_values.int , tid_d: Int = default_values.int, distance: Int = default_values.int, rel_type:String = default_values.string)
 
 object Tables {
 
@@ -52,16 +63,27 @@ object Tables {
     def * = (service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
   }
 
-  class cv_support(tag: Tag) extends Table[(Int, String,String,String, String)](tag, Some("public"), "cv_support"){
+  class ontology (tag: Tag) extends Table[ontology_type](tag, Some("public"), "ontology"){
+    def source = column[String]("source",O.SqlType("VARCHAR(8)"), O.PrimaryKey)
+    def title = column[String]("title",O.SqlType("VARCHAR(64)"))
+    def description = column[String]("description")
+    def url = column[String]("url",O.SqlType("VARCHAR(128)"))
+
+    def * = (source,title.?,description.?,url) <> (ontology_type.tupled, ontology_type.unapply)
+  }
+  val ontology = TableQuery[ontology]
+
+  class cv_support(tag: Tag) extends Table[cv_support_type](tag, Some("public"), "cv_support"){
     def tid = column[Int]("tid", O.AutoInc, O.PrimaryKey)
-    def source = column[String]("source", O.SqlType("VARCHAR(32)"))
-    def code = column[String]("code",O.SqlType("VARCHAR(32)"))
+    def source = column[String]("source", O.SqlType("VARCHAR(8)"))
+    def code = column[String]("code",O.SqlType("VARCHAR(64)"))
     def label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
     def description = column[String]("description")
 
     def idx = index("cv_support_source_code_key",(source,code),unique = true)
+    def fk = foreignKey("ontology_source_fk",source,ontology)(_.source)
 
-    def * = (tid, source,code,label,description)
+    def * = (tid, source,code,label,description) <> (cv_support_type.tupled, cv_support_type.unapply)
   }
   val cv_support = TableQuery[cv_support]
 
@@ -80,8 +102,8 @@ object Tables {
 
   class cv_support_xref(tag: Tag) extends Table[(Int,String,String)](tag, Some("public"), "cv_support_xref"){
     def tid = column[Int]("tid")
-    def source = column[String]("source", O.SqlType("VARCHAR(32)"))
-    def code = column[String]("code",O.SqlType("VARCHAR(32)"))
+    def source = column[String]("source", O.SqlType("VARCHAR(8)"))
+    def code = column[String]("code",O.SqlType("VARCHAR(64)"))
 
     def pk = primaryKey("cv_support_xref_pley", (tid, source, code))
     def fk = foreignKey("cv_cvx_fk",tid, cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
@@ -106,7 +128,8 @@ object Tables {
   }
   val cv_support_raw = TableQuery[cv_support_raw]
 
-  class onto_support_hyp(tag: Tag) extends Table[(Int,Int,String)](tag, Some("public"), "onto_support_hyp"){
+
+  class onto_support_hyp(tag: Tag) extends Table[onto_support_hyp_type](tag, Some("public"), "onto_support_hyp"){
     def tid_p = column[Int]("tid_parent")
     def tid_c = column[Int]("tid_child")
     def rel_type = column[String]("rel_type", O.SqlType("VARCHAR(8)"))
@@ -117,11 +140,11 @@ object Tables {
 
     def idx = index("ohc_idx",tid_c)
 
-    def * = (tid_p, tid_c, rel_type)
+    def * = (tid_p, tid_c, rel_type) <> (onto_support_hyp_type.tupled, onto_support_hyp_type.unapply)
   }
   val onto_support_hyp = TableQuery[onto_support_hyp]
 
-  class onto_support_hyp_unfolded(tag: Tag) extends  Table[(Int,Int,Int,String)](tag, Some("public"),"onto_support_hyp_unfolded"){
+  class onto_support_hyp_unfolded(tag: Tag) extends  Table[onto_support_hyp_unfolded_type](tag, Some("public"),"onto_support_hyp_unfolded"){
     def tid_a = column[Int]("tid_ancestor")
     def tid_d = column[Int]("tid_descendant")
     def distance = column[Int]("distance")
@@ -133,8 +156,9 @@ object Tables {
 
     def idx = index("ohd_unfolded_idx", tid_d)
 
-    def * = (tid_a,tid_d,distance,rel_type)
+    def * = (tid_a,tid_d,distance,rel_type) <> (onto_support_hyp_unfolded_type.tupled, onto_support_hyp_unfolded_type.unapply)
   }
+  val onto_support_hyp_unfolded = TableQuery[onto_support_hyp_unfolded]
 
   class user_feedback(tag: Tag) extends Table[(Int, Boolean, String, String, Option[Int], String, Option[String], Option[String], Option[String], Option[String])](tag, "user_feedback"){
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)

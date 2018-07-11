@@ -3,14 +3,14 @@ package DBcon
 import scala.concurrent._
 import slick.jdbc.PostgresProfile.api._
 import java.io._
+import java.sql.BatchUpdateException
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import Tables.{cv_support,cv_support_syn,cv_support_xref,cv_support_raw,onto_support_hyp,user_changes,user_feedback}
+import Tables.{cv_support, cv_support_raw, cv_support_syn, cv_support_xref, onto_support_hyp, onto_support_hyp_unfolded, ontology, user_changes, user_feedback}
 
 import scala.concurrent.duration.Duration
 import com.typesafe.config.ConfigFactory
 import slick.jdbc.meta.MTable
-
 
 object gecotest_handler {
   private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/DBcon/application.conf"))
@@ -23,14 +23,9 @@ object gecotest_handler {
 
   protected def get_db(): Database = Database.forConfig(_db_name, conf)
 
-  case class cv_support_type(tid: Int, source: String, code: String, label: String, description: String)
-  case class cv_support_syn_type (tid: Int, label: String, ttype: String)
-  case class cv_support_raw_type(tid: Int, label: String, table_name: String, column_name: String, method: Char)
-  case class user_feedback_type (table: String, column: String, tid: Option[Int], raw_value: String, parsed_value: Option[String], label: Option[String], source: Option[String], code: Option[String])
-
   def init(): Unit = {
     val db = get_db()
-    val tables = List(cv_support,cv_support_syn,cv_support_xref,cv_support_raw,onto_support_hyp,user_changes, user_feedback)
+    val tables = List(ontology,cv_support,cv_support_syn,cv_support_xref,cv_support_raw,onto_support_hyp,onto_support_hyp_unfolded,user_changes, user_feedback)
     val existing = db.run(MTable.getTables)
     val f = existing.flatMap(v => {
       val names = v.map(mt => mt.name.name)
@@ -104,9 +99,9 @@ object gecotest_handler {
       ok :+= (l(0).toInt, l(1).toInt, l(2))
     }
     val db = get_db()
-    val insertAction = onto_support_hyp ++= ok
-    val insert = db.run(insertAction)
-    Await.result(insert, Duration.Inf)
+//    val insertAction = onto_support_hyp ++= ok
+//    val insert = db.run(insertAction)
+//    Await.result(insert, Duration.Inf)
     db.close()
   }
 
@@ -203,7 +198,7 @@ object gecotest_handler {
   }
 
 
-  def get_raw_in_cv_support_syn(raw_value: String): cv_support_syn_type = {
+  def get_cv_support_syn_by_value(raw_value: String): cv_support_syn_type = {
     var result = cv_support_syn_type(-1,"","")
     val db = get_db()
     val q = cv_support_syn.filter(a => a.label === raw_value).map(_.*)
@@ -294,7 +289,6 @@ object gecotest_handler {
 
 //  INPUT SOURCE, CODE
 //  RETURNS TRUE IF SOURCE, CODE EXIST IN cv_support
-
   def is_duplicate(source: String, code: String): Boolean = {
     val db = get_db()
     var result = false
@@ -321,10 +315,50 @@ object gecotest_handler {
   def get_cv_support_by_tid(tid: Int): cv_support_type = {
     val db = get_db()
     var result = cv_support_type(-1,"","","","")
-    val q = cv_support.filter(_.tid===tid).map(_.*)
-    Await.result(db.run(q.result).map(a=> result = cv_support_type(a.head._1,a.head._2,a.head._3,a.head._4,a.head._5)),Duration.Inf)
+    val q = cv_support.filter(_.tid===tid).result.headOption
+    val f = db.run(q).map(a=>
+      if(a.isDefined)
+        result = a.get
+    )
+    Await.result(f,Duration.Inf)
     db.close()
     result
   }
 
+  def get_tid_parent_distinct(tid_parent: Int): List[Int] = {
+    var result: List[Int] = List()
+
+    val q = onto_support_hyp.filter(_.tid_p>=tid_parent).map(_.tid_p).distinct.result
+    val db = get_db()
+    Await.result(db.run(q).map(a=> result = a.toList),Duration.Inf)
+    db.close()
+    result
+  }
+
+  def get_onto_hyp(tid_parent: Int): List[onto_support_hyp_type] = {
+    val db = get_db()
+    var result: List[onto_support_hyp_type] = List()
+
+    val q = onto_support_hyp.filter(_.tid_p===tid_parent).result
+
+    val f = db.run(q).map(a =>
+      result = a.toList
+    )
+    Await.result(f, Duration.Inf)
+    db.close()
+    result
+  }
+
+  def insert_unfolded(rows: List[onto_support_hyp_unfolded_type]): Unit = {
+    val db = get_db()
+
+    val insertAction = onto_support_hyp_unfolded ++= rows
+    try {
+      Await.result(db.run(insertAction), Duration.Inf)
+    }
+    catch {
+      case e: BatchUpdateException => e.getNextException.printStackTrace()
+    }
+    db.close()
+  }
 }

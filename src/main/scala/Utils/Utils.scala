@@ -49,4 +49,13 @@ object Utils {
     writer.close()
     return true
   }
+
+  //ELIMINATE DUPLICATES FROM LIST BASED ON CONDITIONS
+  def distinctBy[L, E](list: List[L])(f: L => E): List[L] =
+    list.foldLeft((Vector.empty[L], Set.empty[E])) {
+      case ((acc, set), item) =>
+        val key = f(item)
+        if (set.contains(key)) (acc, set)
+        else (acc :+ item, set + key)
+    }._1.toList
 }

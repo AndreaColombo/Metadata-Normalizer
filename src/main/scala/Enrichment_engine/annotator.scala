@@ -3,24 +3,24 @@ package Enrichment_engine
 import java.net.URLEncoder
 import java.sql.BatchUpdateException
 
-import DBcon.gecotest_handler
-import DBcon.gecotest_handler.user_feedback_type
+import DBcon.{gecotest_handler, user_feedback_type}
 import Ontologies.Util.OlsParser.get_score
 import Utils.Preprocessing
 import Utils.score_calculator.get_match_score
-import play.api.libs.json.Json
+import com.fasterxml.jackson.core.JsonParseException
+import org.slf4j.LoggerFactory
+import play.api.libs.json.{JsValue, Json}
 import scalaj.http._
+
 import util.control.Breaks._
 
 object annotator {
   val max_depth = 2
-  val url = "https://www.ebi.ac.uk/ols/api/search"
 
   def get_info(source: String, code: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
     val tmp = ols_get_info(source,code)
     if (tmp.nonEmpty) {
-      println("good")
       val onto = tmp.head(0)
       val parents = tmp.head(5)
       val children = tmp.head(6)
@@ -36,12 +36,12 @@ object annotator {
 
       for (tmp <- anc) {
         if(!gecotest_handler.is_duplicate(tmp._1,tmp._2))
-          result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8,"description"->tmp._9)
+        result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8,"description"->tmp._9)
       }
 
       for (elem <- desc) {
         if (!gecotest_handler.is_duplicate(elem._1, elem._2))
-          result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9)
+        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9)
       }
     }
     result.distinct
@@ -56,7 +56,7 @@ object annotator {
       val tmp = ols_search_term(raw_value,onto)
       breakable {
         if (tmp._1 == "null")
-          break()
+        break()
         else {
           result = (tmp._1,tmp._2)
           ok = true
@@ -107,9 +107,9 @@ object annotator {
         result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7),res.head(8))
         val n = depth + 1
         if (n != max_depth)
-          result ++= get_hyp(res.head(5), res.head(0), n)
+        result ++= get_hyp(res.head(5), res.head(0), n)
         else
-          result
+        result
       }
     }
     result
@@ -144,17 +144,17 @@ object annotator {
 
       val p_status = Http(parents_url).asString.header("Status").get
       if (!(j \ "is_root").validate[Boolean].get && p_status.contains("200"))
-        ((Json.parse(Http(parents_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => parents :+= a.validate[String].getOrElse("null"))
+      ((Json.parse(Http(parents_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => parents :+= a.validate[String].getOrElse("null"))
       else parents = List("null")
 
       val pp_status = Http(part_url).asString.header("Status").get
       if (part_exist && pp_status.contains("200"))
-        ((Json.parse(Http(part_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => part_of :+= a.validate[String].getOrElse("null"))
+      ((Json.parse(Http(part_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => part_of :+= a.validate[String].getOrElse("null"))
       else part_of = List("null")
 
       val c_status = Http(children_url).asString.header("Status").get
       if ((j \ "has_children").validate[Boolean].get && c_status.contains("200"))
-        ((Json.parse(Http(children_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => children :+= a.validate[String].getOrElse("null"))
+      ((Json.parse(Http(children_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => children :+= a.validate[String].getOrElse("null"))
       else children = List("null")
 
       rows :+= List(ontology, ontology_id, prefLabel, xref.mkString(","), synonym, parents.mkString(","), children.mkString(","), part_of.mkString(","),description)
@@ -163,10 +163,20 @@ object annotator {
   }
 
   def ols_search_term(term: String, onto: String): (String, String) = {
+    val url = "https://www.ebi.ac.uk/ols/api/search"
     val response = Http(url).param("q", term).param("fieldList", "label,short_form,synonym,ontology_name,iri").param("ontology", onto).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
     var max_score = 0
     var result: (String, String)  = ("null", "null")
-    val j = (Json.parse(response) \ "response").get("docs")
+    var j: JsValue = null
+
+    val logger = LoggerFactory.getLogger(this.getClass)
+    try {
+      j = (Json.parse(response) \ "response").get("docs")
+    }
+    catch {
+      case e: JsonParseException => logger.info("json parse error",e)
+    }
+
     val service = "Ols"
     val range = j \\ "label"
     for (i <- range.indices) {

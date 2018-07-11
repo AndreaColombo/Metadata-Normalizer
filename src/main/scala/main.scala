@@ -1,14 +1,15 @@
 import java.util.{Calendar, Date}
 
 import DBcon.gecotest_handler
-import Enrichment_engine.{annotator, enrichment_engine}
+import Enrichment_engine.{annotator, db_interface, enrichment_engine}
+import org.slf4j.LoggerFactory
 
 object main extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
   var i = 0
-
   override def main(args: Array[String]): Unit = {
     gecotest_handler.init()
+    db_interface.unfold_hyp(1)
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))
         user_interface.get_user_feedback()

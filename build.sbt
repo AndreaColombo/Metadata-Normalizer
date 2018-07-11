@@ -14,5 +14,10 @@ libraryDependencies ++= Seq(
 )
 libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.3.5"
 libraryDependencies += "com.github.wookietreiber" %% "scala-cli-tools" % "0.2.0"
-libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.11.0"
-libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.11.0"
+//libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.11.0"
+//libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.11.0"
+// https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.25"
+// https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
+libraryDependencies += "org.slf4j" % "slf4j-log4j12" % "1.7.25" % Test
+
