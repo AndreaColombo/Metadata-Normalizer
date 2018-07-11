@@ -2,11 +2,11 @@ package Ontologies.Util
 
 import java.net.URLEncoder
 
-import Utils.score_calculator._
+import Utilities.score_calculator._
 import DBcon.{db_handler, gecotest_handler}
-import Utils.Preprocessing
+import Utilities.Preprocessing
 import play.api.libs.json._
-import Utils.Preprocessing.{lookup, parse}
+import Utilities.Preprocessing.{lookup, parse}
 import scalaj.http.{Http, HttpOptions}
 
 import scala.util.control.Breaks._

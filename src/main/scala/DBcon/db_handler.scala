@@ -11,7 +11,7 @@ import Tables.{ApiResults, ApiResults2, OntologyScore, best_ontos}
 
 object db_handler {
 
-  private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/DBcon/application.conf"))
+  private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/Config/application.conf"))
   private val conf = ConfigFactory.load(parsedConfig)
   private val db = Database.forConfig("mydb", conf)
   private val ApiResults = TableQuery[ApiResults]

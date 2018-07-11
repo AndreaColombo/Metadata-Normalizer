@@ -2,7 +2,7 @@ import java.util.Calendar
 
 import DBcon.{db_handler, gecotest_handler}
 import Ontologies.Ontology
-import Utils.Preprocessing.parse
+import Utilities.Preprocessing.parse
 
 object db_filler {
 
@@ -11,19 +11,19 @@ object db_filler {
   val zooma = Ontology.apply("zooma")
   val ols = Ontology.apply("ols")
 
-  def update_db (a: String): Unit = {
-    val b = parse(gecotest_handler.get_raw_values(a)).split(",")
+  def update_db (table_name: String, column_name: String): Unit = {
+    val b = parse(gecotest_handler.get_raw_values(table_name,column_name)).split(",")
     for (parsed <- b){
-      db_handler.update_term_type(parsed, a)
+      db_handler.update_term_type(parsed, column_name)
     }
   }
 
-  def fill_db (a: String): Unit = {
+  def fill_db (table_name: String, column_name: String): Unit = {
 
-    val s = parse(gecotest_handler.get_raw_values(a))
+    val s = parse(gecotest_handler.get_raw_values(table_name,column_name))
 //    val c = s.split(",").filterNot(sd => sd.equalsIgnoreCase("p12")).mkString(",")
 //    val b = c.split(",").filterNot(sd => sd.equalsIgnoreCase("h54")).mkString(",")
-    println(a)
+    println(column_name)
     get_timestamp()
 //    println(s)
     val tmp = s.split(",")

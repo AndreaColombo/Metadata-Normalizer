@@ -9,7 +9,7 @@ object main extends App {
   var i = 0
   override def main(args: Array[String]): Unit = {
     gecotest_handler.init()
-    db_interface.unfold_hyp(1)
+    println(Config.config.get_termtype_list("biosample"))
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))
         user_interface.get_user_feedback()

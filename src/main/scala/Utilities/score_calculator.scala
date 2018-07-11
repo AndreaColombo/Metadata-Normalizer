@@ -1,4 +1,4 @@
-package Utils
+package Utilities
 
 import DBcon.db_handler
 import play.api.libs.json.Json

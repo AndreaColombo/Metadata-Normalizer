@@ -1,4 +1,4 @@
-package Utils
+package Utilities
 
 object Preprocessing {
   var lookup_map: Map[String, Seq[String]] = Map()

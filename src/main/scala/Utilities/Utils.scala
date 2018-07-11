@@ -1,16 +1,11 @@
-package Utils
+package Utilities
 
 import java.io._
 
 object Utils {
 
   def escape (str: String) : String = {
-    return str.replace('/', '-').replace('\\','-').replace(':','-').replace(';','-').replace('*','-').replace('?','-').replace('"','-').replace("--", "-")
-  }
-
-  def get_ontologies_by_type(term_type: String): String = {
-    val m = Map("technique" -> "obi", "feature" -> "ncit", "target" -> "ogg,pr", "tissue" ->  "uberon,ncit", "disease" ->  "doid,ncit", "cell_line" ->  "efo,cl", "platform" -> "obi", "ethnicity" -> "ncit, efo", "species" -> "ncbi")
-    m.apply(term_type)
+    str.replace('/', '-').replace('\\','-').replace(':','-').replace(';','-').replace('*','-').replace('?','-').replace('"','-').replace("--", "-")
   }
 
  def write_to_file (str: String, path_raw: String, filename: String, append: Boolean = false) : Boolean = {
@@ -30,14 +25,14 @@ object Utils {
      bw = new BufferedWriter(writer)
     }
     catch {
-      case e: FileNotFoundException => {
+      case e: FileNotFoundException =>
         e.printStackTrace()
         return false
-      }
-      case e1: IOException => {
+
+      case e1: IOException =>
         e1.printStackTrace()
         return false
-      }
+
     }
     if (append){
       pw.println(str)
@@ -47,7 +42,7 @@ object Utils {
       writer.flush()
     }
     writer.close()
-    return true
+    true
   }
 
   //ELIMINATE DUPLICATES FROM LIST BASED ON CONDITIONS

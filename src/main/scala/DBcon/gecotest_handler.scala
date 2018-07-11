@@ -2,26 +2,23 @@ package DBcon
 
 import scala.concurrent._
 import slick.jdbc.PostgresProfile.api._
-import java.io._
 import java.sql.BatchUpdateException
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import Tables.{cv_support, cv_support_raw, cv_support_syn, cv_support_xref, onto_support_hyp, onto_support_hyp_unfolded, ontology, user_changes, user_feedback}
 
 import scala.concurrent.duration.Duration
-import com.typesafe.config.ConfigFactory
 import slick.jdbc.meta.MTable
 
+import Config.config._
+
 object gecotest_handler {
-  private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/DBcon/application.conf"))
-  private val conf = ConfigFactory.load(parsedConfig)
-  val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity", "species"), "item" -> List("platform"), "experiment_type" -> List("technique", "feature", "target"), "container" -> List("annotation"))
 
   private var _db_name = "gecotest1"
   def db_name: String = _db_name
   def set_db_name(value: String): Unit = _db_name = value
 
-  protected def get_db(): Database = Database.forConfig(_db_name, conf)
+  protected def get_db(): Database = Database.forConfig(_db_name,conf)
 
   def init(): Unit = {
     val db = get_db()
@@ -163,14 +160,12 @@ object gecotest_handler {
     db.close()
   }
 
-  def get_raw_values(term_type: String): List[String] = {
+  def get_raw_values(table: String, term_type: String): List[String] = {
     val db = get_db()
     var result: Seq[String] = List()
     val t = term_type
 
-
     val default = (-1, "")
-    val table = m.find(_._2.contains(t)).getOrElse(default)._1.toString
     val type_tid = t + "_tid"
 
     val q =
@@ -253,8 +248,8 @@ object gecotest_handler {
 
   def get_value_info(value: String): List[(String,String)] = {
     var result: List[(String,String)] = List()
-    for (table_name <- m.keys){
-      for(column_name <- m.apply(table_name)){
+    for (table_name <- get_gcm_table_list()){
+      for(column_name <- get_termtype_list(table_name)){
         val q =
           sql"""
                  select distinct #$column_name

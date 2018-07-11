@@ -3,7 +3,7 @@ package Ontologies.Util
 import DBcon.gecotest_handler
 import Ontologies.Util.OlsParser.countWords
 import play.api.libs.json._
-import Utils.Preprocessing.lookup
+import Utilities.Preprocessing.lookup
 import scalaj.http.{Http, HttpOptions}
 
 

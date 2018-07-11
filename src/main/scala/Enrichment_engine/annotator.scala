@@ -5,8 +5,8 @@ import java.sql.BatchUpdateException
 
 import DBcon.{gecotest_handler, user_feedback_type}
 import Ontologies.Util.OlsParser.get_score
-import Utils.Preprocessing
-import Utils.score_calculator.get_match_score
+import Utilities.Preprocessing
+import Utilities.score_calculator.get_match_score
 import com.fasterxml.jackson.core.JsonParseException
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsValue, Json}
@@ -14,8 +14,11 @@ import scalaj.http._
 
 import util.control.Breaks._
 
+import Config.config.{get_anc_limit,get_desc_limit,get_ontologies_by_type}
+
 object annotator {
-  val max_depth = 2
+  val max_depth_anc: Int = get_anc_limit()
+  val max_depth_desc: Int = get_desc_limit()
 
   def get_info(source: String, code: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
@@ -50,7 +53,7 @@ object annotator {
   def search_term(raw_value: String, term_type: String): (String, String) = {
     var res: List[(String, String, String, String, String, String, String, String)] = List()
     var result: (String, String) = ("","")
-    val ontos = Utils.Utils.get_ontologies_by_type(term_type).split(",")
+    val ontos = get_ontologies_by_type(term_type).split(",")
     var ok = false
     for (onto <- ontos if !ok){
       val tmp = ols_search_term(raw_value,onto)
@@ -90,7 +93,7 @@ object annotator {
         val res = ols_get_info(onto,code)
         result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7),res.head(8))
         val n = depth + 1
-        if (n != max_depth)
+        if (n != max_depth_desc)
           result ++= get_desc(res.head(6), res.head(0), n)
         else
           result
@@ -106,7 +109,7 @@ object annotator {
         val res = ols_get_info(onto,code)
         result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7),res.head(8))
         val n = depth + 1
-        if (n != max_depth)
+        if (n != max_depth_anc)
         result ++= get_hyp(res.head(5), res.head(0), n)
         else
         result
@@ -203,7 +206,7 @@ object annotator {
     var rows: List[user_feedback_type] = List()
     val parsed = Preprocessing.parse(List(raw_value)).split(",")
     for (value <- parsed) {
-      val ontologies = Utils.Utils.get_ontologies_by_type(term_type)
+      val ontologies = get_ontologies_by_type(term_type)
       val url = "https://www.ebi.ac.uk/ols/api/search"
       val response = Http(url).param("q", value).param("fieldList", "label,short_form,ontology_name").param("ontology", ontologies).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       val json = (Json.parse(response) \ "response").get("docs")

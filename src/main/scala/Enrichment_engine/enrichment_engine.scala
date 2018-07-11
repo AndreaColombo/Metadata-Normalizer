@@ -2,15 +2,14 @@ package Enrichment_engine
 
 
 import DBcon.{gecotest_handler,user_feedback_type}
+import Config.config.get_termtype_list
 
 object enrichment_engine {
-  val m = Map("biosample" -> List("tissue", "cell_line"), "donor" -> List("ethnicity", "species"), "item" -> List("platform"), "experiment_type" -> List("technique", "target", "feature"))
-
 
   def controller(table_name: String = ""): Unit = {
-    val t = m.apply(table_name)
+    val t = get_termtype_list(table_name)
     for (term_type <- t) {
-      val raw_values = gecotest_handler.get_raw_values(term_type)
+      val raw_values = gecotest_handler.get_raw_values(table_name,term_type)
       for (raw_value <- raw_values) {
         println(raw_value)
         val result_syn = gecotest_handler.get_cv_support_syn_by_value(raw_value)

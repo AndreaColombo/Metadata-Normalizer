@@ -3,7 +3,7 @@ package Ontologies.Util
 import DBcon.gecotest_handler
 import play.api.libs.json._
 import scalaj.http.{Http, HttpOptions}
-import Utils.Preprocessing.lookup
+import Utilities.Preprocessing.lookup
 
 object ZoomaParser {
 

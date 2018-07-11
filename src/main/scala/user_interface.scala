@@ -6,9 +6,9 @@ import scala.io._
 import scalax.cli._
 import shapeless._
 
-object user_interface {
+import Config.config.{get_gcm_table_list,get_termtype_list}
 
-  val m = Map("biosample" -> List("disease", "tissue", "cell_line"), "donor" -> List("ethnicity", "species"), "item" -> List("platform"), "experiment_type" -> List("technique", "target", "feature"))
+object user_interface {
 
   def revision_routine(): Unit = {
     var flag = true
@@ -47,8 +47,8 @@ object user_interface {
   }
 
   def get_user_feedback(): Unit = {
-    for (table_name <- m.keys){
-      for (column_name <- m.apply(table_name)){
+    for (table_name <- get_gcm_table_list()){
+      for (column_name <- get_termtype_list(table_name)){
         val raw_values = gecotest_handler.get_user_feedback_raw_values(table_name,column_name)
         for (rv <- raw_values){
           var i = 0
