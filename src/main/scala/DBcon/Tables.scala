@@ -3,16 +3,19 @@ package DBcon
 import slick.jdbc.PostgresProfile.api._
 
 object default_values{
-  val int = -1
-  val string = "null"
-  val char = 'n'
+  def int: Int = -1
+  def string = "null"
+  def char = 'n'
+  def bool = false
 }
 
 case class cv_support_type(tid: Int = default_values.int, source: String = default_values.string, code: String = default_values.string, label: String = default_values.string, description: String = default_values.string)
 case class cv_support_syn_type (tid: Int = default_values.int, label: String = default_values.string, ttype: String = default_values.string)
+case class cv_support_xref_type (tid: Int = default_values.int, source: String = default_values.string, code: String = default_values.string)
 case class cv_support_raw_type(tid: Int = default_values.int, label: String = default_values.string, table_name: String = default_values.string, column_name: String = default_values.string, method: Char = default_values.char)
-case class user_feedback_type (table: String, column: String, tid: Option[Int], raw_value: String, parsed_value: Option[String], label: Option[String], source: Option[String], code: Option[String])
-case class ontology_type(source: String, title: Option[String], description: Option[String], url: String)
+case class user_feedback_type (id: Int = default_values.int, resolved: Boolean = default_values.bool, table: String = default_values.string, column: String = default_values.string, tid: Option[Int] = Some(default_values.int), raw_value: String = default_values.string, parsed_value: Option[String] = Some(default_values.string), label: Option[String] = Some(default_values.string), source: Option[String] = Some(default_values.string), code: Option[String] = Some(default_values.string))
+case class user_changes_type (id: Int = default_values.int, table_name: String = default_values.string, column_name: String = default_values.string, raw_value: String = default_values.string, source: String = default_values.string, code: String = default_values.string)
+case class ontology_type(source: String = default_values.string, title: Option[String] = Some(default_values.string), description: Option[String] = Some(default_values.string), url: String = default_values.string)
 case class onto_support_hyp_type (tid_p: Int = default_values.int, tid_c: Int = default_values.int, rel_type:String = default_values.string)
 case class onto_support_hyp_unfolded_type (tid_a: Int = default_values.int , tid_d: Int = default_values.int, distance: Int = default_values.int, rel_type:String = default_values.string)
 
@@ -87,7 +90,7 @@ object Tables {
   }
   val cv_support = TableQuery[cv_support]
 
-  class cv_support_syn(tag: Tag) extends Table[(Int,String,String)](tag,Some("public"), "cv_support_syn"){
+  class cv_support_syn(tag: Tag) extends Table[cv_support_syn_type](tag,Some("public"), "cv_support_syn"){
     def tid = column[Int]("tid")
     def label = column[String]("label", O.SqlType("VARCHAR(128)"))
     def ttype = column[String]("type", O.SqlType("VARCHAR(4)"))
@@ -96,25 +99,25 @@ object Tables {
     def fk = foreignKey("cv_cvs_fk",tid, cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
     def idx = index("syn_label_idx", label)
 
-    def * = (tid, label,ttype)
+    def * = (tid, label,ttype) <> (cv_support_syn_type.tupled, cv_support_syn_type.unapply)
   }
   val cv_support_syn = TableQuery[cv_support_syn]
 
-  class cv_support_xref(tag: Tag) extends Table[(Int,String,String)](tag, Some("public"), "cv_support_xref"){
+  class cv_support_xref(tag: Tag) extends Table[cv_support_xref_type](tag, Some("public"), "cv_support_xref"){
     def tid = column[Int]("tid")
     def source = column[String]("source", O.SqlType("VARCHAR(8)"))
-    def code = column[String]("code",O.SqlType("VARCHAR(64)"))
+    def code = column[String]("code")
 
     def pk = primaryKey("cv_support_xref_pley", (tid, source, code))
     def fk = foreignKey("cv_cvx_fk",tid, cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
 
     def idx = index("xref_code_idx",code)
 
-    def * = (tid, source, code)
+    def * = (tid, source, code) <> (cv_support_xref_type.tupled, cv_support_xref_type.unapply)
   }
   val cv_support_xref = TableQuery[cv_support_xref]
 
-  class cv_support_raw(tag: Tag) extends Table[(Int, String, String, String, Char)](tag, Some("public"),"cv_support_raw"){
+  class cv_support_raw(tag: Tag) extends Table[cv_support_raw_type](tag, Some("public"),"cv_support_raw"){
     def tid = column[Int]("tid")
     def label = column[String]("label", O.SqlType("VARCHAR(128)"))
     def table_name = column[String]("table_name", O.SqlType("VARCHAR(32)"))
@@ -124,7 +127,7 @@ object Tables {
     def pk = primaryKey("cv_support_raw_pkey",(label,table_name,column_name))
     def fk = foreignKey("cv_cvr_fk",tid,cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
 
-    def * = (tid,label,table_name,column_name,method)
+    def * = (tid,label,table_name,column_name,method) <> (cv_support_raw_type.tupled, cv_support_raw_type.unapply)
   }
   val cv_support_raw = TableQuery[cv_support_raw]
 
@@ -160,7 +163,7 @@ object Tables {
   }
   val onto_support_hyp_unfolded = TableQuery[onto_support_hyp_unfolded]
 
-  class user_feedback(tag: Tag) extends Table[(Int, Boolean, String, String, Option[Int], String, Option[String], Option[String], Option[String], Option[String])](tag, "user_feedback"){
+  class user_feedback(tag: Tag) extends Table[user_feedback_type](tag, "user_feedback"){
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def table_name = column[String]("table_name")
     def column_name = column[String]("column_name")
@@ -174,18 +177,18 @@ object Tables {
 
     def idx = index("user_feedback_idx",(raw_value,source,code),unique = true)
 
-    def * = (id, resolved, table_name, column_name, tid, raw_value, parsed_value, label, source, code)
+    def * = (id, resolved, table_name, column_name, tid, raw_value, parsed_value, label, source, code) <> (user_feedback_type.tupled, user_feedback_type.unapply)
   }
   val user_feedback = TableQuery[user_feedback]
 
-  class user_changes(tag: Tag) extends Table[(Int, String, String, String, String, String)](tag, "user_requested_changes"){
+  class user_changes(tag: Tag) extends Table[user_changes_type](tag, "user_requested_changes"){
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def table_name = column[String]("table_name")
     def column_name = column[String]("column_name")
     def raw_value = column[String]("raw_value")
     def source = column[String]("source")
     def code = column[String]("code")
-    def * = (id, table_name, column_name, raw_value, source, code)
+    def * = (id, table_name, column_name, raw_value, source, code) <> (user_changes_type.tupled,user_changes_type.unapply)
   }
   val user_changes = TableQuery[user_changes]
 

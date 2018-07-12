@@ -1,7 +1,7 @@
 package Enrichment_engine
 
 
-import DBcon.{gecotest_handler,user_feedback_type}
+import DBcon.{default_values, gecotest_handler, user_feedback_type}
 import Config.config.get_termtype_list
 
 object enrichment_engine {
@@ -16,7 +16,7 @@ object enrichment_engine {
         val result_user_changes = gecotest_handler.get_raw_user_changes(table_name,term_type,raw_value)
 
         //LOCAL KB LOOKUP
-        if(result_syn.tid != -1 || result_user_changes._1 != "null") {
+        if(result_syn.tid != default_values.int || result_user_changes._1 != "null") {
           //CHECK IF TYPE IS RAW
           if (result_syn.ttype == "raw")
             gecotest_handler.update_tid(raw_value, Some(result_syn.tid))
@@ -28,7 +28,7 @@ object enrichment_engine {
           //if (result_syn.ttype == "syn" || result_syn.ttype == "pref"){
           else {
             val suggestion = gecotest_handler.get_cv_support_by_tid(result_syn.tid)
-            gecotest_handler.user_feedback_insert(List(user_feedback_type(table_name,term_type,Some(result_syn.tid), raw_value,null,Some(suggestion.label),Some(suggestion.source),Some(suggestion.code))))
+            gecotest_handler.user_feedback_insert(List(user_feedback_type(default_values.int,default_values.bool,table_name,term_type,Some(result_syn.tid), raw_value,null,Some(suggestion.label),Some(suggestion.source),Some(suggestion.code))))
           }
         }
 

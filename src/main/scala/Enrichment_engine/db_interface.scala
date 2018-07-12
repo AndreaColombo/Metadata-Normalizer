@@ -2,7 +2,7 @@ package Enrichment_engine
 
 import java.sql.BatchUpdateException
 
-import DBcon.{cv_support_raw_type,onto_support_hyp_unfolded_type,gecotest_handler}
+import DBcon._
 import org.slf4j.{Logger, LoggerFactory}
 
 
@@ -17,8 +17,8 @@ object db_interface {
         cv_support ++= db_insert(elem)
       }
       val label = res.head.apply("label")
-      val tid = gecotest_handler.get_tid(label)
-      gecotest_handler.syn_insert(List(List(tid.toString, raw_value, "raw")))
+      val tid = gecotest_handler.get_tid(res.head.apply("source"),res.head.apply("code"))
+      gecotest_handler.syn_insert(List(cv_support_syn_type(tid,raw_value,"raw")))
       gecotest_handler.raw_insert(List(cv_support_raw_type(tid,label,table_name,column_name,method)))
       gecotest_handler.update_tid(raw_value,Some(tid))
       insert_hyp(cv_support, res)
@@ -28,9 +28,9 @@ object db_interface {
 
   //INSERT ELEMENTS IN cv_support, syn, xref
   def db_insert (elem: Map[String,String]): List[cv_support]= {
-    var insert_elem: List[List[String]] = List()
-    var insert_xref: List[List[String]] = List()
-    var insert_syn: List[List[String]] = List()
+    var insert_elem: List[cv_support_type] = List()
+    var insert_xref: List[cv_support_xref_type] = List()
+    var insert_syn: List[cv_support_syn_type] = List()
     var support: List[cv_support] = List()
 
     val source = elem.apply("source")
@@ -38,52 +38,47 @@ object db_interface {
     val label = elem.apply("label")
     val description = elem.apply("description")
 
-    insert_elem ++= List(List(source, code, label, description))
+    insert_elem ++= List(cv_support_type(default_values.int,source,code,label,description))
     gecotest_handler.cv_support_insert(insert_elem)
-    val tid = gecotest_handler.get_tid(label).toString
-    support :+= cv_support(tid,source,code,label)
+    val tid = gecotest_handler.get_tid(source,code)
+    support :+= cv_support(tid.toString,source,code,label)
 
     //XREF
     var xref_l:List[String] = List()
     if (elem.apply("xref") != "null")
+
       xref_l = elem.apply("xref").split(",").toList
 
-    insert_xref ++= List(List(tid, source, code))
+    insert_xref ++= List(cv_support_xref_type(tid, source, code))
 
     for (xref <- xref_l if xref_l.nonEmpty) {
       val source = xref.split(":").head
       val code = xref
-      insert_xref ++= List(List(tid, source, code))
+      insert_xref ++= List(cv_support_xref_type(tid, source, code))
     }
-
-    val logger = LoggerFactory.getLogger(this.getClass)
-    for (elem <- insert_xref) {
-      try {
-        gecotest_handler.xref_insert(List(elem))
-      }
-      catch {
-        case e: BatchUpdateException => logger.info("xref insert error",e.getNextException)
-      }
-    }
+    gecotest_handler.xref_insert(insert_xref)
+    //END XREF
 
     //SYN
     var syn_l:List[String] = List()
     if (elem.apply("syn") != "null")
       syn_l = elem.apply("syn").split(",").toList
 
-    insert_syn ++= List(List(tid, label, "pref"))
+    insert_syn ++= List(cv_support_syn_type(tid, label, "pref"))
 
     for (syn <- syn_l if syn_l.nonEmpty) {
       val label = syn
-      insert_syn ++= List(List(tid, label, "syn"))
+      insert_syn ++= List(cv_support_syn_type(tid, label, "syn"))
     }
 
     gecotest_handler.syn_insert(insert_syn)
+    //END SYN
+
     support
   }
 
   def insert_hyp(elems: List[cv_support], res:List[Map[String,String]]): Unit = {
-    var result: List[List[String]] = List()
+    var result: List[onto_support_hyp_type] = List()
     val default_cv: cv_support = cv_support("null","null","null","null")
     for(elem <- elems){
       val child_tid = elem.tid
@@ -104,7 +99,7 @@ object db_interface {
         for(parent <- parents.split(",")) {
           val parent_tid = elems.find(a => a.code == parent).getOrElse(default_cv).tid
           if(parent_tid != "null")
-            result :+= List(parent_tid, child_tid, "is_a")
+            result :+= onto_support_hyp_type(Integer.parseInt(parent_tid), Integer.parseInt(child_tid), "is_a")
         }
       }
 
@@ -113,7 +108,7 @@ object db_interface {
         for(parent <- parents.split(",")) {
           val parent_tid = elems.find(a => a.code == parent).getOrElse(default_cv).tid
           if(parent_tid != "null")
-            result :+= List(parent_tid, child_tid, "part_of")
+            result :+= onto_support_hyp_type(Integer.parseInt(parent_tid), Integer.parseInt(child_tid), "part_of")
         }
       }
     }

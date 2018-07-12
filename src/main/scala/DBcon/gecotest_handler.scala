@@ -36,11 +36,11 @@ object gecotest_handler {
     db.close()
   }
 
-  def cv_support_insert(rows: List[List[String]]): Unit = {
+  def cv_support_insert(rows: List[cv_support_type]): Unit = {
 
     var ok: Seq[(String, String, String, String)] = Seq()
     for (l <- rows) {
-      ok :+= (l(0), l(1), l(2), l(3))
+      ok :+= (l.source,l.code,l.label,l.description)
     }
     val db = get_db()
     val insertAction = cv_support.map(a=> (a.source,a.code,a.label,a.description)) ++= ok
@@ -49,27 +49,21 @@ object gecotest_handler {
     db.close()
   }
 
-  def syn_insert(rows: List[List[String]]): Unit = {
+  def syn_insert(rows: List[cv_support_syn_type]): Unit = {
     var ok: Seq[(Int, String, String)] = Seq()
 
-    for (l <- rows) {
-      ok :+= (l(0).toInt, l(1), l(2))
-    }
     val db = get_db()
-    val insertAction = cv_support_syn ++= ok
+    val insertAction = cv_support_syn ++= rows
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
     db.close()
   }
 
-  def xref_insert(rows: List[List[String]]): Unit = {
+  def xref_insert(rows: List[cv_support_xref_type]): Unit = {
     var ok: Seq[(Int, String, String)] = Seq()
 
-    for (l <- rows) {
-      ok :+= (l(0).toInt, l(1), l(2))
-    }
     val db = get_db()
-    val insertAction = cv_support_xref ++= ok
+    val insertAction = cv_support_xref ++= rows
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
     db.close()
@@ -79,39 +73,26 @@ object gecotest_handler {
   def raw_insert(rows: List[cv_support_raw_type]): Unit = {
     var ok: Seq[(Int, String, String, String, Char)] = Seq()
 
-    for (l <- rows){
-      ok :+= (l.tid, l.label, l.table_name, l.column_name, l.method)
-    }
-
     val db = get_db()
-    Await.result(db.run(cv_support_raw ++= ok),Duration.Inf)
+    Await.result(db.run(cv_support_raw ++= rows),Duration.Inf)
     db.close()
   }
 
 
-  def hyp_insert(rows: List[List[String]]): Unit = {
-    var ok: Seq[(Int, Int, String)] = Seq()
-
-    for (l <- rows) {
-      ok :+= (l(0).toInt, l(1).toInt, l(2))
-    }
+  def hyp_insert(rows: List[onto_support_hyp_type]): Unit = {
     val db = get_db()
-//    val insertAction = onto_support_hyp ++= ok
-//    val insert = db.run(insertAction)
-//    Await.result(insert, Duration.Inf)
+    val insertAction = onto_support_hyp ++= rows
+    val insert = db.run(insertAction)
+    Await.result(insert, Duration.Inf)
     db.close()
   }
 
 
-  def get_tid(label: String): Int = {
-
+  def get_tid(source: String, code: String): Int = {
     val db = get_db()
-
     var tid = 0
-    val q = cv_support.filter(_.label === label).map(_.tid)
-
+    val q = cv_support.filter(a => a.source === source && a.code === code).map(_.tid)
     val resultfuture = db.run(q.result).map(a => tid = a.head)
-
     Await.result(resultfuture, Duration.Inf)
     db.close()
     tid
@@ -123,7 +104,6 @@ object gecotest_handler {
 
     val q = user_feedback.filter(t => t.table_name === table_name && t.column_name === column_name && t.resolved === false).map(_.raw_value).result
 
-
     val result_future = db.run(q).map(a => result = a.toList.distinct)
     Await.result(result_future, Duration.Inf)
     db.close()
@@ -131,11 +111,11 @@ object gecotest_handler {
     result
   }
 
-  def get_user_feedback_infos(raw_value: String): List[(String, String, String, String, String, String, String)] = {
+  def get_user_feedback_infos(raw_value: String): List[user_feedback_type] = {
     val db = get_db()
-    var result: List[(String, String, String, String, String, String, String)] = List()
+    var result: List[user_feedback_type] = List()
 
-    val q = user_feedback.filter(t => t.raw_value === raw_value && t.code != null).map(t => (t.table_name, t.column_name, t.raw_value, t.parsed_value.getOrElse("null"), t.label.getOrElse("null"), t.source.getOrElse("null"), t.code.getOrElse("null"))).result
+    val q = user_feedback.filter(t => t.raw_value === raw_value && t.code != null).result
 
 
     val result_future = db.run(q).map(a => result = a.toList)
@@ -183,9 +163,9 @@ object gecotest_handler {
     result.toList
   }
 
-  def insert_user_changes(rows: (String, String, String, String, String)): Unit = {
+  def insert_user_changes(rows: user_changes_type): Unit = {
     val db = get_db()
-    val insertAction = user_changes.map(a => (a.table_name, a.column_name, a.raw_value, a.source, a.code)) ++= Seq(rows)
+    val insertAction = user_changes.map(a => (a.table_name, a.column_name, a.raw_value, a.source, a.code)) ++= Seq((rows.table_name,rows.column_name,rows.raw_value,rows.source,rows.code))
     val insert = db.run(insertAction)
 
     Await.result(insert, Duration.Inf)
@@ -194,12 +174,12 @@ object gecotest_handler {
 
 
   def get_cv_support_syn_by_value(raw_value: String): cv_support_syn_type = {
-    var result = cv_support_syn_type(-1,"","")
+    var result = cv_support_syn_type()
     val db = get_db()
-    val q = cv_support_syn.filter(a => a.label === raw_value).map(_.*)
-    val f = db.run(q.result).map(a =>
-      if(a.nonEmpty)
-        result = cv_support_syn_type(a.head._1,a.head._2,a.head._3))
+    val q = cv_support_syn.filter(a => a.label === raw_value).result.headOption
+    val f = db.run(q).map(a =>
+      if(a.isDefined)
+        result = cv_support_syn_type(a.get.tid, a.get.label,a.get.ttype))
     Await.result(f, Duration.Inf)
     db.close()
     result
@@ -274,8 +254,8 @@ object gecotest_handler {
     var result = ("null","null")
     val q = user_changes.filter(a=>a.table_name===table_name && a.column_name===column_name && a.raw_value===raw_value).map(a=>(a.source,a.code))
     val f = db.run(q.result).map(a=>
-    if(a.nonEmpty)
-    result=a.head
+      if(a.nonEmpty)
+        result=a.head
     )
     Await.result(f, Duration.Inf)
     db.close()
@@ -284,7 +264,7 @@ object gecotest_handler {
 
 //  INPUT SOURCE, CODE
 //  RETURNS TRUE IF SOURCE, CODE EXIST IN cv_support
-  def is_duplicate(source: String, code: String): Boolean = {
+  def cv_support_exists(source: String, code: String): Boolean = {
     val db = get_db()
     var result = false
     val q = cv_support.filter(a=> a.source===source && a.code===code).map(a=>(a.source,a.code))

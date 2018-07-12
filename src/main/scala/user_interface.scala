@@ -1,12 +1,11 @@
-import DBcon.gecotest_handler
+import DBcon.{default_values, gecotest_handler, user_changes_type}
 import Enrichment_engine.annotator
 import scalaj.http.{Http, HttpOptions}
 
 import scala.io._
 import scalax.cli._
 import shapeless._
-
-import Config.config.{get_gcm_table_list,get_termtype_list}
+import Config.config.{get_gcm_table_list, get_termtype_list}
 
 object user_interface {
 
@@ -24,7 +23,7 @@ object user_interface {
       val tuples = gecotest_handler.update_tid(value,null)
 
       for ((table_name, column_name) <- tuples) {
-        gecotest_handler.insert_user_changes(table_name, column_name, value, source_code._1, source_code._2)
+        gecotest_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, value, source_code._1, source_code._2))
       }
 
       println("Do you wish to update another value?")
@@ -55,12 +54,12 @@ object user_interface {
           val options = gecotest_handler.get_user_feedback_infos(rv)
           val table = Table(Sized("id","table name", "column name", "raw value", "parsed value","label","source","code"))
           for (o <- options){
-            table.rows += Sized(i.toString,o._1,o._2,o._3,o._4,o._5,o._6,o._7)
+            table.rows += Sized(i.toString,o.table,o.column,o.raw_value,o.parsed_value.get,o.label.get,o.source.get,o.code.get)
             i+=1
           }
           table.alignments
           //CASE RAW VALUE NOT FOUND IN OLS LOOKUP
-          if(options.head._7=="null"){
+          if(!options.head.code.isDefined){
             table.print()
             println("Please input manually source and code")
             val user_choice = input_source_code()
@@ -68,7 +67,7 @@ object user_interface {
             val code = user_choice._2
             val prefLabel = annotator.ols_get_info(code,source).head(2)
             //INSERT IN USER REQUESTED CHOICE
-            gecotest_handler.insert_user_changes(table_name, column_name, rv, source, code)
+            gecotest_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, rv, source, code))
           }
           //CASE RAW VALUE FOUND BUT NOT BEST MATCH
           else {
@@ -81,11 +80,11 @@ object user_interface {
               val code = user_choice._2
               val prefLabel = annotator.ols_get_info(source,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
-              gecotest_handler.insert_user_changes(table_name, column_name, rv, source, code)
+              gecotest_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, rv, source, code))
             }
             else {
               val a = options(user_choice.toInt)
-              gecotest_handler.insert_user_changes(a._1,a._2,a._3,a._6,a._7)
+              gecotest_handler.insert_user_changes(user_changes_type(default_values.int,a.table,a.column,a.raw_value,a.source.get,a.code.get))
             }
           }
           gecotest_handler.set_resolved(rv)

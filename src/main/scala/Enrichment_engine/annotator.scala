@@ -3,7 +3,7 @@ package Enrichment_engine
 import java.net.URLEncoder
 import java.sql.BatchUpdateException
 
-import DBcon.{gecotest_handler, user_feedback_type}
+import DBcon.{default_values, gecotest_handler, user_feedback_type}
 import Ontologies.Util.OlsParser.get_score
 import Utilities.Preprocessing
 import Utilities.score_calculator.get_match_score
@@ -13,8 +13,7 @@ import play.api.libs.json.{JsValue, Json}
 import scalaj.http._
 
 import util.control.Breaks._
-
-import Config.config.{get_anc_limit,get_desc_limit,get_ontologies_by_type}
+import Config.config.{get_anc_limit, get_desc_limit, get_ontologies_by_type}
 
 object annotator {
   val max_depth_anc: Int = get_anc_limit()
@@ -31,19 +30,19 @@ object annotator {
       val desc = get_desc(children, onto, 0)
       val anc = get_hyp(parents, onto, 0)
 
-      if(!gecotest_handler.is_duplicate(onto,tmp.head(1)))
+      if(!gecotest_handler.cv_support_exists(onto,tmp.head(1)))
         result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8))
 
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
 
       for (tmp <- anc) {
-        if(!gecotest_handler.is_duplicate(tmp._1,tmp._2))
+        if(!gecotest_handler.cv_support_exists(tmp._1,tmp._2))
         result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8,"description"->tmp._9)
       }
 
       for (elem <- desc) {
-        if (!gecotest_handler.is_duplicate(elem._1, elem._2))
+        if (!gecotest_handler.cv_support_exists(elem._1, elem._2))
         result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9)
       }
     }
@@ -82,7 +81,7 @@ object annotator {
       }
     }
     else {
-      gecotest_handler.user_feedback_insert(List(user_feedback_type(table_name, term_type, null, value, null, null, null, null)))
+      gecotest_handler.user_feedback_insert(List(user_feedback_type(default_values.int,default_values.bool,table_name, term_type, null, value, null, null, null, null)))
     }
   }
 
@@ -216,7 +215,7 @@ object annotator {
         val id = (jj \ "short_form").validate[String].get
         val onto = (jj \ "ontology_name").validate[String].get
         if (!rows.exists(_.code.get==id))
-          rows :+= user_feedback_type(table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id))
+          rows :+= user_feedback_type(default_values.int, default_values.bool, table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id))
       }
     }
     rows.distinct
