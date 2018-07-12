@@ -9,10 +9,13 @@ import Tables.{cv_support, cv_support_raw, cv_support_syn, cv_support_xref, onto
 
 import scala.concurrent.duration.Duration
 import slick.jdbc.meta.MTable
-
 import Config.config._
+import org.apache.log4j.Logger
+import org.joda.time.DateTime
 
 object gecotest_handler {
+
+  val logger = Logger.getLogger(this.getClass)
 
   private var _db_name = "gecotest1"
   def db_name: String = _db_name
@@ -44,8 +47,13 @@ object gecotest_handler {
     }
     val db = get_db()
     val insertAction = cv_support.map(a=> (a.source,a.code,a.label,a.description)) ++= ok
-    val insert = db.run(insertAction)
-    Await.result(insert, Duration.Inf)
+    try {
+      val insert = db.run(insertAction)
+      Await.result(insert, Duration.Inf)
+    }
+    catch {
+      case e: BatchUpdateException => logger.error("Error on insert into cv_support"+DateTime.now(),e.getNextException)
+    }
     db.close()
   }
 
