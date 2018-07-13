@@ -15,9 +15,9 @@ import org.joda.time.DateTime
 
 object gecotest_handler {
 
-  val logger = Logger.getLogger(this.getClass)
+//  val logger = Logger.getLogger(this.getClass)
 
-  private var _db_name = "gecotest1"
+  private var _db_name = "gecotest2"
   def db_name: String = _db_name
   def set_db_name(value: String): Unit = _db_name = value
 
@@ -52,7 +52,7 @@ object gecotest_handler {
       Await.result(insert, Duration.Inf)
     }
     catch {
-      case e: BatchUpdateException => logger.error("Error on insert into cv_support"+DateTime.now(),e.getNextException)
+      case e: BatchUpdateException => e.getNextException.printStackTrace()
     }
     db.close()
   }

@@ -10,7 +10,7 @@ import org.joda.time.format.DateTimeFormat
 
 object main extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
-  val logger = Logger.getLogger(this.getClass)
+//  val logger = Logger.getLogger(this.getClass)
 
   var i = 0
 
@@ -42,7 +42,8 @@ object main extends App {
 //    }
 
 //    println(config.conf.getStringList("db_config.biosample.disease.ontologies"))
-    println(config.get_gcm_table_list())
+//    gecotest_handler.set_db_name("gecotest2")
+    gecotest_handler.init()
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))
         user_interface.get_user_feedback()
