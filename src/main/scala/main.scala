@@ -1,7 +1,8 @@
 import java.util.{Calendar, Date}
 
+import Config.config
 import DBcon.gecotest_handler
-import Enrichment_engine.{annotator, db_interface, enrichment_engine}
+import Enrichment_engine.enrichment_engine
 import org.apache.log4j._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
@@ -26,17 +27,22 @@ object main extends App {
     fa2.activateOptions()
     Logger.getLogger("logger").addAppender(fa2)
   }
+
   override def main(args: Array[String]): Unit = {
     //setup logger
-    setup_logger()
+//    setup_logger()
+//    val logger = Logger.getLogger(this.getClass)
+//    logger.fatal("ciao")
+//
+//    try {
+//      gecotest_handler.init()
+//    }
+//    catch {
+//      case e: Exception => logger.error("error",e.getCause)
+//    }
 
-    try {
-      gecotest_handler.init()
-    }
-    catch {
-      case e: Exception => logger.error("kodio",e.getCause)
-    }
-
+//    println(config.conf.getStringList("db_config.biosample.disease.ontologies"))
+    println(config.get_gcm_table_list())
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))
         user_interface.get_user_feedback()

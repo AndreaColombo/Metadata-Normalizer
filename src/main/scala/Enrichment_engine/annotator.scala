@@ -52,7 +52,7 @@ object annotator {
   def search_term(raw_value: String, term_type: String): (String, String) = {
     var res: List[(String, String, String, String, String, String, String, String)] = List()
     var result: (String, String) = ("","")
-    val ontos = get_ontologies_by_type(term_type).split(",")
+    val ontos = get_ontologies_by_type(term_type)
     var ok = false
     for (onto <- ontos if !ok){
       val tmp = ols_search_term(raw_value,onto)
@@ -207,7 +207,7 @@ object annotator {
     for (value <- parsed) {
       val ontologies = get_ontologies_by_type(term_type)
       val url = "https://www.ebi.ac.uk/ols/api/search"
-      val response = Http(url).param("q", value).param("fieldList", "label,short_form,ontology_name").param("ontology", ontologies).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+      val response = Http(url).param("q", value).param("fieldList", "label,short_form,ontology_name").param("ontology", ontologies.mkString(",")).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       val json = (Json.parse(response) \ "response").get("docs")
       for (k <- (json \\ "label").indices) {
         val jj = json(k)

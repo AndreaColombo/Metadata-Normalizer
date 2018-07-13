@@ -12,13 +12,22 @@ object config  {
 
   def get_threshold():Int = conf.getInt("threshold_match")
 
-  def get_ontologies_by_type(term_type: String): String = conf.getString("ontologies_termtype_map."+term_type)
+  def get_ontologies_by_type(term_type: String): List[String] = {
+    val table_list = conf.getObject("db_config").keySet()
+    var table = ""
+    for (elem <- table_list.asScala) {
+    val t = get_termtype_list(elem)
+    if (t.exists(_.equals(term_type)))
+      table = elem
+    }
+    conf.getStringList(s"db_config.$table.$term_type.ontologies").asScala.toList
+  }
 
-  def get_termtype_list(table: String): List[String] = conf.getStringList("table_column_map."+table).asScala.toList
+  def get_termtype_list(table: String): List[String] = conf.getObject(s"db_config.$table").keySet().asScala.toList
 
   def get_anc_limit(): Int = conf.getInt("ontology_depth.anc_deph")
 
   def get_desc_limit(): Int = conf.getInt("ontology_depth.desc_deph")
 
-  def get_gcm_table_list(): List[String] = conf.getStringList("gcm_table_list").asScala.toList
+  def get_gcm_table_list(): List[String] = conf.getObject("db_config").keySet().asScala.toList
 }
