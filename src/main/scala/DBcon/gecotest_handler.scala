@@ -11,11 +11,10 @@ import scala.concurrent.duration.Duration
 import slick.jdbc.meta.MTable
 import Config.config._
 import org.apache.log4j.Logger
-import org.joda.time.DateTime
 
 object gecotest_handler {
 
-//  val logger = Logger.getLogger(this.getClass)
+  val logger = Logger.getLogger(this.getClass)
 
   private var _db_name = "gecotest2"
   def db_name: String = _db_name
@@ -26,6 +25,8 @@ object gecotest_handler {
   def init(): Unit = {
     val db = get_db()
     val tables = List(ontology,cv_support,cv_support_syn,cv_support_xref,cv_support_raw,onto_support_hyp,onto_support_hyp_unfolded,user_changes, user_feedback)
+    println("logging")
+    logger.error("ciao")
     val existing = db.run(MTable.getTables)
     val f = existing.flatMap(v => {
       val names = v.map(mt => mt.name.name)

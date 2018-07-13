@@ -8,31 +8,29 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
 
-object main extends App {
+object  main extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
-//  val logger = Logger.getLogger(this.getClass)
 
   var i = 0
 
   def setup_logger(): Unit = {
     val PATTERN = "%d [%p] - %l %m%n"
-    val runId = 0
-    val logName = "run_" + runId + "_" + DateTime.now.toString(DateTimeFormat.forPattern("yyyy_MM_dd_HH_mm_ss_SSS")) + ".log"
+    val logName = "log/lkb_normalizer_"+DateTime.now.toString(DateTimeFormat.forPattern("yyyy_MM_dd_HH_mm_ss_SSS")) + ".log"
     val fa2: FileAppender = new FileAppender()
     fa2.setName("FileLogger")
     fa2.setFile(logName)
     fa2.setLayout(new PatternLayout(PATTERN))
-    fa2.setThreshold(Level.ERROR)
+    fa2.setThreshold(Level.DEBUG)
     fa2.setAppend(true)
     fa2.activateOptions()
-    Logger.getLogger("logger").addAppender(fa2)
+    Logger.getRootLogger.addAppender(fa2)
   }
 
   override def main(args: Array[String]): Unit = {
     //setup logger
-//    setup_logger()
-//    val logger = Logger.getLogger(this.getClass)
-//    logger.fatal("ciao")
+    setup_logger()
+    val logger = Logger.getLogger(this.getClass)
+    logger.fatal("ciao")
 //
 //    try {
 //      gecotest_handler.init()

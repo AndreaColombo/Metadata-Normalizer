@@ -12,9 +12,8 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-nop" % "1.6.4",
   "com.typesafe.slick" %% "slick-hikaricp" % "3.2.1"
 )
+libraryDependencies += "com.typesafe.slick" %% "slick-codegen" % "3.2.1"
 libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.3.5"
 libraryDependencies += "com.github.wookietreiber" %% "scala-cli-tools" % "0.2.0"
 // https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
-libraryDependencies += "org.slf4j" % "slf4j-log4j12" % "1.7.25"
-// https://mvnrepository.com/artifact/org.slf4j/slf4j-api
-libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.25"
+libraryDependencies += "log4j" % "log4j" % "1.2.17"
