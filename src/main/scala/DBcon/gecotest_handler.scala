@@ -2,7 +2,7 @@ package DBcon
 
 import scala.concurrent._
 import slick.jdbc.PostgresProfile.api._
-import java.sql.BatchUpdateException
+import java.sql.{BatchUpdateException, SQLTransientConnectionException}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import Tables.{cv_support, cv_support_raw, cv_support_syn, cv_support_xref, onto_support_hyp, onto_support_hyp_unfolded, ontology, user_changes, user_feedback}
@@ -20,21 +20,45 @@ object gecotest_handler {
   def db_name: String = _db_name
   def set_db_name(value: String): Unit = _db_name = value
 
-  protected def get_db(): Database = Database.forConfig(_db_name,conf)
+  protected def get_db(): Database = {
+    var db: Database = null
+    var attempts = 0
+    while(db==null & attempts != 5){
+      try {
+        db = Database.forConfig(_db_name, conf)
+      }
+      catch {
+        case e: TimeoutException => logger.info(e.getCause)
+        case e1: SQLTransientConnectionException => logger.info(e1.getCause)
+        case e2: Exception => logger.info(e2.getCause)
+      }
+      attempts += 1
+    }
+    if(db==null){
+      logger.info("Connection to db failed, Exiting")
+      sys.exit(-1)
+    }
+    db
+  }
 
   def init(): Unit = {
-    val db = get_db()
+    var db: Database = null
+    try {
+      db = get_db()
+    }
+    catch {
+      case e: java.sql.SQLTransientConnectionException => logger.info(e.getNextException)
+    }
     val tables = List(ontology,cv_support,cv_support_syn,cv_support_xref,cv_support_raw,onto_support_hyp,onto_support_hyp_unfolded,user_changes, user_feedback)
     val existing = db.run(MTable.getTables)
     val f = existing.flatMap(v => {
       val names = v.map(mt => mt.name.name)
       val createIfNotExist = tables.filter(table =>
-      !names.contains(table.baseTableRow.tableName)
+        !names.contains(table.baseTableRow.tableName)
       ).map(_.schema.create)
       db.run(DBIO.sequence(createIfNotExist))
     })
     Await.result(f, Duration.Inf)
-
     db.close()
   }
 
@@ -153,15 +177,16 @@ object gecotest_handler {
 
     val default = (-1, "")
     val type_tid = t + "_tid"
-
+    val cose = table+"."+t
     val q =
-    sql"""select distinct #$t
+    sql"""select distinct #$t as value
            from #$table
            where #$t IS NOT NULL AND
            #$type_tid IS NULL
-         """.as[String]
+           AND NOT EXISTS(select * from user_feedback where raw_value = #$cose)
+         """
     try {
-      val result_future = db.run(q).map(_.foreach(a =>
+      val result_future = db.run(q.as[String]).map(_.foreach(a =>
       result :+= a))
       Await.result(result_future, Duration.Inf)
     }
@@ -361,5 +386,16 @@ object gecotest_handler {
 
     Await.result(db.run(insert),Duration.Inf)
     db.close()
+  }
+
+  def user_fb_exist(value: String, source: String, code: String): Boolean = {
+    val q = user_feedback.filter(a => a.source===source && a.code === code && a.raw_value===value).exists
+    val db = get_db()
+    var res = false
+    val f = db.run(q.result).map(a => res = a)
+
+    Await.result(f, Duration.Inf)
+    db.close()
+    res
   }
 }

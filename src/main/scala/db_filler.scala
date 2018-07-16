@@ -12,15 +12,14 @@ object db_filler {
   val ols = Ontology.apply("ols")
 
   def update_db (table_name: String, column_name: String): Unit = {
-    val b = parse(gecotest_handler.get_raw_values(table_name,column_name)).split(",")
+    val b = parse(db_handler.get_raw_values(table_name,column_name)).split(",")
     for (parsed <- b){
       db_handler.update_term_type(parsed, column_name)
     }
   }
 
   def fill_db (table_name: String, column_name: String): Unit = {
-
-    val s = parse(gecotest_handler.get_raw_values(table_name,column_name))
+    val s = parse(db_handler.get_raw_values(table_name,column_name)).split(",").filterNot(_.isEmpty).mkString(",")
 //    val c = s.split(",").filterNot(sd => sd.equalsIgnoreCase("p12")).mkString(",")
 //    val b = c.split(",").filterNot(sd => sd.equalsIgnoreCase("h54")).mkString(",")
     println(column_name)
@@ -39,9 +38,9 @@ object db_filler {
 //    println(recsys2.split(",").length)
 //    println(recsys3.split(",").length)
 //    println(recsys4.split(",").length)
-//
 
     println("bioportal inizio")
+    println(s)
     db_handler.insert(bioportal.input(s))
     println("bioportal fine")
     get_timestamp()
@@ -72,11 +71,10 @@ object db_filler {
     println("zooma fine")
     get_timestamp()
 
-//    println("ols inizio")
-//    db_handler.insert(ols.input(s))
-//    println("ols fine")
-//    get_timestamp()
-//
+    println("ols inizio")
+    db_handler.insert(ols.input(s))
+    println("ols fine")
+    get_timestamp()
   }
 
   def get_timestamp() = {

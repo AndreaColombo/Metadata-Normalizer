@@ -112,7 +112,6 @@ object score_calculator {
       val onto_score = db_handler.get_onto_score(onto,tt)
       println(i)
       val match_score = get_match_score(i, a._2)
-//      val suitability = calculate_suitability_score(tt, onto)
 
       val k1 = 2
       val k2 = 2
@@ -129,7 +128,6 @@ object score_calculator {
       db_handler.update_score(score1,score2,onto_score.toDouble,match_score,i)
 
     }
-
   }
 
 

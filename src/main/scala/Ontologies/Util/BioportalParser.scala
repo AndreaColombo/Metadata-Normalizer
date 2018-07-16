@@ -9,9 +9,10 @@ import Utilities.Preprocessing.lookup
 object BioportalParser {
   val apikey = "2338fb64-0246-4627-bf4d-4197bc8c9c64"
   def parse (str: String, term: String): List[List[String]] ={
-//    println(term)
     var rows:Seq[List[String]] = List()
     val service = "Bioportal"
+//    println(str)
+    println(term)
     val j = (Json.parse(str) \ "collection").get
     val parsed_value = term
     val raw_value = lookup(parsed_value)

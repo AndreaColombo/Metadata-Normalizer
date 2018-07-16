@@ -3,7 +3,7 @@ package Enrichment_engine
 import java.net.URLEncoder
 import java.sql.BatchUpdateException
 
-import DBcon.{default_values, gecotest_handler, user_feedback_type, ontology_type}
+import DBcon.{default_values, gecotest_handler, ontology_type, user_feedback_type}
 import Ontologies.Util.OlsParser.get_score
 import Utilities.Preprocessing
 import Utilities.score_calculator.get_match_score
@@ -14,10 +14,14 @@ import scalaj.http._
 
 import util.control.Breaks._
 import Config.config.{get_anc_limit, get_desc_limit, get_ontologies_by_type}
+import org.apache.log4j._
+
 
 object annotator {
   val max_depth_anc: Int = get_anc_limit()
   val max_depth_desc: Int = get_desc_limit()
+
+  val logger = Logger.getLogger(this.getClass)
 
   def get_info(source: String, code: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
@@ -75,9 +79,7 @@ object annotator {
         gecotest_handler.user_feedback_insert(user_feedback)
       }
       catch {
-        case e: BatchUpdateException => e.getNextException.printStackTrace()
-          user_feedback.foreach(println)
-          sys.exit(-1)
+        case e: BatchUpdateException => logger.info("User feedback exception",e.getNextException)
       }
     }
     else {
@@ -90,12 +92,14 @@ object annotator {
     for (code <- children.split(",")) {
       if (code != "null") {
         val res = ols_get_info(onto,code)
-        result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7),res.head(8))
-        val n = depth + 1
-        if (n != max_depth_desc)
-          result ++= get_desc(res.head(6), res.head(0), n)
-        else
-          result
+        if(res.nonEmpty) {
+          result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7), res.head(8))
+          val n = depth + 1
+          if (n != max_depth_desc)
+            result ++= get_desc(res.head(6), res.head(0), n)
+          else
+            result
+        }
       }
     }
     result
@@ -106,12 +110,14 @@ object annotator {
     for (code <- parents.split(",")) {
       if (code != "null") {
         val res = ols_get_info(onto,code)
-        result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7),res.head(8))
-        val n = depth + 1
-        if (n != max_depth_anc)
-        result ++= get_hyp(res.head(5), res.head(0), n)
-        else
-        result
+        if (res.nonEmpty) {
+          result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7), res.head(8))
+          val n = depth + 1
+          if (n != max_depth_anc)
+            result ++= get_hyp(res.head(5), res.head(0), n)
+          else
+            result
+        }
       }
     }
     result
@@ -138,28 +144,31 @@ object annotator {
       var part_of: List[String] = List()
       var children: List[String] = List()
 
-      val children_url = base_url + "/hierarchicalChildren"
-      val parents_url = base_url + "/parents"
-      val part_url = base_url + "/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FBFO_0000050"
+      val children_url = url + "/hierarchicalChildren"
+      val parents_url = url + "/parents"
+      val part_url = url + "/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FBFO_0000050"
 
       val part_exist = (j \\ "part_of").nonEmpty
 
       val p_status = Http(parents_url).asString.header("Status").get
       if (!(j \ "is_root").validate[Boolean].get && p_status.contains("200"))
-      ((Json.parse(Http(parents_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => parents :+= a.validate[String].getOrElse("null"))
+        ((Json.parse(Http(parents_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => parents :+= a.validate[String].getOrElse("null"))
       else parents = List("null")
 
       val pp_status = Http(part_url).asString.header("Status").get
       if (part_exist && pp_status.contains("200"))
-      ((Json.parse(Http(part_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => part_of :+= a.validate[String].getOrElse("null"))
+        ((Json.parse(Http(part_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => part_of :+= a.validate[String].getOrElse("null"))
       else part_of = List("null")
 
       val c_status = Http(children_url).asString.header("Status").get
       if ((j \ "has_children").validate[Boolean].get && c_status.contains("200"))
-      ((Json.parse(Http(children_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => children :+= a.validate[String].getOrElse("null"))
+        ((Json.parse(Http(children_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => children :+= a.validate[String].getOrElse("null"))
       else children = List("null")
 
       rows :+= List(ontology, ontology_id, prefLabel, xref.mkString(","), synonym, parents.mkString(","), children.mkString(","), part_of.mkString(","),description)
+    }
+    else {
+      logger.info(s"OLS resource not available for $source, $code")
     }
     rows.toList.distinct
   }
@@ -214,7 +223,7 @@ object annotator {
         val label = (jj \ "label").validate[String].get
         val id = (jj \ "short_form").validate[String].get
         val onto = (jj \ "ontology_name").validate[String].get
-        if (!rows.exists(_.code.get==id))
+        if (!rows.exists(_.code.get==id) && !gecotest_handler.user_fb_exist(raw_value,onto,id))
           rows :+= user_feedback_type(default_values.int, default_values.bool, table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id))
       }
     }
@@ -222,14 +231,19 @@ object annotator {
   }
 
   def ols_get_onto_info(onto: String): ontology_type = {
+    var result = ontology_type()
     val url = "https://www.ebi.ac.uk/ols/api/ontologies/"+onto
-    val response = Http(url).asString.body
-    val json = Json.parse(response)
-    val source = onto
-    val title = (json \ "config").get("title").validate[String].getOrElse(null)
-    val description = (json \ "config").get("description").validate[String].getOrElse(null)
-    val result = ontology_type(source,Some(title),Some(description),url)
-
+    val response = Http(url).asString
+    if(response.header("status").get.contains("200")) {
+      val json = Json.parse(response.body)
+      val source = onto
+      val title = (json \ "config").get("title").validate[String].getOrElse(null)
+      val description = (json \ "config").get("description").validate[String].getOrElse(null)
+      result = ontology_type(source,Some(title),Some(description),url)
+    }
+    else {
+      result = ontology_type(onto,null,null,"OTHER_LINK")
+    }
     result
   }
 }

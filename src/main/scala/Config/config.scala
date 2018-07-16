@@ -25,9 +25,9 @@ object config  {
 
   def get_termtype_list(table: String): List[String] = conf.getObject(s"db_config.$table").keySet().asScala.toList
 
-  def get_anc_limit(): Int = conf.getInt("ontology_depth.anc_deph")
+  def get_anc_limit(): Int = conf.getInt("ontology_depth.anc_depth")
 
-  def get_desc_limit(): Int = conf.getInt("ontology_depth.desc_deph")
+  def get_desc_limit(): Int = conf.getInt("ontology_depth.desc_depth")
 
   def get_gcm_table_list(): List[String] = conf.getObject("db_config").keySet().asScala.toList
 }

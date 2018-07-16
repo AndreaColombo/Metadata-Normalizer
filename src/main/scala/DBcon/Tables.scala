@@ -21,7 +21,7 @@ case class onto_support_hyp_unfolded_type (tid_a: Int = default_values.int , tid
 
 object Tables {
 
-  class ApiResults(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String)](tag, Some("svr"), "apiresults1"){
+  class ApiResults(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String)](tag, Some("public"), "apiresults1"){
     def service = column[String]("service")
     def raw_value = column[String]("raw_value")
     def parsed_value = column[String]("parsed_value")
@@ -36,13 +36,13 @@ object Tables {
     def * = (service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
   }
 
-  class OntologyScore (tag: Tag) extends Table [(String, Double)](tag, Some("svr"), "ontologyscore"){
+  class OntologyScore (tag: Tag) extends Table [(String, Double)](tag, Some("public"), "ontologyscore"){
     def ontology = column[String]("ontology")
     def score = column[Double]("score")
     def * = (ontology,score)
   }
 
-  class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double, Double)](tag, Some("svr"), "best_ontos2"){
+  class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double, Double)](tag, Some("public"), "best_ontos2"){
     def term_type = column[String]("term_type")
     def ontology_set = column[String]("ontologies_set")
     def coverage = column[Double]("set_coverage")
@@ -52,7 +52,8 @@ object Tables {
     def * = (term_type,ontology_set,coverage,score,score2,suitability)
   }
 
-  class ApiResults2(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String)](tag, Some("svr"), "apiresults2"){
+  class ApiResults2(tag: Tag) extends Table[(Int, String, String, String, String, String, String, String, String, String)](tag, Some("public"), "apiresults"){
+    def id = column[Int]("id", O.AutoInc)
     def service = column[String]("service")
     def raw_value = column[String]("raw_value")
     def parsed_value = column[String]("parsed_value")
@@ -62,17 +63,16 @@ object Tables {
     def synonym = column[String]("synonym")
     def score = column[String]("score")
     def term_type = column[String]("term_type")
-    def id = column[Int]("id")
-    def * = (service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
+    def * = (id,service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
   }
 
   class ontology (tag: Tag) extends Table[ontology_type](tag, Some("public"), "ontology"){
-    def source = column[String]("source",O.SqlType("VARCHAR(8)"), O.PrimaryKey)
-    def title = column[String]("title",O.SqlType("VARCHAR(64)"))
-    def description = column[String]("description")
+    def source = column[String]("source",O.SqlType("VARCHAR(64)"), O.PrimaryKey)
+    def title = column[Option[String]]("title",O.SqlType("VARCHAR(64)"))
+    def description = column[Option[String]]("description")
     def url = column[String]("url",O.SqlType("VARCHAR(128)"))
 
-    def * = (source,title.?,description.?,url) <> (ontology_type.tupled, ontology_type.unapply)
+    def * = (source,title,description,url) <> (ontology_type.tupled, ontology_type.unapply)
   }
   val ontology = TableQuery[ontology]
 
@@ -105,7 +105,7 @@ object Tables {
 
   class cv_support_xref(tag: Tag) extends Table[cv_support_xref_type](tag, Some("public"), "cv_support_xref"){
     def tid = column[Int]("tid")
-    def source = column[String]("source", O.SqlType("VARCHAR(8)"))
+    def source = column[String]("source", O.SqlType("VARCHAR(128)"))
     def code = column[String]("code")
 
     def pk = primaryKey("cv_support_xref_pley", (tid, source, code))
