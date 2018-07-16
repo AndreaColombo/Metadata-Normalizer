@@ -3,7 +3,7 @@ package Enrichment_engine
 import java.net.URLEncoder
 import java.sql.BatchUpdateException
 
-import DBcon.{default_values, gecotest_handler, user_feedback_type}
+import DBcon.{default_values, gecotest_handler, user_feedback_type, ontology_type}
 import Ontologies.Util.OlsParser.get_score
 import Utilities.Preprocessing
 import Utilities.score_calculator.get_match_score
@@ -219,5 +219,17 @@ object annotator {
       }
     }
     rows.distinct
+  }
+
+  def ols_get_onto_info(onto: String): ontology_type = {
+    val url = "https://www.ebi.ac.uk/ols/api/ontologies/"+onto
+    val response = Http(url).asString.body
+    val json = Json.parse(response)
+    val source = onto
+    val title = (json \ "config").get("title").validate[String].getOrElse(null)
+    val description = (json \ "config").get("description").validate[String].getOrElse(null)
+    val result = ontology_type(source,Some(title),Some(description),url)
+
+    result
   }
 }

@@ -25,8 +25,6 @@ object gecotest_handler {
   def init(): Unit = {
     val db = get_db()
     val tables = List(ontology,cv_support,cv_support_syn,cv_support_xref,cv_support_raw,onto_support_hyp,onto_support_hyp_unfolded,user_changes, user_feedback)
-    println("logging")
-    logger.error("ciao")
     val existing = db.run(MTable.getTables)
     val f = existing.flatMap(v => {
       val names = v.map(mt => mt.name.name)
@@ -133,7 +131,6 @@ object gecotest_handler {
 
     result
   }
-
 
   def user_feedback_insert(rows: List[user_feedback_type]): Unit = {
     var ok: Seq[(String, String, Option[Int], String, Option[String], Option[String], Option[String], Option[String])] = Seq()
@@ -343,6 +340,26 @@ object gecotest_handler {
     catch {
       case e: BatchUpdateException => e.getNextException.printStackTrace()
     }
+    db.close()
+  }
+
+  def onto_exist(onto: String): Boolean = {
+    val q = ontology.filter(_.source === onto).exists
+    val db = get_db()
+    var res = false
+    val f = db.run(q.result).map(a => res = a)
+
+    Await.result(f, Duration.Inf)
+    db.close()
+    res
+  }
+
+  def insert_ontology (rows: ontology_type): Unit = {
+    val db = get_db()
+
+    val insert = ontology ++= List(rows)
+
+    Await.result(db.run(insert),Duration.Inf)
     db.close()
   }
 }

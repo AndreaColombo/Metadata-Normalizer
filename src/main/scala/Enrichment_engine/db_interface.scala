@@ -31,12 +31,20 @@ object db_interface {
     var insert_elem: List[cv_support_type] = List()
     var insert_xref: List[cv_support_xref_type] = List()
     var insert_syn: List[cv_support_syn_type] = List()
+    var insert_onto = ontology_type()
     var support: List[cv_support] = List()
 
     val source = elem.apply("source")
     val code = elem.apply("code")
     val label = elem.apply("label")
     val description = elem.apply("description")
+
+    //CHECK EXISTENCE OF SOURCE IN ONTOLOGY TABLE
+    //IF DOESN'T EXIST INSERT
+    if(!gecotest_handler.onto_exist(source)){
+      insert_onto = annotator.ols_get_onto_info(source)
+      gecotest_handler.insert_ontology(insert_onto)
+    }
 
     insert_elem ++= List(cv_support_type(default_values.int,source,code,label,description))
     gecotest_handler.cv_support_insert(insert_elem)
@@ -45,8 +53,8 @@ object db_interface {
 
     //XREF
     var xref_l:List[String] = List()
-    if (elem.apply("xref") != "null")
 
+    if (elem.apply("xref") != "null")
       xref_l = elem.apply("xref").split(",").toList
 
     insert_xref ++= List(cv_support_xref_type(tid, source, code))
@@ -54,6 +62,10 @@ object db_interface {
     for (xref <- xref_l if xref_l.nonEmpty) {
       val source = xref.split(":").head
       val code = xref
+      if(!gecotest_handler.onto_exist(source)){
+        insert_onto = annotator.ols_get_onto_info(source)
+        gecotest_handler.insert_ontology(insert_onto)
+      }
       insert_xref ++= List(cv_support_xref_type(tid, source, code))
     }
     gecotest_handler.xref_insert(insert_xref)

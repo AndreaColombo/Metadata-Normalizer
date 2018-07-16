@@ -16,4 +16,5 @@ libraryDependencies += "com.typesafe.slick" %% "slick-codegen" % "3.2.1"
 libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.3.5"
 libraryDependencies += "com.github.wookietreiber" %% "scala-cli-tools" % "0.2.0"
 // https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
-libraryDependencies += "log4j" % "log4j" % "1.2.17"
+//libraryDependencies += "log4j" % "log4j" % "1.2.17"
+libraryDependencies += "org.slf4j" % "slf4j-log4j12" % "1.7.25"

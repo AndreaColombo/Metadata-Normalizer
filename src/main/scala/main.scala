@@ -6,6 +6,7 @@ import Enrichment_engine.enrichment_engine
 import org.apache.log4j._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import org.slf4j.LoggerFactory
 
 
 object  main extends App {
@@ -29,8 +30,7 @@ object  main extends App {
   override def main(args: Array[String]): Unit = {
     //setup logger
     setup_logger()
-    val logger = Logger.getLogger(this.getClass)
-    logger.fatal("ciao")
+//    val logger = Logger.getLogger(this.getClass)
 //
 //    try {
 //      gecotest_handler.init()
@@ -39,7 +39,6 @@ object  main extends App {
 //      case e: Exception => logger.error("error",e.getCause)
 //    }
 
-//    println(config.conf.getStringList("db_config.biosample.disease.ontologies"))
 //    gecotest_handler.set_db_name("gecotest2")
     gecotest_handler.init()
     if (args.nonEmpty) {
