@@ -7,6 +7,8 @@ import org.apache.log4j._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
+import play.api.libs.json.Json
+import scalaj.http.Http
 
 
 object  main extends App {
@@ -30,7 +32,6 @@ object  main extends App {
   override def main(args: Array[String]): Unit = {
     //setup logger
     setup_logger()
-//    val logger = Logger.getLogger(this.getClass)
 
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))

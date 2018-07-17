@@ -123,10 +123,12 @@ object annotator {
     result
   }
 
-  def ols_get_info(source: String, iri: String): List[List[String]] = {
+  def ols_get_info(source: String, code: String): List[List[String]] = {
     var rows: Seq[List[String]] = List()
+    val iri_tmp = (Json.parse(Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms").asString.body) \\ "iri").head.validate[String].get
+    val iri = iri_tmp.substring(0,iri_tmp.lastIndexOf("/")+1)+code
     val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
-    val code = iri.substring(iri.lastIndexOf("/"))
+
     if(ols_exist(source, iri)) {
       val response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
       val j = Json.parse(response.body)
@@ -192,7 +194,7 @@ object annotator {
       val j2 = j(i)
       val prefLabel = (j2 \ "label").validate[String].get
       val ontology = (j2 \ "ontology_name").validate[String].get
-      val ontology_id = (j2 \ "iri").validate[String].get
+      val ontology_id = (j2 \ "short_form").validate[String].get
 
       val score_num = get_match_score(get_score(term, prefLabel), service)
 
@@ -206,7 +208,7 @@ object annotator {
     result
   }
 
-  def ols_exist(source: String, code: String): Boolean = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F" + code).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get.contains("200")
+  def ols_exist(source: String, iri: String): Boolean = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get.contains("200")
 
   def ols_get_user_feedback(raw_value: String, term_type: String, table_name: String): List[user_feedback_type] = {
     var rows: List[user_feedback_type] = List()
