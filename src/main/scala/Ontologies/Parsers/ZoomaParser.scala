@@ -1,4 +1,4 @@
-package Ontologies.Util
+package Ontologies.Parsers
 
 import DBcon.gecotest_handler
 import play.api.libs.json._

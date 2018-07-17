@@ -1,7 +1,7 @@
-package Ontologies.Util
+package Ontologies.Parsers
 
 import DBcon.gecotest_handler
-import Ontologies.Util.OlsParser.countWords
+import Ontologies.Parsers.OlsParser.countWords
 import play.api.libs.json._
 import Utilities.Preprocessing.lookup
 

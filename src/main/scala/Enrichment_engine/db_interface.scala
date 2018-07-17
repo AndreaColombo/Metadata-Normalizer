@@ -17,7 +17,7 @@ object db_interface {
         cv_support ++= db_insert(elem)
       }
       val label = res.head.apply("label")
-      val tid = gecotest_handler.get_tid(res.head.apply("source"),res.head.apply("code"))
+      val tid = gecotest_handler.get_tid(res.head.apply("source"),res.head.apply("iri"))
       gecotest_handler.syn_insert(List(cv_support_syn_type(tid,raw_value,"raw")))
       gecotest_handler.raw_insert(List(cv_support_raw_type(tid,label,table_name,column_name,method)))
       gecotest_handler.update_tid(raw_value,Some(tid))
@@ -35,7 +35,7 @@ object db_interface {
     var support: List[cv_support] = List()
 
     val source = elem.apply("source")
-    val code = elem.apply("code")
+    val code = elem.apply("iri")
     val label = elem.apply("label")
     val description = elem.apply("description")
 
@@ -98,7 +98,7 @@ object db_interface {
       val default:Map[String,String] = Map()
       var parents = ""
       try {
-        parents = res.find(a => a.apply("code") == child_code).get.apply("parents")
+        parents = res.find(a => a.apply("iri") == child_code).get.apply("parents")
       }
       catch {
         case e: NoSuchElementException =>
@@ -115,7 +115,7 @@ object db_interface {
         }
       }
 
-      parents = res.find(a => a.apply("code")==child_code).get.apply("part_of")
+      parents = res.find(a => a.apply("iri")==child_code).get.apply("part_of")
       if(parents!=null) {
         for(parent <- parents.split(",")) {
           val parent_tid = elems.find(a => a.code == parent).getOrElse(default_cv).tid

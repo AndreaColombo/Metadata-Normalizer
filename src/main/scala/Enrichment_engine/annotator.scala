@@ -4,7 +4,7 @@ import java.net.URLEncoder
 import java.sql.BatchUpdateException
 
 import DBcon.{default_values, gecotest_handler, ontology_type, user_feedback_type}
-import Ontologies.Util.OlsParser.get_score
+import Ontologies.Parsers.OlsParser.get_score
 import Utilities.Preprocessing
 import Utilities.score_calculator.get_match_score
 import com.fasterxml.jackson.core.JsonParseException
@@ -23,9 +23,9 @@ object annotator {
 
   val logger = Logger.getLogger(this.getClass)
 
-  def get_info(source: String, code: String): List[Map[String, String]] = {
+  def get_info(source: String, iri: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
-    val tmp = ols_get_info(source,code)
+    val tmp = ols_get_info(source,iri)
     if (tmp.nonEmpty) {
       val onto = tmp.head(0)
       val parents = tmp.head(5)
@@ -35,19 +35,19 @@ object annotator {
       val anc = get_hyp(parents, onto, 0)
 
       if(!gecotest_handler.cv_support_exists(onto,tmp.head(1)))
-        result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8))
+        result :+= Map("source" -> onto, "iri" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8))
 
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
 
       for (tmp <- anc) {
         if(!gecotest_handler.cv_support_exists(tmp._1,tmp._2))
-        result :+= Map("source" -> tmp._1, "code" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8,"description"->tmp._9)
+        result :+= Map("source" -> tmp._1, "iri" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8,"description"->tmp._9)
       }
 
       for (elem <- desc) {
         if (!gecotest_handler.cv_support_exists(elem._1, elem._2))
-        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9)
+        result :+= Map("source" -> elem._1, "iri" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9)
       }
     }
     result.distinct
@@ -123,10 +123,11 @@ object annotator {
     result
   }
 
-  def ols_get_info(source: String, code: String): List[List[String]] = {
+  def ols_get_info(source: String, iri: String): List[List[String]] = {
     var rows: Seq[List[String]] = List()
-    val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F" + code
-    if(ols_exist(source, code)) {
+    val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
+    val code = iri.substring(iri.lastIndexOf("/"))
+    if(ols_exist(source, iri)) {
       val response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
       val j = Json.parse(response.body)
       val prefLabel = (j \ "label").validate[String].get
@@ -136,9 +137,6 @@ object annotator {
       val synonym_l = (j \ "synonym").validate[List[String]].getOrElse(List("null"))
       val synonym = synonym_l.mkString(",")
       val xref = (j \ "annotation" \ "database_cross_reference").validate[List[String]].getOrElse(List("null"))
-
-      val iri = (j \ "iri").validate[String].get
-      val base_url = s"https://www.ebi.ac.uk/ols/api/ontologies/$ontology/terms/" + URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
 
       var parents: List[String] = List()
       var part_of: List[String] = List()
@@ -194,7 +192,7 @@ object annotator {
       val j2 = j(i)
       val prefLabel = (j2 \ "label").validate[String].get
       val ontology = (j2 \ "ontology_name").validate[String].get
-      val ontology_id = (j2 \ "short_form").validate[String].get
+      val ontology_id = (j2 \ "iri").validate[String].get
 
       val score_num = get_match_score(get_score(term, prefLabel), service)
 

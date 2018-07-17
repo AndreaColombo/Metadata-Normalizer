@@ -1,7 +1,7 @@
 package Ontologies
 
 import scalaj.http.{Http, HttpOptions}
-import Util._
+import Parsers._
 
 trait Ontology {
    //a string of comma separated keywords

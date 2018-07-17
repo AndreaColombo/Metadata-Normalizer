@@ -71,7 +71,7 @@ object db_handler {
     val q =
       sqlu"""
              update public.apiresults
-             set score_num = $score1,
+             set score_num1 = $score1,
              score_num2 = $score2,
              onto_score = $ontoScore,
              match_score = $matchScore
@@ -174,6 +174,7 @@ object db_handler {
       sql"""
            select distinct ontology
            from public.apiresults
+           limit 50
          """.as[String]
     val result_future = db.run(q).map(_.foreach(
       a => result :+= a
@@ -264,14 +265,17 @@ object db_handler {
 
   def get_onto_score(onto: String, term_type: String): String = {
     val db = Database.forConfig("gecotest2", conf)
-    var score = ""
+    var score = "0"
     val q =
       sql"""
            select score
            from public.ontologyscore
            where ontology ilike $onto
          """.as[String]
-    val result_future = db.run(q).map(a => score = a.head)
+    val result_future = db.run(q).map(a =>
+    if(a.nonEmpty)
+      score = a.head
+    )
     Await.result(result_future, Duration.Inf)
     db.close()
     score

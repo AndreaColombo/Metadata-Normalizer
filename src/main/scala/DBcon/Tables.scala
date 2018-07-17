@@ -79,7 +79,7 @@ object Tables {
   class cv_support(tag: Tag) extends Table[cv_support_type](tag, Some("public"), "cv_support"){
     def tid = column[Int]("tid", O.AutoInc, O.PrimaryKey)
     def source = column[String]("source", O.SqlType("VARCHAR(8)"))
-    def code = column[String]("code",O.SqlType("VARCHAR(64)"))
+    def code = column[String]("iri",O.SqlType("VARCHAR(64)"))
     def label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
     def description = column[String]("description")
 
@@ -106,7 +106,7 @@ object Tables {
   class cv_support_xref(tag: Tag) extends Table[cv_support_xref_type](tag, Some("public"), "cv_support_xref"){
     def tid = column[Int]("tid")
     def source = column[String]("source", O.SqlType("VARCHAR(128)"))
-    def code = column[String]("code")
+    def code = column[String]("iri")
 
     def pk = primaryKey("cv_support_xref_pley", (tid, source, code))
     def fk = foreignKey("cv_cvx_fk",tid, cv_support)(_.tid, onDelete = ForeignKeyAction.Cascade)
@@ -172,7 +172,7 @@ object Tables {
     def parsed_value = column[Option[String]]("parsed_value")
     def label = column[Option[String]]("label")
     def source = column[Option[String]]("source")
-    def code = column[Option[String]]("code")
+    def code = column[Option[String]]("iri")
     def resolved = column[Boolean]("resolved", O.Default(false))
 
     def idx = index("user_feedback_idx",(raw_value,source,code),unique = true)
@@ -187,7 +187,7 @@ object Tables {
     def column_name = column[String]("column_name")
     def raw_value = column[String]("raw_value")
     def source = column[String]("source")
-    def code = column[String]("code")
+    def code = column[String]("iri")
     def * = (id, table_name, column_name, raw_value, source, code) <> (user_changes_type.tupled,user_changes_type.unapply)
   }
   val user_changes = TableQuery[user_changes]

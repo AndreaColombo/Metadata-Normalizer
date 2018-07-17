@@ -52,7 +52,7 @@ object user_interface {
         for (rv <- raw_values){
           var i = 0
           val options = gecotest_handler.get_user_feedback_infos(rv)
-          val table = Table(Sized("id","table name", "column name", "raw value", "parsed value","label","source","code"))
+          val table = Table(Sized("id","table name", "column name", "raw value", "parsed value","label","source","iri"))
           for (o <- options){
             table.rows += Sized(i.toString,o.table,o.column,o.raw_value,o.parsed_value.get,o.label.get,o.source.get,o.code.get)
             i+=1
@@ -61,7 +61,7 @@ object user_interface {
           //CASE RAW VALUE NOT FOUND IN OLS LOOKUP
           if(!options.head.code.isDefined){
             table.print()
-            println("Please input manually source and code")
+            println("Please input manually source and iri")
             val user_choice = input_source_code()
             val source = user_choice._1
             val code = user_choice._2
@@ -74,7 +74,7 @@ object user_interface {
             table.print()
             val user_choice = get_input(i)
             if(user_choice.equalsIgnoreCase("manual insert")){
-              println("Please input manually source and code")
+              println("Please input manually source and iri")
               val user_choice = input_source_code()
               val source = user_choice._1
               val code = user_choice._2
@@ -125,11 +125,11 @@ object user_interface {
     }
     val source = input
 
-    println("Please input code in the form ONTO_XXXXXXXX")
+    println("Please input iri in the form ONTO_XXXXXXXX")
     input = StdIn.readLine()
     while(!validate_code(source, input.map(_.toUpper))) {
-      println("Error, code not valid")
-      println("Please input a valid code")
+      println("Error, iri not valid")
+      println("Please input a valid iri")
       input = StdIn.readLine()
     }
     val code = input.map(_.toUpper)
@@ -150,7 +150,7 @@ object user_interface {
     Http("https://www.ebi.ac.uk/ols/api/ontologies/"+source).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get.contains("200")
   }
 
-  //return true if code is valid
+  //return true if iri is valid
   def validate_code(onto: String, code: String): Boolean = {
     Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$onto/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F" + code).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get.contains("200")
   }

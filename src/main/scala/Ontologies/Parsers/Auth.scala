@@ -1,4 +1,4 @@
-package Ontologies.Util
+package Ontologies.Parsers
 
 import scalaj.http._
 
