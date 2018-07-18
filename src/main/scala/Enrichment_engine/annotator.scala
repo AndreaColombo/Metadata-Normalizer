@@ -1,6 +1,6 @@
 package Enrichment_engine
 
-import java.net.URLEncoder
+import java.net.{SocketTimeoutException, URLEncoder}
 import java.sql.BatchUpdateException
 
 import DBcon.{default_values, gecotest_handler, ontology_type, user_feedback_type}
@@ -125,7 +125,13 @@ object annotator {
 
   def ols_get_info(source: String, code: String): List[List[String]] = {
     var rows: Seq[List[String]] = List()
-    val iri_tmp = (Json.parse(Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms").asString.body) \\ "iri").head.validate[String].get
+    var iri_tmp = ""
+    try {
+      iri_tmp = (Json.parse(Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms").option(HttpOptions.readTimeout(50000)).asString.body) \\ "iri").head.validate[String].get
+    }
+    catch {
+      case e: SocketTimeoutException => logger.info("Read timeout",e.getCause)
+    }
     val iri = iri_tmp.substring(0,iri_tmp.lastIndexOf("/")+1)+code
     val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
 
@@ -150,19 +156,19 @@ object annotator {
 
       val part_exist = (j \\ "part_of").nonEmpty
 
-      val p_status = Http(parents_url).asString.header("Status").get
+      val p_status = Http(parents_url).option(HttpOptions.readTimeout(50000)).asString.header("Status").get
       if (!(j \ "is_root").validate[Boolean].get && p_status.contains("200"))
-        ((Json.parse(Http(parents_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => parents :+= a.validate[String].getOrElse("null"))
+        ((Json.parse(Http(parents_url).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => parents :+= a.validate[String].getOrElse("null"))
       else parents = List("null")
 
-      val pp_status = Http(part_url).asString.header("Status").get
+      val pp_status = Http(part_url).option(HttpOptions.readTimeout(50000)).asString.header("Status").get
       if (part_exist && pp_status.contains("200"))
-        ((Json.parse(Http(part_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => part_of :+= a.validate[String].getOrElse("null"))
+        ((Json.parse(Http(part_url).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => part_of :+= a.validate[String].getOrElse("null"))
       else part_of = List("null")
 
       val c_status = Http(children_url).asString.header("Status").get
       if ((j \ "has_children").validate[Boolean].get && c_status.contains("200"))
-        ((Json.parse(Http(children_url).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => children :+= a.validate[String].getOrElse("null"))
+        ((Json.parse(Http(children_url).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => children :+= a.validate[String].getOrElse("null"))
       else children = List("null")
 
       rows :+= List(ontology, ontology_id, prefLabel, xref.mkString(","), synonym, parents.mkString(","), children.mkString(","), part_of.mkString(","),description)
@@ -233,7 +239,7 @@ object annotator {
   def ols_get_onto_info(onto: String): ontology_type = {
     var result = ontology_type()
     val url = "https://www.ebi.ac.uk/ols/api/ontologies/"+onto
-    val response = Http(url).asString
+    val response = Http(url).option(HttpOptions.readTimeout(50000)).asString
     if(response.header("status").get.contains("200")) {
       val json = Json.parse(response.body)
       val source = onto

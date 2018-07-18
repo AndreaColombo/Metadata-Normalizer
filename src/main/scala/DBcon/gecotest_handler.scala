@@ -4,6 +4,8 @@ import scala.concurrent._
 import slick.jdbc.PostgresProfile.api._
 import java.sql.{BatchUpdateException, SQLTransientConnectionException}
 
+import Config.config
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import Tables.{cv_support, cv_support_raw, cv_support_syn, cv_support_xref, onto_support_hyp, onto_support_hyp_unfolded, ontology, user_changes, user_feedback}
 
@@ -11,6 +13,7 @@ import scala.concurrent.duration.Duration
 import slick.jdbc.meta.MTable
 import Config.config._
 import org.apache.log4j.Logger
+import slick.sql.SqlAction
 
 object gecotest_handler {
 
@@ -42,13 +45,8 @@ object gecotest_handler {
   }
 
   def init(): Unit = {
-    var db: Database = null
-    try {
-      db = get_db()
-    }
-    catch {
-      case e: java.sql.SQLTransientConnectionException => logger.info(e.getNextException)
-    }
+    null_gcm()
+    val db = get_db()
     val tables = List(ontology,cv_support,cv_support_syn,cv_support_xref,cv_support_raw,onto_support_hyp,onto_support_hyp_unfolded,user_changes, user_feedback)
     val existing = db.run(MTable.getTables)
     val f = existing.flatMap(v => {
@@ -60,6 +58,24 @@ object gecotest_handler {
     })
     Await.result(f, Duration.Inf)
     db.close()
+  }
+
+  def null_gcm(): Unit = {
+    val tables = config.get_gcm_table_list()
+    var setup: DBIOAction[Unit,NoStream,Effect] = DBIO.seq()
+    for (table<- tables) {
+      val columns = config.get_termtype_list(table)
+      for (column <- columns) {
+        val column_tid = column + "_tid"
+        val q =
+          sqlu"""update #$table
+                set #$column_tid = NULL"""
+        setup = setup.andThen(DBIO.seq(q))
+      }
+    }
+    val db = get_db()
+    val f = db.run(setup)
+    Await.result(f,Duration.Inf)
   }
 
   def cv_support_insert(rows: List[cv_support_type]): Unit = {
@@ -177,14 +193,11 @@ object gecotest_handler {
 
     val default = (-1, "")
     val type_tid = t + "_tid"
-    val cose = table+"."+t
     val q =
     sql"""select distinct #$t as value
            from #$table
            where #$t IS NOT NULL AND
-           #$type_tid IS NULL
-           AND NOT EXISTS(select * from user_feedback where raw_value = #$cose)
-         """
+           #$type_tid IS NULL"""
     try {
       val result_future = db.run(q.as[String]).map(_.foreach(a =>
       result :+= a))
