@@ -48,11 +48,11 @@ object Tables {
     def synonym = column[String]("synonym")
     def score = column[String]("score")
     def term_type = column[String]("term_type")
-    def match_score = column[Double]("match_score")
-    def onto_score = column[Double]("onto_score")
-    def score_num1 = column[Double]("score_num1")
-    def score_num2 = column[Double]("score_num2")
-    def suitability = column[Double]("suitability")
+    def match_score = column[Double]("match_score",O.Default(0.0))
+    def onto_score = column[Double]("onto_score",O.Default(0.0))
+    def score_num1 = column[Double]("score_num1",O.Default(0.0))
+    def score_num2 = column[Double]("score_num2",O.Default(0.0))
+    def suitability = column[Double]("suitability",O.Default(0.0))
     def * = (id,service,term_type,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,match_score,onto_score,score_num1,score_num2,suitability)
   }
 
