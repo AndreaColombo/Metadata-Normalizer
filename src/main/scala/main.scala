@@ -31,12 +31,13 @@ object  main extends App {
 
   override def main(args: Array[String]): Unit = {
     //setup logger
-//    setup_logger()
-
+    setup_logger()
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))
         user_interface.get_user_feedback()
       else {
+        gecotest_handler.null_gcm()
+        gecotest_handler.reset_db()
         gecotest_handler.init()
         enrichment_engine.controller(args(0))
       }

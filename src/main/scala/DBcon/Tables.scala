@@ -84,7 +84,7 @@ object Tables {
     def description = column[String]("description")
 
     def idx = index("cv_support_source_code_key",(source,code),unique = true)
-    def fk = foreignKey("ontology_source_fk",source,ontology)(_.source)
+    def fk = foreignKey("ontology_source_fk",source,ontology)(_.source, onDelete = ForeignKeyAction.Cascade)
 
     def * = (tid, source,code,label,description) <> (cv_support_type.tupled, cv_support_type.unapply)
   }
