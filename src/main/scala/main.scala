@@ -31,7 +31,7 @@ object  main extends App {
 
   override def main(args: Array[String]): Unit = {
     //setup logger
-    setup_logger()
+//    setup_logger()
 
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))

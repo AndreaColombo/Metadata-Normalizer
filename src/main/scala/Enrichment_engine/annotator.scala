@@ -195,11 +195,11 @@ object annotator {
       val prefLabel = (j2 \ "label").validate[String].get
       val ontology = (j2 \ "ontology_name").validate[String].get
       val ontology_id = (j2 \ "short_form").validate[String].get
-
+      val iri = (j2 \ "iri").validate[String].get
       val score_num = get_match_score(get_score(term, prefLabel), service)
 
       if (score_num > 6 && score_num > max_score) {
-        if(ols_exist(ontology,ontology_id)) {
+        if(ols_exist(ontology,iri)) {
           max_score = score_num
           result = (ontology, ontology_id)
         }
