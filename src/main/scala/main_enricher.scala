@@ -32,6 +32,7 @@ object main_enricher extends App {
   override def main(args: Array[String]): Unit = {
     //setup logger
     setup_logger()
+    config.conf.getObject("db_config")
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection"))
         user_interface.get_user_feedback()
