@@ -8,11 +8,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import com.typesafe.config.ConfigFactory
 import Tables.{ApiResults2, OntologyScore, best_ontos}
+import Config.config.conf
 
 object db_handler {
 
-  private val parsedConfig = ConfigFactory.parseFile(new File("src/main_enricher/scala/Config/application.conf"))
-  private val conf = ConfigFactory.load(parsedConfig)
   private val db = Database.forConfig("gecotest2", conf)
   private val OntologyScore = TableQuery[OntologyScore]
   private val BestOntos = TableQuery[best_ontos]
