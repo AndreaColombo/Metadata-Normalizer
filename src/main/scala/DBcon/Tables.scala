@@ -15,7 +15,7 @@ case class cv_support_xref_type (tid: Int = default_values.int, source: String =
 case class cv_support_raw_type(tid: Int = default_values.int, label: String = default_values.string, table_name: String = default_values.string, column_name: String = default_values.string, method: Char = default_values.char)
 case class user_feedback_type (id: Int = default_values.int, resolved: Boolean = default_values.bool, table: String = default_values.string, column: String = default_values.string, tid: Option[Int] = Some(default_values.int), raw_value: String = default_values.string, parsed_value: Option[String] = Some(default_values.string), label: Option[String] = Some(default_values.string), source: Option[String] = Some(default_values.string), code: Option[String] = Some(default_values.string))
 case class user_changes_type (id: Int = default_values.int, table_name: String = default_values.string, column_name: String = default_values.string, raw_value: String = default_values.string, source: String = default_values.string, code: String = default_values.string)
-case class ontology_type(source: String = default_values.string, title: Option[String] = Some(default_values.string), description: Option[String] = Some(default_values.string), url: String = default_values.string)
+case class ontology_type(source: String = default_values.string, title: Option[String] = Some(default_values.string), description: Option[String] = Some(default_values.string), url: Option[String] = Some(default_values.string))
 case class onto_support_hyp_type (tid_p: Int = default_values.int, tid_c: Int = default_values.int, rel_type:String = default_values.string)
 case class onto_support_hyp_unfolded_type (tid_a: Int = default_values.int , tid_d: Int = default_values.int, distance: Int = default_values.int, rel_type:String = default_values.string)
 
@@ -70,7 +70,7 @@ object Tables {
     def source = column[String]("source",O.SqlType("VARCHAR(64)"), O.PrimaryKey)
     def title = column[Option[String]]("title",O.SqlType("VARCHAR(64)"))
     def description = column[Option[String]]("description")
-    def url = column[String]("url",O.SqlType("VARCHAR(128)"))
+    def url = column[Option[String]]("url",O.SqlType("VARCHAR(128)"))
 
     def * = (source,title,description,url) <> (ontology_type.tupled, ontology_type.unapply)
   }

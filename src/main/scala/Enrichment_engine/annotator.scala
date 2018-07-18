@@ -239,10 +239,10 @@ object annotator {
       val source = onto
       val title = (json \ "config").get("title").validate[String].getOrElse(null)
       val description = (json \ "config").get("description").validate[String].getOrElse(null)
-      result = ontology_type(source,Some(title),Some(description),url)
+      result = ontology_type(source,Some(title),Some(description),Some(url))
     }
     else {
-      result = ontology_type(onto,null,null,"OTHER_LINK")
+      result = ontology_type("other_link",null,null,null)
     }
     result
   }
