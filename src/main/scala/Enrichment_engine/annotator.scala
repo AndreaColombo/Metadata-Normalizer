@@ -166,7 +166,7 @@ object annotator {
         ((Json.parse(Http(part_url).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => part_of :+= a.validate[String].getOrElse("null"))
       else part_of = List("null")
 
-      val c_status = Http(children_url).asString.header("Status").get
+      val c_status = Http(children_url).option(HttpOptions.readTimeout(50000)).asString.header("Status").get
       if ((j \ "has_children").validate[Boolean].get && c_status.contains("200"))
         ((Json.parse(Http(children_url).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded").get("terms") \\ "short_form").foreach(a => children :+= a.validate[String].getOrElse("null"))
       else children = List("null")

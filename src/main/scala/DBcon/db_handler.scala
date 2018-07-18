@@ -7,14 +7,13 @@ import java.io._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import com.typesafe.config.ConfigFactory
-import Tables.{ApiResults, ApiResults2, OntologyScore, best_ontos}
+import Tables.{ApiResults2, OntologyScore, best_ontos}
 
 object db_handler {
 
-  private val parsedConfig = ConfigFactory.parseFile(new File("src/main/scala/Config/application.conf"))
+  private val parsedConfig = ConfigFactory.parseFile(new File("src/main_enricher/scala/Config/application.conf"))
   private val conf = ConfigFactory.load(parsedConfig)
   private val db = Database.forConfig("gecotest2", conf)
-  private val ApiResults = TableQuery[ApiResults]
   private val OntologyScore = TableQuery[OntologyScore]
   private val BestOntos = TableQuery[best_ontos]
   private val ApiResults2 = TableQuery[ApiResults2]
@@ -174,7 +173,6 @@ object db_handler {
       sql"""
            select distinct ontology
            from public.apiresults
-           limit 50
          """.as[String]
     val result_future = db.run(q).map(_.foreach(
       a => result :+= a
@@ -511,5 +509,30 @@ object db_handler {
     }
     finally db.close()
     result.toList
+  }
+
+  def create_view(): Unit = {
+    val q1 = sqlu"""
+                create view support_table as
+                    SELECT term_type, raw_value, max(score_num1) as score1, lower(ontology) as ontology, array_agg(ontology_id), max(suitability) as suitability
+                    FROM apiresults
+                    GROUP BY term_type, raw_value, lower(ontology)
+                    ORDER BY term_type, raw_value, score1 desc, suitability desc, lower(ontology)"""
+
+    val q2 = sqlu"""
+                create view num_raw_values as
+                   	SELECT term_type, count(distinct raw_value) as nrv_count
+                   	from apiresults
+                   	Group by term_type"""
+    val q3 = sqlu"""
+                create view best_onto_per_term as
+                    SELECT term_type, ontology, avg(score1) as avg_score1, count(*)/max(nrv_count)::float as coverage, suitability
+                    FROM support_table  NATURAL JOIN num_raw_values
+                    GROUP BY term_type,ontology, suitability
+                    order by coverage desc, avg_score1 desc, suitability desc, term_type"""
+    val createAction = DBIO.seq(q1,q2,q3)
+    val db = Database.forConfig("gecotest2",conf)
+    Await.result(db.run(createAction),Duration.Inf)
+    db.close()
   }
 }

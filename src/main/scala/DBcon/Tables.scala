@@ -21,21 +21,6 @@ case class onto_support_hyp_unfolded_type (tid_a: Int = default_values.int , tid
 
 object Tables {
 
-  class ApiResults(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String)](tag, Some("public"), "apiresults1"){
-    def service = column[String]("service")
-    def raw_value = column[String]("raw_value")
-    def parsed_value = column[String]("parsed_value")
-    def ontology = column[String]("ontology")
-    def ontology_id = column[String]("ontology_id")
-    def pref_label = column[String]("pref_label")
-    def synonym = column[String]("synonym")
-    def score = column[String]("score")
-    def term_type = column[String]("term_type")
-    def id = column[Int]("id")
-    def deleted = column[Boolean]("deleted")
-    def * = (service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
-  }
-
   class OntologyScore (tag: Tag) extends Table [(String, Double)](tag, Some("public"), "ontologyscore"){
     def ontology = column[String]("ontology")
     def score = column[Double]("score")
@@ -52,7 +37,7 @@ object Tables {
     def * = (term_type,ontology_set,coverage,score,score2,suitability)
   }
 
-  class ApiResults2(tag: Tag) extends Table[(Int, String, String, String, String, String, String, String, String, String)](tag, Some("public"), "apiresults"){
+  class ApiResults2(tag: Tag) extends Table[(Int, String, String, String, String, String, String, String, String, String, Double, Double, Double, Double, Double)](tag, Some("public"), "apiresults"){
     def id = column[Int]("id", O.AutoInc)
     def service = column[String]("service")
     def raw_value = column[String]("raw_value")
@@ -63,7 +48,12 @@ object Tables {
     def synonym = column[String]("synonym")
     def score = column[String]("score")
     def term_type = column[String]("term_type")
-    def * = (id,service,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,term_type)
+    def match_score = column[Double]("match_score")
+    def onto_score = column[Double]("onto_score")
+    def score_num1 = column[Double]("score_num1")
+    def score_num2 = column[Double]("score_num2")
+    def suitability = column[Double]("suitability")
+    def * = (id,service,term_type,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,match_score,onto_score,score_num1,score_num2,suitability)
   }
 
   class ontology (tag: Tag) extends Table[ontology_type](tag, Some("public"), "ontology"){

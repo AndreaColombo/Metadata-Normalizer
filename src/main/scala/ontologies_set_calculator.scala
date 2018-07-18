@@ -43,7 +43,7 @@ object ontologies_set_calculator {
           result :+= List(t, onto1, coverage.toString, (weight1_sc1/terms1.size).toString,(weight1_sc2/terms1.size).toString,(weight1_suit/terms1.size).toString)
         }
 
-        for (j <- i + 1 until ontos.length/3) {
+        for (j <- i + 1 until ontos.length) {
           val onto2 = ontos(j)._2
           val terms2 = db_handler.get_term_by_ontology(onto2, t).toSet
 
@@ -77,7 +77,7 @@ object ontologies_set_calculator {
               result :+= List(t, onto1+","+onto2, coverage.toString, ((weight1_sc1+weight2_sc1)/terms.size).toString,((weight1_sc2+weight2_sc2)/terms1.size).toString,((weight1_suit+weight2_suit)/terms.size).toString)
             }
 
-            for (k <- j + 1 until ontos.length/3) {
+            for (k <- j + 1 until ontos.length) {
               val onto3 = ontos(k)._2
               val terms3 = db_handler.get_term_by_ontology(onto3, t)
 
@@ -150,68 +150,6 @@ object ontologies_set_calculator {
     println(missing.size)
     missing.foreach(println(_))
     println()
-  }
-
-  def cose() = {
-    //try {
-    //  if (args.nonEmpty) {
-    //    if (args.length > 1 && args(1).equalsIgnoreCase("insert")) {
-    //      for (t <- term_type) {
-    //        val f = new File("best_onto_" + t.replace("_", "-") + ".csv")
-    //        val reader = CSVReader.open(f)
-    //        val insertvalue = reader.all()
-    //        var ok: Seq[(String, String, Double, Double, Double, Double)] = List()
-    //        for (l <- insertvalue) {
-    //          ok :+= (l(0), l(1), l(2).toDouble, l(3).toDouble, l(4).toDouble, l(5).toDouble)
-    //        }
-    //        db_handler.insert_best_ontos(ok)
-    //      }
-    //    }
-    //
-    //    if (args.length < 2) {
-    //      val term_type = m.apply(args(0))
-    //      for (t <- term_type) {
-    //        ontologies_set_calculator.calculate_ontology_set(t)
-    //      }
-    //    }
-    //  }
-    //}
-    //    catch {
-    //      case e: Exception => println(e)
-    //        e.printStackTrace()
-    //        e.getCause.printStackTrace()
-    //    }
-
-    //  }
-
-    //    if(args.nonEmpty && args(0).equals("get")){
-    //      ontologies_set_calculator.get_set_coverage(args.slice(1,3).toList, args(3))
-    //    }
-    //    else {
-    //      for (tt <- m.keys.toList) {
-    //        for (t <- m.apply(tt)) {
-    //          val onto_sets = db_handler.get_onto_sets(t)
-    //          println(t)
-    //          for (onto_set <- onto_sets) {
-    //            var terms_full: Set[String] = Set()
-    //            var acc = 0.0
-    //            for (o <- onto_set.split(",")) {
-    //              val scores = db_handler.get_score_suitability(o, t)
-    //              val terms = db_handler.get_term_by_ontology(o, t).toSet
-    //              val termsgood = (terms_full ++ terms).filterNot(terms_full)
-    //              val weight_suit = termsgood.size * scores._3
-    //              acc += weight_suit
-    //              terms_full ++= terms
-    //            }
-    //            val new_suit = acc / terms_full.size.toDouble
-    //
-    //            db_handler.update_suitability_sets(new_suit, onto_set, t)
-    //          }
-    //          val d2 = System.currentTimeMillis()
-    //          get_elapsed_time(d1, d2)
-    //        }
-    //      }
-    //    }
   }
 }
 

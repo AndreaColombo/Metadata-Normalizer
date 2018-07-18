@@ -11,7 +11,7 @@ import play.api.libs.json.Json
 import scalaj.http.Http
 
 
-object  main extends App {
+object main_enricher extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
 
   var i = 0

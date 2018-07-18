@@ -7,7 +7,7 @@ import scala.collection.JavaConverters._
 
 object config  {
 
-  val parsedConfig: Config = ConfigFactory.parseFile(new File("src/main/scala/Config/application.conf"))
+  val parsedConfig: Config = ConfigFactory.parseFile(new File("src/main_enricher/scala/Config/application.conf"))
   val conf: Config = ConfigFactory.load(parsedConfig)
 
   def get_threshold():Int = conf.getInt("threshold_match")
