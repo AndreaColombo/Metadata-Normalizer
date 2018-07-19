@@ -23,6 +23,26 @@ object annotator {
 
   val logger: Logger = Logger.getLogger(this.getClass)
 
+  def search_term(raw_value: String, term_type: String): (String, String) = {
+    var res: List[(String, String, String, String, String, String, String, String)] = List()
+    var result: (String, String) = ("","")
+    val ontos = get_ontologies_by_type(term_type)
+    var ok = false
+    for (onto <- ontos if !ok){
+      val tmp = ols_search_term(raw_value,onto)
+      println(raw_value,onto)
+      breakable {
+        if (tmp._1 == "null")
+          break()
+        else {
+          result = (tmp._1,tmp._2)
+          ok = true
+        }
+      }
+    }
+    result
+  }
+
   def get_info(source: String, iri: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
     val tmp = ols_get_info(source,iri)
@@ -35,7 +55,7 @@ object annotator {
       val anc = get_hyp(parents, onto, 0)
 
       if(!db_handler.cv_support_exists(onto,tmp.head(1)))
-        result :+= Map("source" -> onto, "iri" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8))
+      result :+= Map("source" -> onto, "iri" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8))
 
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
@@ -53,28 +73,10 @@ object annotator {
     result.distinct
   }
 
-  def search_term(raw_value: String, term_type: String): (String, String) = {
-    var res: List[(String, String, String, String, String, String, String, String)] = List()
-    var result: (String, String) = ("","")
-    val ontos = get_ontologies_by_type(term_type)
-    var ok = false
-    for (onto <- ontos if !ok){
-      val tmp = ols_search_term(raw_value,onto)
-      breakable {
-        if (tmp._1 == "null")
-        break()
-        else {
-          result = (tmp._1,tmp._2)
-          ok = true
-        }
-      }
-    }
-    result
-  }
-
   def get_user_feedback(value: String,table_name: String, term_type: String): Unit = {
     var user_feedback: List[user_feedback_type] = List()
-    if ({user_feedback = ols_get_user_feedback(value, term_type, table_name); user_feedback.nonEmpty}) {
+    user_feedback = ols_get_user_feedback(value, term_type, table_name)
+    if (user_feedback.nonEmpty) {
       try {
         db_handler.user_feedback_insert(user_feedback)
       }
