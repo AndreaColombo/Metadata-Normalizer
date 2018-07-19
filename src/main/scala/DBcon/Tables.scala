@@ -27,15 +27,15 @@ object Tables {
     def * = (ontology,score)
   }
 
-  class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double, Double)](tag, Some("public"), "best_ontos2"){
+  class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double)](tag, Some("public"), "best_ontos2"){
     def term_type = column[String]("term_type")
     def ontology_set = column[String]("ontologies_set")
     def coverage = column[Double]("set_coverage")
     def score = column[Double]("set_score1")
-    def score2 = column[Double]("set_score2")
     def suitability = column[Double]("set_suitability")
-    def * = (term_type,ontology_set,coverage,score,score2,suitability)
+    def * = (term_type,ontology_set,coverage,score,suitability)
   }
+  val best_onto_set = TableQuery[best_ontos]
 
   class ApiResults2(tag: Tag) extends Table[(Int, String, String, String, String, String, String, String, String, String, Double, Double, Double, Double, Double)](tag, Some("public"), "apiresults"){
     def id = column[Int]("id", O.AutoInc)

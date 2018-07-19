@@ -7,18 +7,17 @@ import java.io._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import com.typesafe.config.ConfigFactory
-import Tables.{ApiResults2, OntologyScore, best_ontos}
+import Tables.{ApiResults2, OntologyScore, best_onto_set}
 import Config.config.conf
 
 object db_handler {
 
   private val db = Database.forConfig("gecotest2", conf)
   private val OntologyScore = TableQuery[OntologyScore]
-  private val BestOntos = TableQuery[best_ontos]
   private val ApiResults2 = TableQuery[ApiResults2]
 
   val setup2 = OntologyScore.schema.create
-  val setup3  = BestOntos.schema.create
+  val setup3  = best_onto_set.schema.create
   val setupapiresults2 = ApiResults2.schema.create
 
   db.run(setup2)
@@ -56,9 +55,9 @@ object db_handler {
     db.close()
   }
 
-  def insert_best_ontos(rows: Iterable[(String, String, Double, Double, Double, Double)]) = {
+  def insert_best_ontos(rows: Iterable[(String, String, Double, Double, Double)]) = {
     val db = Database.forConfig("gecotest2", conf)
-    val insertAction = BestOntos ++= rows
+    val insertAction = best_onto_set ++= rows
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
     db.close()

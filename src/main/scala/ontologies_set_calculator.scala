@@ -8,11 +8,10 @@ object ontologies_set_calculator {
 
   val term_type = List("cell_line")
 
-  def calculate_ontology_set(t: String) = {
+  def calculate_ontology_set(t: String): Unit = {
 
-    var result: Seq[List[String]] = List()
+    var result: Seq[(String, String, Double, Double, Double)] = List()
     var score1 = 0.0
-    var score2 = 0.0
     var suitability = 0.0
     val ontos = db_handler.get_best_onto_per_term(t)
     val a = db_handler.get_nrv(t)
@@ -27,20 +26,19 @@ object ontologies_set_calculator {
 
         val scores = db_handler.get_score_suitability(onto1, t)
         val weight1_sc1 = terms1.size * scores._1
-        val weight1_sc2 = terms1.size * scores._2
         val weight1_suit = terms1.size * scores._3
 
         //IF ONTO1 COVERS ALL TERMS NO NEED TO GO FURTHER
         if((terms1.size.toDouble / a.toDouble)==1.0){
           val coverage: Double = terms1.size.toDouble / a.toDouble
-          result :+= List(t, onto1, coverage.toString, scores._1.toString, scores._2.toString, scores._3.toString)
+          result :+= (t, onto1, coverage, scores._1, scores._3)
           break()
         }
 
         //IF ONTO1 COVERS ENOUGH TERMS SAVE IT
         if((terms1.size.toDouble / a.toDouble)>=threshold){
           val coverage: Double = terms1.size.toDouble / a.toDouble
-          result :+= List(t, onto1, coverage.toString, (weight1_sc1/terms1.size).toString,(weight1_sc2/terms1.size).toString,(weight1_suit/terms1.size).toString)
+          result :+= (t, onto1, coverage, weight1_sc1/terms1.size,weight1_suit/terms1.size)
         }
 
         for (j <- i + 1 until ontos.length) {
@@ -52,7 +50,6 @@ object ontologies_set_calculator {
             val scores = db_handler.get_score_suitability(onto2, t)
             val terms2good = (terms1 ++ terms2).filterNot(terms1)
             val weight2_sc1 = terms2good.size * scores._1
-            val weight2_sc2 = terms2good.size * scores._2
             val weight2_suit = terms2good.size * scores._3
             val terms = terms1 ++ terms2
 
@@ -66,15 +63,14 @@ object ontologies_set_calculator {
               val coverage: Double = terms.size.toDouble / a.toDouble
               suitability = (weight1_suit + weight2_suit) / terms.size
               score1 = (weight1_sc1 + weight2_sc1) / terms.size
-              score2 = (weight1_sc2 + weight2_sc2) / terms.size
-              result :+= List(t, onto1 + "," + onto2, coverage.toString, score1.toString, score2.toString, suitability.toString)
+              result :+= (t, onto1 + "," + onto2, coverage, score1, suitability)
               break()
             }
 
             //IF (ONTO1,ONTO2) COVER ENOUGH TERMS SAVE IT
             if((terms.size.toDouble/a.toDouble)>=threshold){
               val coverage: Double = terms.size.toDouble/a.toDouble
-              result :+= List(t, onto1+","+onto2, coverage.toString, ((weight1_sc1+weight2_sc1)/terms.size).toString,((weight1_sc2+weight2_sc2)/terms1.size).toString,((weight1_suit+weight2_suit)/terms.size).toString)
+              result :+= (t, onto1+","+onto2, coverage, (weight1_sc1+weight2_sc1)/terms.size,(weight1_suit+weight2_suit)/terms.size)
             }
 
             for (k <- j + 1 until ontos.length) {
@@ -93,7 +89,6 @@ object ontologies_set_calculator {
 
                 val terms3good = terms.filterNot(terms12)
                 val weight3_sc1 = terms3good.size * scores._1
-                val weight3_sc2 = terms3good.size * scores._2
                 val weight3_suit = terms3good.size * scores._3
 
                 //BEING HERE MEANS THAT ONTO3 ADDS SOMETHING USEFUL TO (ONTO1,ONTO2) AND (ONTO1,ONTO2,ONTO3) COVER ENOUGH TERMS
@@ -101,8 +96,7 @@ object ontologies_set_calculator {
                   val coverage: Double = terms.size.toDouble / a.toDouble
                   suitability = (weight1_suit + weight2_suit + weight3_suit) / terms.size
                   score1 = (weight1_sc1 + weight2_sc1 + weight3_sc1) / terms.size
-                  score2 = (weight1_sc2 + weight2_sc2 + weight3_sc2) / terms.size
-                  result :+= List(t, onto1+","+onto2+","+onto3, coverage.toString, score1.toString, score2.toString, suitability.toString)
+                  result :+= (t, onto1+","+onto2+","+onto3, coverage, score1, suitability)
                 }
               }
             }
@@ -111,15 +105,15 @@ object ontologies_set_calculator {
       }
     }
 
-    var result_true: Seq[List[String]] = List()
+    var result_true: Seq[(String, String, Double, Double, Double)] = List()
     for (i <- result.indices){
       val l = result(i)
-      var ontos = l(1).split(",").toList
+      var ontos = l._2.split(",").toList
       if(ontos.length>2){
         ontos = ontos.filterNot(a => a == ontos.apply(1))
         var already_present = false
         for (ontos2 <- result if already_present == false)
-          if(ontos2(1).split(",").toSeq.equals(ontos))
+          if(ontos2._2.split(",").toSeq.equals(ontos))
             already_present=true
 
         if(!already_present){
@@ -128,16 +122,12 @@ object ontologies_set_calculator {
       }
       else result_true :+= l
     }
-    val f = new File("best_onto_" + t.replace("_","-") + ".csv")
-    val writer = CSVWriter.open(f)
-    writer.writeAll(result_true.distinct)
-//    println("end " + t + " \n")
-//    result
+    db_handler.insert_best_ontos(result)
   }
 
-  def get_set_coverage(ontos: List[String], t: String) = {
+  def get_set_coverage(ontos: List[String], t: String): Unit = {
     var terms_full: Set[String] = Set()
-    val terms1 = db_handler.get_term_by_ontology(ontos(0),t).toSet
+    val terms1 = db_handler.get_term_by_ontology(ontos.head,t).toSet
     val terms2 = db_handler.get_term_by_ontology(ontos(1),t).toSet
     terms_full = terms1 ++ terms2
     val coverage = terms_full.size.toDouble / db_handler.get_nrv(t).toDouble
@@ -146,7 +136,7 @@ object ontologies_set_calculator {
     val missing = terms.filterNot(terms_full)
 
     println()
-    println(ontos(0)+"\t"+ontos(1)+"\t"+coverage+"\n")
+    println(ontos.head+"\t"+ontos(1)+"\t"+coverage+"\n")
     println(missing.size)
     missing.foreach(println(_))
     println()
