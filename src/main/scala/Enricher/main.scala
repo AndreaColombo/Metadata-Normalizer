@@ -9,7 +9,7 @@ import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
-object main_enricher extends App {
+object main extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
 
   var i = 0
