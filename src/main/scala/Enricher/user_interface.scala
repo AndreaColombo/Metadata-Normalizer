@@ -1,11 +1,13 @@
-import DBcon.{default_values, gecotest_handler, user_changes_type}
+package Enricher
+
+import Config.config.{get_gcm_table_list, get_termtype_list}
+import Enricher.DBCon.{default_values, db_handler, user_changes_type}
 import Enrichment_engine.annotator
 import scalaj.http.{Http, HttpOptions}
+import scalax.cli.Table
+import shapeless.Sized
 
-import scala.io._
-import scalax.cli._
-import shapeless._
-import Config.config.{get_gcm_table_list, get_termtype_list}
+import scala.io.StdIn
 
 object user_interface {
 
@@ -14,16 +16,16 @@ object user_interface {
     while (flag) {
       println("Input value to update")
       var value = StdIn.readLine()
-      while (gecotest_handler.get_value_info(value).isEmpty){
+      while (db_handler.get_value_info(value).isEmpty){
         println("Value not valid")
         println("Input valid value")
         value = StdIn.readLine()
       }
       val source_code = input_source_code()
-      val tuples = gecotest_handler.update_tid(value,null)
+      val tuples = db_handler.update_tid(value,null)
 
       for ((table_name, column_name) <- tuples) {
-        gecotest_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, value, source_code._1, source_code._2))
+        db_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, value, source_code._1, source_code._2))
       }
 
       println("Do you wish to update another value?")
@@ -48,10 +50,10 @@ object user_interface {
   def get_user_feedback(): Unit = {
     for (table_name <- get_gcm_table_list()){
       for (column_name <- get_termtype_list(table_name)){
-        val raw_values = gecotest_handler.get_user_feedback_raw_values(table_name,column_name)
+        val raw_values = db_handler.get_user_feedback_raw_values(table_name,column_name)
         for (rv <- raw_values){
           var i = 0
-          val options = gecotest_handler.get_user_feedback_infos(rv)
+          val options = db_handler.get_user_feedback_infos(rv)
           val table = Table(Sized("id","table name", "column name", "raw value", "parsed value","label","source","iri"))
           for (o <- options){
             table.rows += Sized(i.toString,o.table,o.column,o.raw_value,o.parsed_value.get,o.label.get,o.source.get,o.code.get)
@@ -67,27 +69,27 @@ object user_interface {
             val code = user_choice._2
             val prefLabel = annotator.ols_get_info(code,source).head(2)
             //INSERT IN USER REQUESTED CHOICE
-            gecotest_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, rv, source, code))
+            db_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, rv, source, code))
           }
           //CASE RAW VALUE FOUND BUT NOT BEST MATCH
           else {
             table.print()
             val user_choice = get_input(i)
-            if(user_choice.equalsIgnoreCase("manual insert")){
+            if(user_choice.equalsIgnoreCase("manual apiresults_insert")){
               println("Please input manually source and iri")
               val user_choice = input_source_code()
               val source = user_choice._1
               val code = user_choice._2
               val prefLabel = annotator.ols_get_info(source,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
-              gecotest_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, rv, source, code))
+              db_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, rv, source, code))
             }
             else {
               val a = options(user_choice.toInt)
-              gecotest_handler.insert_user_changes(user_changes_type(default_values.int,a.table,a.column,a.raw_value,a.source.get,a.code.get))
+              db_handler.insert_user_changes(user_changes_type(default_values.int,a.table,a.column,a.raw_value,a.source.get,a.code.get))
             }
           }
-          gecotest_handler.set_resolved(rv)
+          db_handler.set_resolved(rv)
         }
       }
     }
@@ -101,7 +103,7 @@ object user_interface {
     catch {
       case e: NumberFormatException => e
     }
-    while (!user_choice.equalsIgnoreCase("manual insert") && ((id_choice<0) || (id_choice>range))) {
+    while (!user_choice.equalsIgnoreCase("manual apiresults_insert") && ((id_choice<0) || (id_choice>range))) {
       println("Unknown command")
       display_prompt()
       user_choice = StdIn.readLine()

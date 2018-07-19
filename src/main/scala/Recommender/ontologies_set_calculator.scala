@@ -1,8 +1,8 @@
-import java.io.File
+package Recommender
 
-import DBcon.db_handler
-import com.github.tototoshi.csv.CSVWriter
-import  util.control.Breaks._
+import Recommender.DBCon.db_handler
+
+import scala.util.control.Breaks._
 
 object ontologies_set_calculator {
 
@@ -26,12 +26,12 @@ object ontologies_set_calculator {
 
         val scores = db_handler.get_score_suitability(onto1, t)
         val weight1_sc1 = terms1.size * scores._1
-        val weight1_suit = terms1.size * scores._3
+        val weight1_suit = terms1.size * scores._2
 
         //IF ONTO1 COVERS ALL TERMS NO NEED TO GO FURTHER
         if((terms1.size.toDouble / a.toDouble)==1.0){
           val coverage: Double = terms1.size.toDouble / a.toDouble
-          result :+= (t, onto1, coverage, scores._1, scores._3)
+          result :+= (t, onto1, coverage, scores._1, scores._2)
           break()
         }
 
@@ -50,7 +50,7 @@ object ontologies_set_calculator {
             val scores = db_handler.get_score_suitability(onto2, t)
             val terms2good = (terms1 ++ terms2).filterNot(terms1)
             val weight2_sc1 = terms2good.size * scores._1
-            val weight2_suit = terms2good.size * scores._3
+            val weight2_suit = terms2good.size * scores._2
             val terms = terms1 ++ terms2
 
             //IF ONTO2 DOESN'T ADD ANYTHING TO ONTO1 CONTINUE TO NEXT ONTOLOGY
@@ -89,7 +89,7 @@ object ontologies_set_calculator {
 
                 val terms3good = terms.filterNot(terms12)
                 val weight3_sc1 = terms3good.size * scores._1
-                val weight3_suit = terms3good.size * scores._3
+                val weight3_suit = terms3good.size * scores._2
 
                 //BEING HERE MEANS THAT ONTO3 ADDS SOMETHING USEFUL TO (ONTO1,ONTO2) AND (ONTO1,ONTO2,ONTO3) COVER ENOUGH TERMS
                 if((terms.size.toDouble / a.toDouble)>=threshold) {

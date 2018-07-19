@@ -1,8 +1,8 @@
-package Enrichment_engine
+package Enricher.Enrichment_engine
 
 import java.sql.BatchUpdateException
 
-import DBcon._
+import Enricher.DBCon._
 import org.slf4j.{Logger, LoggerFactory}
 
 
@@ -17,10 +17,10 @@ object db_interface {
         cv_support ++= db_insert(elem)
       }
       val label = res.head.apply("label")
-      val tid = gecotest_handler.get_tid(res.head.apply("source"),res.head.apply("iri"))
-      gecotest_handler.syn_insert(List(cv_support_syn_type(tid,raw_value,"raw")))
-      gecotest_handler.raw_insert(List(cv_support_raw_type(tid,label,table_name,column_name,method)))
-      gecotest_handler.update_tid(raw_value,Some(tid))
+      val tid = db_handler.get_tid(res.head.apply("source"),res.head.apply("iri"))
+      db_handler.syn_insert(List(cv_support_syn_type(tid,raw_value,"raw")))
+      db_handler.raw_insert(List(cv_support_raw_type(tid,raw_value,table_name,column_name,method)))
+      db_handler.update_tid(raw_value,Some(tid))
       insert_hyp(cv_support, res)
       unfold_hyp(tid)
     }
@@ -42,8 +42,8 @@ object db_interface {
     //IF DOESN'T EXIST INSERT
 
     insert_elem ++= List(cv_support_type(default_values.int,source,code,label,description))
-    gecotest_handler.cv_support_insert(insert_elem)
-    val tid = gecotest_handler.get_tid(source,code)
+    db_handler.cv_support_insert(insert_elem)
+    val tid = db_handler.get_tid(source,code)
     support :+= cv_support(tid.toString,source,code,label)
 
     //XREF
@@ -59,7 +59,7 @@ object db_interface {
       val code = xref
       insert_xref ++= List(cv_support_xref_type(tid, source, code))
     }
-    gecotest_handler.xref_insert(insert_xref)
+    db_handler.xref_insert(insert_xref)
     //END XREF
 
     //SYN
@@ -74,7 +74,7 @@ object db_interface {
       insert_syn ++= List(cv_support_syn_type(tid, label, "syn"))
     }
 
-    gecotest_handler.syn_insert(insert_syn)
+    db_handler.syn_insert(insert_syn)
     //END SYN
 
     support
@@ -116,7 +116,7 @@ object db_interface {
       }
     }
     try {
-      gecotest_handler.hyp_insert(result)
+      db_handler.hyp_insert(result)
     }
     catch  {
       case e: BatchUpdateException => e.getNextException.printStackTrace()
@@ -124,11 +124,11 @@ object db_interface {
   }
 
   def unfold_hyp(cur_tid: Int): Unit = {
-    val tid_list = gecotest_handler.get_tid_parent_distinct(cur_tid)
+    val tid_list = db_handler.get_tid_parent_distinct(cur_tid)
     var unfolded: List[onto_support_hyp_unfolded_type] = List()
     for (tid_parent_cur <- tid_list) {
       val distance = 1
-      val onto_support_hyp_l = gecotest_handler.get_onto_hyp(tid_parent_cur)
+      val onto_support_hyp_l = db_handler.get_onto_hyp(tid_parent_cur)
       for (onto_support_hyp <- onto_support_hyp_l){
         unfolded :+= onto_support_hyp_unfolded_type(onto_support_hyp.tid_p,onto_support_hyp.tid_c,distance,onto_support_hyp.rel_type)
         unfolded ++= unfold_recursive(tid_parent_cur,onto_support_hyp.tid_c,distance+1,onto_support_hyp.rel_type)
@@ -137,12 +137,12 @@ object db_interface {
     //Remove duplicates and then keeps only relations with minimum distance
     //EG if (5,10,dist=1) exists then (5,10,dist=2) is eliminated
     unfolded = unfolded.distinct.filterNot(a => unfolded.exists(p => p.tid_a == a.tid_a && p.tid_d == a.tid_d && p.distance < a.distance))
-    gecotest_handler.insert_unfolded(unfolded)
+    db_handler.insert_unfolded(unfolded)
   }
 
   def unfold_recursive(tid_parent_cur: Int, tid_child_cur: Int, distance: Int, rel_type_cur: String): List[onto_support_hyp_unfolded_type] = {
     var result: List[onto_support_hyp_unfolded_type] = List()
-    val onto_support_hyp_l = gecotest_handler.get_onto_hyp(tid_child_cur)
+    val onto_support_hyp_l = db_handler.get_onto_hyp(tid_child_cur)
 
     for (elem <- onto_support_hyp_l) {
       val rel_type = get_rel_type(rel_type_cur,elem.rel_type)

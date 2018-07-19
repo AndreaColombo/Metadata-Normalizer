@@ -1,15 +1,8 @@
-package Ontologies.Parsers
+package Recommender.Ontologies.Parsers
 
-import java.net.URLEncoder
 
-import Utilities.score_calculator._
-import DBcon.{db_handler, gecotest_handler}
-import Utilities.Preprocessing
 import play.api.libs.json._
-import Utilities.Preprocessing.{lookup, parse}
-import scalaj.http.{Http, HttpOptions}
-
-import scala.util.control.Breaks._
+import Utilities.Preprocessing.lookup
 
 object OlsParser {
   def parse(response: String, termAnnotated: String):List[List[String]] = {

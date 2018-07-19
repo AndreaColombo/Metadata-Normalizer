@@ -1,7 +1,6 @@
-package Ontologies.Parsers
+package Recommender.Ontologies.Parsers
 
-import DBcon.gecotest_handler
-import Ontologies.Parsers.OlsParser.countWords
+import Recommender.Ontologies.Parsers.OlsParser.countWords
 import play.api.libs.json._
 import Utilities.Preprocessing.lookup
 
@@ -11,8 +10,6 @@ object BioportalParser {
   def parse (str: String, term: String): List[List[String]] ={
     var rows:Seq[List[String]] = List()
     val service = "Bioportal"
-//    println(str)
-    println(term)
     val j = (Json.parse(str) \ "collection").get
     val parsed_value = term
     val raw_value = lookup(parsed_value)

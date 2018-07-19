@@ -1,10 +1,10 @@
-package Enrichment_engine
+package Enricher.Enrichment_engine
 
 import java.net.{SocketTimeoutException, URLEncoder}
 import java.sql.BatchUpdateException
 
-import DBcon.{default_values, gecotest_handler, ontology_type, user_feedback_type}
-import Ontologies.Parsers.OlsParser.get_score
+import Enricher.DBCon.{default_values, db_handler, ontology_type, user_feedback_type}
+import Recommender.Ontologies.Parsers.OlsParser.get_score
 import Utilities.Preprocessing
 import Utilities.score_calculator.get_match_score
 import com.fasterxml.jackson.core.JsonParseException
@@ -21,32 +21,32 @@ object annotator {
   val max_depth_anc: Int = get_anc_limit()
   val max_depth_desc: Int = get_desc_limit()
 
-  val logger = Logger.getLogger(this.getClass)
+  val logger: Logger = Logger.getLogger(this.getClass)
 
   def get_info(source: String, iri: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
     val tmp = ols_get_info(source,iri)
     if (tmp.nonEmpty) {
-      val onto = tmp.head(0)
+      val onto = tmp.head.head
       val parents = tmp.head(5)
       val children = tmp.head(6)
 
       val desc = get_desc(children, onto, 0)
       val anc = get_hyp(parents, onto, 0)
 
-      if(!gecotest_handler.cv_support_exists(onto,tmp.head(1)))
+      if(!db_handler.cv_support_exists(onto,tmp.head(1)))
         result :+= Map("source" -> onto, "iri" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8))
 
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
 
       for (tmp <- anc) {
-        if(!gecotest_handler.cv_support_exists(tmp._1,tmp._2))
+        if(!db_handler.cv_support_exists(tmp._1,tmp._2))
         result :+= Map("source" -> tmp._1, "iri" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8,"description"->tmp._9)
       }
 
       for (elem <- desc) {
-        if (!gecotest_handler.cv_support_exists(elem._1, elem._2))
+        if (!db_handler.cv_support_exists(elem._1, elem._2))
         result :+= Map("source" -> elem._1, "iri" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9)
       }
     }
@@ -76,14 +76,14 @@ object annotator {
     var user_feedback: List[user_feedback_type] = List()
     if ({user_feedback = ols_get_user_feedback(value, term_type, table_name); user_feedback.nonEmpty}) {
       try {
-        gecotest_handler.user_feedback_insert(user_feedback)
+        db_handler.user_feedback_insert(user_feedback)
       }
       catch {
         case e: BatchUpdateException => logger.info("User feedback exception",e.getNextException)
       }
     }
     else {
-      gecotest_handler.user_feedback_insert(List(user_feedback_type(default_values.int,default_values.bool,table_name, term_type, null, value, null, null, null, null)))
+      db_handler.user_feedback_insert(List(user_feedback_type(default_values.int,default_values.bool,table_name, term_type, null, value, null, null, null, null)))
     }
   }
 
@@ -96,7 +96,7 @@ object annotator {
           result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7), res.head(8))
           val n = depth + 1
           if (n != max_depth_desc)
-            result ++= get_desc(res.head(6), res.head(0), n)
+            result ++= get_desc(res.head(6), res.head.head, n)
           else
             result
         }
@@ -114,7 +114,7 @@ object annotator {
           result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7), res.head(8))
           val n = depth + 1
           if (n != max_depth_anc)
-            result ++= get_hyp(res.head(5), res.head(0), n)
+            result ++= get_hyp(res.head(5), res.head.head, n)
           else
             result
         }
@@ -229,7 +229,7 @@ object annotator {
         val label = (jj \ "label").validate[String].get
         val id = (jj \ "short_form").validate[String].get
         val onto = (jj \ "ontology_name").validate[String].get
-        if (!rows.exists(_.code.get==id) && !gecotest_handler.user_fb_exist(raw_value,onto,id))
+        if (!rows.exists(_.code.get==id) && !db_handler.user_fb_exist(raw_value,onto,id))
           rows :+= user_feedback_type(default_values.int, default_values.bool, table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id))
       }
     }

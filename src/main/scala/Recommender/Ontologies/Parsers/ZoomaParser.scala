@@ -1,6 +1,5 @@
-package Ontologies.Parsers
+package Recommender.Ontologies.Parsers
 
-import DBcon.gecotest_handler
 import play.api.libs.json._
 import scalaj.http.{Http, HttpOptions}
 import Utilities.Preprocessing.lookup

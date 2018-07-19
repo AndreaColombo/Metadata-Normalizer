@@ -1,15 +1,13 @@
-import java.util.{Calendar, Date}
+package Enricher
+
+import java.util.Calendar
 
 import Config.config
-import DBcon.gecotest_handler
+import Enricher.DBCon.db_handler
 import Enrichment_engine.enrichment_engine
-import org.apache.log4j._
+import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import org.slf4j.LoggerFactory
-import play.api.libs.json.Json
-import scalaj.http.Http
-
 
 object main_enricher extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
@@ -38,9 +36,9 @@ object main_enricher extends App {
         user_interface.get_user_feedback()
       }
       else if (args(0).equals("reset")) {
-        gecotest_handler.null_gcm()
-        gecotest_handler.reset_db()
-        gecotest_handler.init()
+        db_handler.null_gcm()
+        db_handler.reset_db()
+        db_handler.init()
       }
       else {
         enrichment_engine.controller(args(0))

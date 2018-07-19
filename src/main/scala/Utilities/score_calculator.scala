@@ -1,6 +1,6 @@
 package Utilities
 
-import DBcon.db_handler
+import Recommender.DBCon.db_handler
 import play.api.libs.json.Json
 import scalaj.http.{Http, HttpOptions}
 

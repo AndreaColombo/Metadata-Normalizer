@@ -1,7 +1,9 @@
+package Recommender
+
 import java.util.Calendar
 
-import DBcon.{db_handler, gecotest_handler}
 import Ontologies.Ontology
+import Recommender.DBCon.db_handler
 import Utilities.Preprocessing.parse
 
 object db_filler {
@@ -41,43 +43,43 @@ object db_filler {
 
     println("bioportal inizio")
     println(s)
-    db_handler.insert(bioportal.input(s))
+    db_handler.apiresults_insert(bioportal.input(s))
     println("bioportal fine")
     get_timestamp()
 
 
     println("recsys 1 inizio")
-    db_handler.insert(recommender.input(recsys1))
+    db_handler.apiresults_insert(recommender.input(recsys1))
     println("recsys 1 fine")
     get_timestamp()
 
     println("recsys 2 inizio")
-    db_handler.insert(recommender.input(recsys2))
+    db_handler.apiresults_insert(recommender.input(recsys2))
     println("recsys 2 fine")
     get_timestamp()
 
     println("recsys 3 inizio")
-    db_handler.insert(recommender.input(recsys3))
+    db_handler.apiresults_insert(recommender.input(recsys3))
     println("recsys 3 fine")
     get_timestamp()
 
     println("recsys 4 inizio")
-    db_handler.insert(recommender.input(recsys4))
+    db_handler.apiresults_insert(recommender.input(recsys4))
     println("recsys 4 fine")
     get_timestamp()
 
     println("zooma inizio")
-    db_handler.insert(zooma.input(s))
+    db_handler.apiresults_insert(zooma.input(s))
     println("zooma fine")
     get_timestamp()
 
     println("ols inizio")
-    db_handler.insert(ols.input(s))
+    db_handler.apiresults_insert(ols.input(s))
     println("ols fine")
     get_timestamp()
   }
 
-  def get_timestamp() = {
+  def get_timestamp(): Unit = {
     val now = Calendar.getInstance()
     println(now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+":"+now.get(Calendar.SECOND))
   }

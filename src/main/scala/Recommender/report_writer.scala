@@ -1,7 +1,8 @@
-import java.io.{File, FileWriter, PrintWriter}
+package Recommender
 
-import DBcon.db_handler
-import com.github.tototoshi.csv.CSVWriter
+import java.io.{File, PrintWriter}
+
+import Recommender.DBCon.db_handler
 import play.api.libs.json.Json
 import scalaj.http.Http
 
@@ -34,13 +35,13 @@ object report_writer {
         val scores = db_handler.get_score_suitability(onto, tt)
         val coverage = ontos(i)._5
         val score = scores._1
-        val suit = scores._3
+        val suit = scores._2
         r += """\paragraph{""" + onto +"""}""" + "\n"
         val onto_data = Json.parse(Http(url + onto.map(_.toUpper)).param("display_context", "false").param("apikey", apikey).header("accept", "text/json").asString.body)
         val name = (onto_data \ "name").validate[String].get
         r += name + "\n"
         val url2 = (onto_data \ "links" \ "categories").validate[String].get
-        val categories = (Json.parse(Http(url2).param("apikey", apikey).header("accept", "text/json").asString.body) \\ "name")
+        val categories = Json.parse(Http(url2).param("apikey", apikey).header("accept", "text/json").asString.body) \\ "name"
 
         r +=
           """\begin{itemize}""" + "\n" +

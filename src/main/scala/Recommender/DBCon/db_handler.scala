@@ -1,48 +1,40 @@
-package DBcon
+package Recommender.DBCon
 
-import scala.concurrent._
+import Config.config.conf
+import Recommender.DBCon.Tables.{apiresults, ontologyScore, best_onto_set}
 import slick.jdbc.PostgresProfile.api._
-import java.io._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent._
 import scala.concurrent.duration.Duration
-import com.typesafe.config.ConfigFactory
-import Tables.{ApiResults2, OntologyScore, best_onto_set}
-import Config.config.conf
 
 object db_handler {
 
   private val db = Database.forConfig("gecotest2", conf)
-  private val OntologyScore = TableQuery[OntologyScore]
-  private val ApiResults2 = TableQuery[ApiResults2]
 
-  val setup2 = OntologyScore.schema.create
+  val setup2 = ontologyScore.schema.create
   val setup3  = best_onto_set.schema.create
-  val setupapiresults2 = ApiResults2.schema.create
+  val setupapiresults2 = apiresults.schema.create
 
   db.run(setup2)
   db.run(setup3)
   db.run(setupapiresults2)
 
-  def insert(rows: List[List[String]]) = {
+  def apiresults_insert(rows: List[List[String]]): Unit = {
     var ok: Seq[(String, String, String, String, String, String, String, String, String)] = Seq()
 
     for (l <- rows) {
-      ok :+= (l(0), l(1), l(2), l(3), l(4), l(5), l(6), l(7), l(8))
+      ok :+= (l.head, l(1), l(2), l(3), l(4), l(5), l(6), l(7), l(8))
     }
-    actual_insert(ok)
-    println("ok insert")
-  }
-
-  private def actual_insert(rows: Iterable[(String, String, String, String, String, String, String, String, String)]) = {
     val db = Database.forConfig("gecotest2", conf)
-    val insertAction = ApiResults2.map(a=> (a.service,a.raw_value,a.parsed_value,a.ontology,a.ontology_id,a.pref_label,a.synonym,a.score,a.term_type)) ++= rows
+    val insertAction = apiresults.map(a=> (a.service,a.raw_value,a.parsed_value,a.ontology,a.ontology_id,a.pref_label,a.synonym,a.score,a.term_type)) ++= ok
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
     db.close()
+    println("ok apiresults_insert")
   }
 
-  def update_raw_value(rawValue: String, parsed: String) = {
+  def update_raw_value(rawValue: String, parsed: String): Unit = {
     val db = Database.forConfig("gecotest2", conf)
     val q =
       sqlu"""update public.apiresults
@@ -55,7 +47,7 @@ object db_handler {
     db.close()
   }
 
-  def insert_best_ontos(rows: Iterable[(String, String, Double, Double, Double)]) = {
+  def insert_best_ontos(rows: Iterable[(String, String, Double, Double, Double)]): Unit = {
     val db = Database.forConfig("gecotest2", conf)
     val insertAction = best_onto_set ++= rows
     val insert = db.run(insertAction)
@@ -63,7 +55,7 @@ object db_handler {
     db.close()
   }
 
-  def update_score(score1: Double, score2: Double, ontoScore: Double, matchScore: Int, id: Int) = {
+  def update_score(score1: Double, score2: Double, ontoScore: Double, matchScore: Int, id: Int): Unit = {
     val db = Database.forConfig("gecotest2", conf)
     val q =
       sqlu"""
@@ -80,7 +72,7 @@ object db_handler {
     db.close()
   }
 
-  def update_suitability(suitability: Double, ontology: String, term_type: String) = {
+  def update_suitability(suitability: Double, ontology: String, term_type: String): Unit = {
     val db = Database.forConfig("gecotest2", conf)
     val q =
       sqlu"""
@@ -94,7 +86,7 @@ object db_handler {
     db.close()
   }
 
-  def update_suitability_sets(suitability: Double, ontology: String, term_type: String) = {
+  def update_suitability_sets(suitability: Double, ontology: String, term_type: String): Unit = {
     val db = Database.forConfig("gecotest2", conf)
     val q =
       sqlu"""
@@ -137,9 +129,9 @@ object db_handler {
     match_type
   }
 
-  def ontology_score_insert(rows: Seq[(String, Double)]) = {
+  def ontology_score_insert(rows: Seq[(String, Double)]): Unit = {
     val db = Database.forConfig("gecotest2", conf)
-    val insertaction = OntologyScore ++= rows
+    val insertaction = ontologyScore ++= rows
     val result_future = db.run(insertaction)
     Await.result(result_future, Duration.Inf)
     db.close()
@@ -436,15 +428,15 @@ object db_handler {
     result
   }
 
-  def get_score_suitability(onto: String, term_type: String): (Double, Double, Double) = {
-    var result: (Double, Double, Double) = (0.0,0.0,0.0)
+  def get_score_suitability(onto: String, term_type: String): (Double, Double) = {
+    var result: (Double, Double) = (0.0,0.0)
     val db = Database.forConfig("gecotest2", conf)
     val q =
       sql"""
-           select avg_score1, avg_score2, suitability
+           select avg_score1, suitability
            from public.best_onto_per_term
            where term_type ilike $term_type and ontology ilike $onto
-         """.as[(Double, Double, Double)]
+         """.as[(Double, Double)]
     val result_future = db.run(q).map(a=>
       result = a.head
     )
@@ -457,7 +449,6 @@ object db_handler {
 
   def get_max_score(rv: String, onto:String): String = {
     val db = Database.forConfig("gecotest2", conf)
-    val a = "%"+rv+"%"
     val q =
       sql"""
             select match_score

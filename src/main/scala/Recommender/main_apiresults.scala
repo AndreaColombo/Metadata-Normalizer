@@ -1,6 +1,6 @@
+package Recommender
+
 import Config.config
-import DBcon.db_handler
-import Utilities.score_calculator._
 
 object main_apiresults {
 
@@ -18,6 +18,6 @@ object main_apiresults {
 //      calculate_suitability_score(col)
 //    }
 //    db_handler.create_view()
-    column_l.foreach(ontologies_set_calculator.calculate_ontology_set(_))
+    column_l.foreach(ontologies_set_calculator.calculate_ontology_set)
   }
 }

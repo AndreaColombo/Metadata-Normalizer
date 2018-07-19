@@ -1,4 +1,4 @@
-package DBcon
+package Enricher.DBCon
 
 import scala.concurrent._
 import slick.jdbc.PostgresProfile.api._
@@ -15,8 +15,8 @@ import Config.config._
 import org.apache.log4j.Logger
 import slick.sql.SqlAction
 
-object gecotest_handler {
-  val logger = Logger.getLogger(this.getClass)
+object db_handler {
+  val logger: Logger = Logger.getLogger(this.getClass)
 
 
   private var _db_name = "gecotest2"

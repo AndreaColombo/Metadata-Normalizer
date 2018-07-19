@@ -1,4 +1,4 @@
-package Ontologies
+package Recommender.Ontologies
 
 import scalaj.http.{Http, HttpOptions}
 import Parsers._
