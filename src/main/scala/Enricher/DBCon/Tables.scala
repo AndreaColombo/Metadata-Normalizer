@@ -33,7 +33,7 @@ object Tables {
 
   class cv_support(tag: Tag) extends Table[cv_support_type](tag, Some("public"), "cv_support"){
     def tid = column[Int]("tid", O.AutoInc, O.PrimaryKey)
-    def source = column[String]("source", O.SqlType("VARCHAR(8)"))
+    def source = column[String]("source", O.SqlType("VARCHAR(32)"))
     def code = column[String]("code",O.SqlType("VARCHAR(64)"))
     def label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
     def description = column[String]("description")
