@@ -30,7 +30,6 @@ object annotator {
     var ok = false
     for (onto <- ontos if !ok){
       val tmp = ols_search_term(raw_value,onto)
-      println(raw_value,onto)
       breakable {
         if (tmp._1 == "null")
           break()
