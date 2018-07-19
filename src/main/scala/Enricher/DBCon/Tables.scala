@@ -130,7 +130,7 @@ object Tables {
     def code = column[Option[String]]("code")
     def resolved = column[Boolean]("resolved", O.Default(false))
 
-    def idx = index("user_feedback_idx",(raw_value,source,code),unique = true)
+    def idx = index("user_feedback_idx",(tid,raw_value,source,code),unique = true)
 
     def * = (id, resolved, table_name, column_name, tid, raw_value, parsed_value, label, source, code) <> (user_feedback_type.tupled, user_feedback_type.unapply)
   }

@@ -38,7 +38,8 @@ object enrichment_engine {
           else {
             println("Value found not raw type")
             val suggestion = db_handler.get_cv_support_by_tid(result_syn.tid)
-            db_handler.user_feedback_insert(List(user_feedback_type(default_values.int,default_values.bool,table_name,term_type,Some(result_syn.tid), raw_value,null,Some(suggestion.label),Some(suggestion.source),Some(suggestion.code))))
+            if(!db_handler.user_fb_exist(raw_value,suggestion.source,suggestion.code))
+              db_handler.user_feedback_insert(List(user_feedback_type(default_values.int,default_values.bool,table_name,term_type,Some(result_syn.tid), raw_value,null,Some(suggestion.label),Some(suggestion.source),Some(suggestion.code))))
           }
         }
 
