@@ -19,7 +19,6 @@ object main {
           for (t <- table_l) {
             val column_l = config.get_termtype_list(t)
             for (col <- column_l) {
-              println(col)
               db_filler.fill_db(t, col)
               calculate_suitability_score(col)
             }

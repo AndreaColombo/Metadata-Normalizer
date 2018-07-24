@@ -20,20 +20,21 @@ object db_filler {
     println(column_name)
     get_timestamp()
 //    println(s)
-    val tmp = s.split(",")
-    val tmp1 = tmp.splitAt(tmp.length / 2)._1.toList
-    val tmp2 = tmp.splitAt(tmp.length / 2)._2.toList
-    val recsys1 = tmp1.splitAt(tmp1.length / 2)._1.mkString(",")
-    val recsys2 = tmp1.splitAt(tmp1.length / 2)._2.mkString(",")
-    val recsys3 = tmp2.splitAt(tmp2.length / 2)._1.mkString(",")
-    val recsys4 = tmp2.splitAt(tmp2.length / 2)._2.mkString(",")
-//    println(tmp1.length)
-//    println(tmp2.length)
-//    println(recsys1.split(",").length)
-//    println(recsys2.split(",").length)
-//    println(recsys3.split(",").length)
-//    println(recsys4.split(",").length)
-
+    var split = false
+    var recsys1 = ""
+    var recsys2 = ""
+    var recsys3 = ""
+    var recsys4 = ""
+    if (s.split(",").length>200) {
+      split = true
+      val tmp = s.split(",")
+      val tmp1 = tmp.splitAt(tmp.length / 2)._1.toList
+      val tmp2 = tmp.splitAt(tmp.length / 2)._2.toList
+      recsys1 = tmp1.splitAt(tmp1.length / 2)._1.mkString(",")
+      recsys2 = tmp1.splitAt(tmp1.length / 2)._2.mkString(",")
+      recsys3 = tmp2.splitAt(tmp2.length / 2)._1.mkString(",")
+      recsys4 = tmp2.splitAt(tmp2.length / 2)._2.mkString(",")
+    }
 //    println("bioportal inizio")
 //    println(s)
 //    db_handler.apiresults_insert(bioportal.input(s),column_name)
@@ -41,27 +42,34 @@ object db_filler {
 //    get_timestamp()
 
 
-    println("recsys 1 inizio")
-    var output = recommender.input(recsys1)
-    db_handler.apiresults_insert(recommender.input(recsys1),column_name)
-    println("recsys 1 fine")
-    get_timestamp()
+    println(s)
+    if(split) {
+      println("recsys 1 inizio")
+      var output = recommender.input(recsys1)
+      db_handler.apiresults_insert(recommender.input(recsys1), column_name)
+      println("recsys 1 fine")
+      get_timestamp()
 
-    println("recsys 2 inizio")
-    db_handler.apiresults_insert(recommender.input(recsys2),column_name)
-    println("recsys 2 fine")
-    get_timestamp()
+      println("recsys 2 inizio")
+      db_handler.apiresults_insert(recommender.input(recsys2), column_name)
+      println("recsys 2 fine")
+      get_timestamp()
 
-    println("recsys 3 inizio")
-    db_handler.apiresults_insert(recommender.input(recsys3),column_name)
-    println("recsys 3 fine")
-    get_timestamp()
+      println("recsys 3 inizio")
+      db_handler.apiresults_insert(recommender.input(recsys3), column_name)
+      println("recsys 3 fine")
+      get_timestamp()
 
-    println("recsys 4 inizio")
-    db_handler.apiresults_insert(recommender.input(recsys4),column_name)
-    println("recsys 4 fine")
-    get_timestamp()
-
+      println("recsys 4 inizio")
+      db_handler.apiresults_insert(recommender.input(recsys4), column_name)
+      println("recsys 4 fine")
+      get_timestamp()
+    }
+    else {
+      println("recsys inizio")
+      db_handler.apiresults_insert(recommender.input(s),column_name)
+      println("recsys fine")
+    }
     println("zooma inizio")
     db_handler.apiresults_insert(zooma.input(s),column_name)
     println("zooma fine")

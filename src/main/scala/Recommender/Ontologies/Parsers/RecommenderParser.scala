@@ -17,13 +17,12 @@ object RecommenderParser {
     val l_parsed_value = j \\ "text"
     val l_match_type = j \\ "matchType"
     val l_url = j \\ "self"
-
     for (i <- l_parsed_value.indices) {
       var score = ""
       val parsed_value = l_parsed_value(i).validate[String].get.map(_.toLower)
       val raw_value = lookup(parsed_value)
       val match_type = l_match_type(i).validate[String].get.map(_.toLower)
-      //      println(raw_value)
+      println(raw_value)
       val url = l_url(i).validate[String].get
       val ontology_raw = get_ontology(url)
       val ontology = ontology_raw.head.map(_.toLower)
@@ -62,11 +61,13 @@ object RecommenderParser {
           score = "SYN - "+diff
         else score = "SYN"
       }
+      println(prefLabel)
       if (prefLabel != "null") {
         val term_type = ""
-        val db_current = db_handler.get_recsys("Recommender")
+        val db_current = db_handler.get_recsys(service)
         val current = List(service,raw_value,parsed_value,ontology.map(_.toLower),ontology_id,prefLabel,synonym,score,term_type)
-        if (!rows.exists(p => p.equals(current)) && !db_current.exists(p => p.equals(current)))
+        println(rows)
+        if (!rows.exists(p => p.equals(current)))// && !db_current.exists(p => p.equals(current)))
           rows :+= current
       }
     }
