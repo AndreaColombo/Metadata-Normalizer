@@ -34,11 +34,11 @@ object db_filler {
 //    println(recsys3.split(",").length)
 //    println(recsys4.split(",").length)
 
-    println("bioportal inizio")
-    println(s)
-    db_handler.apiresults_insert(bioportal.input(s),column_name)
-    println("bioportal fine")
-    get_timestamp()
+//    println("bioportal inizio")
+//    println(s)
+//    db_handler.apiresults_insert(bioportal.input(s),column_name)
+//    println("bioportal fine")
+//    get_timestamp()
 
 
     println("recsys 1 inizio")
