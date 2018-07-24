@@ -17,7 +17,7 @@ object ontologies_set_calculator {
 
     val threshold = 0.90
 
-    for (i <- 0 until ontos.length/3){
+    for (i <- 0 until ontos.length/4){
       val onto1 = ontos(i)._2
       val terms1 = db_handler.get_term_by_ontology(onto1, t).toSet
       breakable {
