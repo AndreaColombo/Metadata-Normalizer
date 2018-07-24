@@ -42,6 +42,7 @@ object db_filler {
 
 
     println("recsys 1 inizio")
+    var output = recommender.input(recsys1)
     db_handler.apiresults_insert(recommender.input(recsys1),column_name)
     println("recsys 1 fine")
     get_timestamp()

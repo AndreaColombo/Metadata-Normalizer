@@ -25,7 +25,9 @@ object OlsParser {
       val synonym = synonym_l.mkString(",")
       var term_type = ""
       score = get_score(termAnnotated,prefLabel,synonym_l)
-      rows:+=List(service,raw_value,parsed_value,ontology.map(_.toLower),id,prefLabel,synonym,score,term_type)
+      val current = List(service,raw_value,parsed_value,ontology.map(_.toLower) ,ontology_id,prefLabel,synonym,score,term_type)
+      if (!rows.exists(p => p.equals(current)))
+        rows :+= current
     }
     rows.toList.distinct
   }

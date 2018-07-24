@@ -1,5 +1,6 @@
 package Recommender.Ontologies.Parsers
 
+import Recommender.DBCon.db_handler
 import Recommender.Ontologies.Parsers.OlsParser.countWords
 import play.api.libs.json._
 import Utilities.Preprocessing.lookup
@@ -63,8 +64,10 @@ object RecommenderParser {
       }
       if (prefLabel != "null") {
         val term_type = ""
-        //      println(raw_value,parsed_value,ontology,ontology_id,prefLabel,synonym, parsed_value_type)
-        rows :+= List(service, raw_value, parsed_value, ontology.map(_.toLower), ontology_id, prefLabel, synonym, score,term_type)
+        val db_current = db_handler.get_recsys("Recommender")
+        val current = List(service,raw_value,parsed_value,ontology.map(_.toLower),ontology_id,prefLabel,synonym,score,term_type)
+        if (!rows.exists(p => p.equals(current)) && !db_current.exists(p => p.equals(current)))
+          rows :+= current
       }
     }
     rows.toList.distinct

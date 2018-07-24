@@ -530,4 +530,16 @@ object db_handler {
     Await.result(db.run(createAction),Duration.Inf)
     db.close()
   }
+
+  def get_recsys(service: String): List[List[String]] = {
+    val q = apiresults.filter(a => a.service === service).map(a => (a.service,a.term_type,a.raw_value,a.parsed_value,a.ontology,a.ontology_id,a.pref_label,a.synonym,a.score))
+    var result: List[List[String]] = List()
+    val db = Database.forConfig("gecotest2",conf)
+    val f = db.run(q.result).map(_.foreach(
+      a => result:+= List(a._1,a._2,a._3,a._4,a._5.map(_.toLower),a._6,a._7,a._8,a._9)
+    ))
+    Await.result(f,Duration.Inf)
+    db.close()
+    result
+  }
 }
