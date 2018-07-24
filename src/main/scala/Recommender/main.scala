@@ -21,7 +21,7 @@ object main {
 //          db_filler.update_db(t, col)
 //        }
         for (col <- column_l) {
-//          println(col)
+          println(col)
           calculate_suitability_score(col)
 //          ontologies_set_calculator.calculate_ontology_set(col)
 //          set_suitability(col)
