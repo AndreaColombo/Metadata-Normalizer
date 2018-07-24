@@ -6,8 +6,6 @@ import scala.util.control.Breaks._
 
 object ontologies_set_calculator {
 
-  val term_type = List("cell_line")
-
   def calculate_ontology_set(t: String): Unit = {
 
     var result: Seq[(String, String, Double, Double, Double)] = List()
