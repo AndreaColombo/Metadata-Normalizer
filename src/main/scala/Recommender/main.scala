@@ -7,6 +7,7 @@ import Recommender.DBCon.db_handler
 object main {
 
   def main(args: Array[String]): Unit = {
+//    db_handler.create_view()
     if (args.nonEmpty) {
       if (args.head.equals("score")) {
         //     calculate_ontology_score()
@@ -21,10 +22,8 @@ object main {
 //          db_filler.update_db(t, col)
 //        }
         for (col <- column_l) {
-          println(col)
-          calculate_suitability_score(col)
-//          ontologies_set_calculator.calculate_ontology_set(col)
-//          set_suitability(col)
+//          calculate_suitability_score(col)
+          ontologies_set_calculator.calculate_ontology_set(col)
         }
       }
     }
