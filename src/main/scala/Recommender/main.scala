@@ -7,26 +7,58 @@ import Recommender.DBCon.db_handler
 object main {
 
   def main(args: Array[String]): Unit = {
-//    db_handler.create_view()
     if (args.nonEmpty) {
-      if (args.head.equals("score")) {
-        //     calculate_ontology_score()
-        //     calculate_score()
+      if(args.head.equals("-h"))
+        print_manual()
+      else if (args.head.equals("score")) {
+        calculate_score()
+      }
+      else if (args.length == 1){
+        if (args.head == "all"){
+          val table_l = config.get_gcm_table_list()
+          for (t <- table_l) {
+            val column_l = config.get_termtype_list(t)
+            for (col <- column_l) {
+              println(col)
+              db_filler.fill_db(t, col)
+              calculate_suitability_score(col)
+            }
+//            for (col <- column_l) {
+//              ontologies_set_calculator.calculate_ontology_set(col)
+//            }
+          }
+        }
+        else {
+          val t = args(0)
+          val column_l = config.get_termtype_list(t)
+          for (col <- column_l) {
+            println(col)
+            db_filler.fill_db(t, col)
+            calculate_suitability_score(col)
+          }
+//          for (col <- column_l) {
+//            ontologies_set_calculator.calculate_ontology_set(col)
+//          }
+        }
       }
       else {
         val t = args(0)
-        val column_l = config.get_termtype_list(t)
-//        for (col <- column_l) {
-//          println(col)
-//          db_filler.fill_db(t, col)
-//          db_filler.update_db(t, col)
-//        }
-        for (col <- column_l) {
-//          calculate_suitability_score(col)
-          ontologies_set_calculator.calculate_ontology_set(col)
-        }
+        val col = args(1)
+        db_filler.fill_db(t, col)
+        calculate_suitability_score(col)
+//        ontologies_set_calculator.calculate_ontology_set(col)
       }
     }
+    else print_manual()
+  }
+
+  def print_manual() = {
+    println("Program arguments: ")
+    println("all \t\t\t\t\t\t\t\t Launch the script for all table and columns" +
+      "\n" +
+      "<table_name> \t\t\t\t\t\t Launch the script for that specific table " +
+      "\n" +
+      "<table_name> <column_name> \t\t\t Launch the script for that specific column")
   }
 
   def set_suitability(t: String): Unit = {

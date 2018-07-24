@@ -20,11 +20,11 @@ object db_handler {
   db.run(setup3)
   db.run(setupapiresults2)
 
-  def apiresults_insert(rows: List[List[String]]): Unit = {
+  def apiresults_insert(rows: List[List[String]], term_type: String): Unit = {
     var ok: Seq[(String, String, String, String, String, String, String, String, String)] = Seq()
 
     for (l <- rows) {
-      ok :+= (l.head, l(1), l(2), l(3), l(4), l(5), l(6), l(7), l(8))
+      ok :+= (l.head, l(1), l(2), l(3), l(4), l(5), l(6), l(7), term_type)
     }
     val db = Database.forConfig("gecotest2", conf)
     val insertAction = apiresults.map(a=> (a.service,a.raw_value,a.parsed_value,a.ontology,a.ontology_id,a.pref_label,a.synonym,a.score,a.term_type)) ++= ok

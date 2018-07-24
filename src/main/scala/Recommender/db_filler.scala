@@ -13,13 +13,6 @@ object db_filler {
   val zooma = Ontology.apply("zooma")
   val ols = Ontology.apply("ols")
 
-  def update_db (table_name: String, column_name: String): Unit = {
-    val b = parse(db_handler.get_raw_values(table_name,column_name)).split(",")
-    for (parsed <- b){
-      db_handler.update_term_type(parsed, column_name)
-    }
-  }
-
   def fill_db (table_name: String, column_name: String): Unit = {
     val s = parse(db_handler.get_raw_values(table_name,column_name)).split(",").filterNot(_.isEmpty).mkString(",")
 //    val c = s.split(",").filterNot(sd => sd.equalsIgnoreCase("p12")).mkString(",")
@@ -43,38 +36,38 @@ object db_filler {
 
     println("bioportal inizio")
     println(s)
-    db_handler.apiresults_insert(bioportal.input(s))
+    db_handler.apiresults_insert(bioportal.input(s),column_name)
     println("bioportal fine")
     get_timestamp()
 
 
     println("recsys 1 inizio")
-    db_handler.apiresults_insert(recommender.input(recsys1))
+    db_handler.apiresults_insert(recommender.input(recsys1),column_name)
     println("recsys 1 fine")
     get_timestamp()
 
     println("recsys 2 inizio")
-    db_handler.apiresults_insert(recommender.input(recsys2))
+    db_handler.apiresults_insert(recommender.input(recsys2),column_name)
     println("recsys 2 fine")
     get_timestamp()
 
     println("recsys 3 inizio")
-    db_handler.apiresults_insert(recommender.input(recsys3))
+    db_handler.apiresults_insert(recommender.input(recsys3),column_name)
     println("recsys 3 fine")
     get_timestamp()
 
     println("recsys 4 inizio")
-    db_handler.apiresults_insert(recommender.input(recsys4))
+    db_handler.apiresults_insert(recommender.input(recsys4),column_name)
     println("recsys 4 fine")
     get_timestamp()
 
     println("zooma inizio")
-    db_handler.apiresults_insert(zooma.input(s))
+    db_handler.apiresults_insert(zooma.input(s),column_name)
     println("zooma fine")
     get_timestamp()
 
     println("ols inizio")
-    db_handler.apiresults_insert(ols.input(s))
+    db_handler.apiresults_insert(ols.input(s),column_name)
     println("ols fine")
     get_timestamp()
   }
