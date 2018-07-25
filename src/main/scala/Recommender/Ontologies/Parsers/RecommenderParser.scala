@@ -66,7 +66,6 @@ object RecommenderParser {
         val term_type = ""
         val db_current = db_handler.get_recsys(service)
         val current = List(service,raw_value,parsed_value,ontology.map(_.toLower),ontology_id,prefLabel,synonym,score,term_type)
-        println(rows)
         if (!rows.exists(p => p.equals(current)) && !db_current.exists(p => p.equals(current)))
           rows :+= current
       }

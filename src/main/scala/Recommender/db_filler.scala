@@ -25,7 +25,7 @@ object db_filler {
     var recsys2 = ""
     var recsys3 = ""
     var recsys4 = ""
-    if (s.split(",").length>200) {
+    if (s.split(",").length>150) {
       split = true
       val tmp = s.split(",")
       val tmp1 = tmp.splitAt(tmp.length / 2)._1.toList
