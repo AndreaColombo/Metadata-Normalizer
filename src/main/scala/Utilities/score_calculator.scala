@@ -92,7 +92,6 @@ object score_calculator {
     println("inizio")
     for (onto <- onto_recsys) {
       val terms = db_handler.get_parsed_by_ontology(onto)
-      println(terms.length)
       var recsys_score = 0.0
 
       recsys_score = get_recommender_score(terms.take(50),onto)

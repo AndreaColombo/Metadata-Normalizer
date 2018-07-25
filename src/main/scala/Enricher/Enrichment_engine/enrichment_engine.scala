@@ -32,7 +32,7 @@ object enrichment_engine {
             if(!db_handler.onto_exist(a.source)){
               db_handler.insert_ontology(a)
             }
-            db_interface.db_interface(annotator.get_info(result_user_changes._1, result_user_changes._2), raw_value, table_name, term_type, 'U')
+            db_interface.db_interface(annotator.get_info(result_user_changes._1, result_user_changes._2,raw_value,table_name,term_type), raw_value, table_name, term_type, 'U')
           }
           //if (result_syn.ttype == "syn" || result_syn.ttype == "pref"){
           else {
@@ -59,7 +59,7 @@ object enrichment_engine {
             if(!db_handler.onto_exist(a.source)){
               db_handler.insert_ontology(a)
             }
-            val result = annotator.get_info(source_code._1, source_code._2)
+            val result = annotator.get_info(source_code._1, source_code._2,raw_value,table_name,term_type)
             db_interface.db_interface(result, raw_value, table_name, term_type, 'O')
           }
         }

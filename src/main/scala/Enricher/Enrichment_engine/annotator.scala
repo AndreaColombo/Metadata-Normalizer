@@ -42,16 +42,16 @@ object annotator {
     result
   }
 
-  def get_info(source: String, iri: String): List[Map[String, String]] = {
+  def get_info(source: String, code: String, raw_value: String,table: String, column: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
-    val tmp = ols_get_info(source,iri)
+    val tmp = ols_get_info(source,code)
     if (tmp.nonEmpty) {
       val onto = tmp.head.head
       val parents = tmp.head(5)
       val children = tmp.head(6)
 
-      val desc = get_desc(children, onto, 0)
-      val anc = get_hyp(parents, onto, 0)
+      val desc = get_desc(children, onto, 0,tmp.head(1))
+      val anc = get_hyp(parents, onto, 0,tmp.head(1))
 
       if(!db_handler.cv_support_exists(onto,tmp.head(1)))
       result :+= Map("source" -> onto, "iri" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8))
@@ -59,15 +59,18 @@ object annotator {
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
 
-      for (tmp <- anc) {
-        if(!db_handler.cv_support_exists(tmp._1,tmp._2))
-        result :+= Map("source" -> tmp._1, "iri" -> tmp._2, "label" -> tmp._3, "xref" -> tmp._4, "syn" -> tmp._5, "parents" -> tmp._6, "part_of" -> tmp._8,"description"->tmp._9)
+      for (elem <- anc) {
+        if(!db_handler.cv_support_exists(elem._1,elem._2))
+        result :+= Map("source" -> elem._1, "iri" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9)
       }
 
       for (elem <- desc) {
         if (!db_handler.cv_support_exists(elem._1, elem._2))
         result :+= Map("source" -> elem._1, "iri" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9)
       }
+    }
+    else {
+      db_handler.user_feedback_insert(List(user_feedback_type(-1,false,table,column,null,raw_value,null,null,Some(source),Some(code))))
     }
     result.distinct
   }
@@ -88,7 +91,7 @@ object annotator {
     }
   }
 
-  def get_desc(children: String, onto: String, depth: Int): List[(String, String, String, String, String, String, String, String,String)] = {
+  def get_desc(children: String, onto: String, depth: Int, previous_code: String): List[(String, String, String, String, String, String, String, String,String)] = {
     var result: List[(String, String, String, String, String, String, String, String, String)] = List()
     for (code <- children.split(",")) {
       if (code != "null") {
@@ -97,16 +100,17 @@ object annotator {
           result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7), res.head(8))
           val n = depth + 1
           if (n != max_depth_desc)
-            result ++= get_desc(res.head(6), res.head.head, n)
+            result ++= get_desc(res.head(6), res.head.head, n,previous_code+","+code)
           else
             result
         }
+        else logger.warn(s"Error in descendant retrieval, code $code with path $previous_code")
       }
     }
     result
   }
 
-  def get_hyp(parents: String, onto: String, depth: Int): List[(String, String, String, String, String, String, String, String,String)] = {
+  def get_hyp(parents: String, onto: String, depth: Int, previous_code: String): List[(String, String, String, String, String, String, String, String,String)] = {
     var result: List[(String, String, String, String, String, String, String, String, String)] = List()
     for (code <- parents.split(",")) {
       if (code != "null") {
@@ -115,10 +119,11 @@ object annotator {
           result :+= (res.head.head, res.head(1), res.head(2), res.head(3), res.head(4), res.head(5), res.head(6), res.head(7), res.head(8))
           val n = depth + 1
           if (n != max_depth_anc)
-            result ++= get_hyp(res.head(5), res.head.head, n)
+            result ++= get_hyp(res.head(5), res.head.head, n,previous_code+","+code)
           else
             result
         }
+        else logger.warn(s"Error in hypernym retrieval, code $code with path $previous_code")
       }
     }
     result

@@ -51,7 +51,7 @@ object main {
     else print_manual()
   }
 
-  def print_manual() = {
+  def print_manual(): Unit = {
     println("Program arguments: ")
     println("all \t\t\t\t\t\t\t\t Launch the script for all table and columns" +
       "\n" +
@@ -60,7 +60,7 @@ object main {
       "<table_name> <column_name> \t\t\t Launch the script for that specific column")
   }
 
-  def set_suitability(t: String): Unit = {
+  def update_set_suitability(t: String): Unit = {
     val set_l = db_handler.get_best_ontos_per_term(t)
     for (set <- set_l) {
       var set_suit = 0.0
