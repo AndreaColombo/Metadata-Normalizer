@@ -22,7 +22,6 @@ object RecommenderParser {
       val parsed_value = l_parsed_value(i).validate[String].get.map(_.toLower)
       val raw_value = lookup(parsed_value)
       val match_type = l_match_type(i).validate[String].get.map(_.toLower)
-      println(raw_value)
       val url = l_url(i).validate[String].get
       val ontology_raw = get_ontology(url)
       val ontology = ontology_raw.head.map(_.toLower)
@@ -61,7 +60,6 @@ object RecommenderParser {
           score = "SYN - "+diff
         else score = "SYN"
       }
-      println(prefLabel)
       if (prefLabel != "null") {
         val term_type = ""
         val db_current = db_handler.get_recsys(service)
