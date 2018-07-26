@@ -508,19 +508,19 @@ object db_handler {
 //                DROP VIEW best_onto_per_term2"""
 
     val q1 = sqlu"""
-                create view support_table2 as
+                create view support_table as
                     SELECT term_type, raw_value, max(score_num1) as score1, lower(ontology) as ontology, array_agg(ontology_id), max(suitability) as suitability
                     FROM apiresults
                     GROUP BY term_type, raw_value, lower(ontology)
                     ORDER BY term_type, raw_value, score1 desc, suitability desc, lower(ontology)"""
 
     val q2 = sqlu"""
-                create view num_raw_values2 as
+                create view num_raw_values as
                    	SELECT term_type, count(distinct raw_value) as nrv_count
                    	from apiresults
                    	Group by term_type"""
     val q3 = sqlu"""
-                create view best_onto_per_term2 as
+                create view best_onto_per_term as
                     SELECT term_type, ontology, avg(score1) as avg_score1, count(*)/max(nrv_count)::float as coverage, suitability
                     FROM support_table2  NATURAL JOIN num_raw_values2
                     GROUP BY term_type,ontology, suitability
