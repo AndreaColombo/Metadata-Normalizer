@@ -67,7 +67,9 @@ object db_filler {
     }
     else {
       println("recsys inizio")
-      db_handler.apiresults_insert(recommender.input(s),column_name)
+      val aa = recommender.input(s)
+      println(aa)
+      db_handler.apiresults_insert(aa,column_name)
       println("recsys fine")
     }
 //    println("zooma inizio")
