@@ -35,43 +35,43 @@ object db_filler {
       recsys3 = tmp2.splitAt(tmp2.length / 2)._1.mkString(",")
       recsys4 = tmp2.splitAt(tmp2.length / 2)._2.mkString(",")
     }
-//    println("bioportal inizio")
-//    println(s)
-//    db_handler.apiresults_insert(bioportal.input(s),column_name)
-//    println("bioportal fine")
-//    get_timestamp()
+    println("bioportal inizio")
+    println(s)
+    db_handler.apiresults_insert(bioportal.input(s),column_name)
+    println("bioportal fine")
+    get_timestamp()
 
 
     println(s)
-    if(split) {
-      println("recsys 1 inizio")
-      var output = recommender.input(recsys1)
-      db_handler.apiresults_insert(recommender.input(recsys1), column_name)
-      println("recsys 1 fine")
-      get_timestamp()
-
-      println("recsys 2 inizio")
-      db_handler.apiresults_insert(recommender.input(recsys2), column_name)
-      println("recsys 2 fine")
-      get_timestamp()
-
-      println("recsys 3 inizio")
-      db_handler.apiresults_insert(recommender.input(recsys3), column_name)
-      println("recsys 3 fine")
-      get_timestamp()
-
-      println("recsys 4 inizio")
-      db_handler.apiresults_insert(recommender.input(recsys4), column_name)
-      println("recsys 4 fine")
-      get_timestamp()
-    }
-    else {
-      println("recsys inizio")
-      val aa = recommender.input(s)
-      println(aa)
-      db_handler.apiresults_insert(aa,column_name)
-      println("recsys fine")
-    }
+//    if(split) {
+//      println("recsys 1 inizio")
+//      var output = recommender.input(recsys1)
+//      db_handler.apiresults_insert(recommender.input(recsys1), column_name)
+//      println("recsys 1 fine")
+//      get_timestamp()
+//
+//      println("recsys 2 inizio")
+//      db_handler.apiresults_insert(recommender.input(recsys2), column_name)
+//      println("recsys 2 fine")
+//      get_timestamp()
+//
+//      println("recsys 3 inizio")
+//      db_handler.apiresults_insert(recommender.input(recsys3), column_name)
+//      println("recsys 3 fine")
+//      get_timestamp()
+//
+//      println("recsys 4 inizio")
+//      db_handler.apiresults_insert(recommender.input(recsys4), column_name)
+//      println("recsys 4 fine")
+//      get_timestamp()
+//    }
+//    else {
+//      println("recsys inizio")
+//      val aa = recommender.input(s)
+//      println(aa)
+//      db_handler.apiresults_insert(aa,column_name)
+//      println("recsys fine")
+//    }
 //    println("zooma inizio")
 //    db_handler.apiresults_insert(zooma.input(s),column_name)
 //    println("zooma fine")
