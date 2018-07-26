@@ -11,7 +11,7 @@ object Tables {
   }
   val ontologyScore = TableQuery[OntologyScore]
 
-  class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double)](tag, Some("public"), "best_ontos2"){
+  class best_ontos (tag: Tag) extends Table [(String, String, Double, Double, Double)](tag, Some("public"), "best_onto_sets"){
     def term_type = column[String]("term_type")
     def ontology_set = column[String]("ontologies_set")
     def coverage = column[Double]("set_coverage")

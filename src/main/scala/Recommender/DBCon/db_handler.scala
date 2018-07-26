@@ -90,7 +90,7 @@ object db_handler {
     val db = Database.forConfig("gecotest2", conf)
     val q =
       sqlu"""
-             update public.best_ontos2
+             update public.best_onto_sets
              set set_suitability = $suitability
              where ontologies_set ilike $ontology and term_type ilike $term_type
         """
@@ -394,7 +394,7 @@ object db_handler {
     val q =
       sql"""
            select ontologies_set, set_score1, set_coverage, set_suitability, (char_length(ontologies_set)-char_length(replace(ontologies_set,',',''))+1) as num_ontos
-           from public.best_ontos2
+           from public.best_onto_sets
            where term_type ilike $term_type
            order by term_type, set_coverage desc, num_ontos asc, set_suitability desc
          """.as[(String, String, String, String, String)]
@@ -472,7 +472,7 @@ object db_handler {
     val q =
       sql"""
             select ontologies_set
-           	from public.best_ontos2
+           	from public.best_onto_sets
            	where term_type ilike $t
          """.as[String]
     var result = List("")
