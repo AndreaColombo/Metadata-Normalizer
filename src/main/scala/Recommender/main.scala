@@ -12,6 +12,38 @@ object main {
         print_manual()
       else if (args.head.equals("score")) {
         calculate_score()
+        val table_l = config.get_gcm_table_list()
+        for (t <- table_l) {
+          val column_l = config.get_termtype_list(t)
+          for (col <- column_l) {
+            calculate_suitability_score(col)
+          }
+        }
+      }
+      else if (args.head.equals("sets")){
+        if (args.length == 1){
+          if (args.head == "all"){
+            val table_l = config.get_gcm_table_list()
+            for (t <- table_l) {
+              val column_l = config.get_termtype_list(t)
+              for (col <- column_l) {
+                ontologies_set_calculator.calculate_ontology_set(col)
+              }
+            }
+          }
+          else {
+            val t = args(0)
+            val column_l = config.get_termtype_list(t)
+            for (col <- column_l) {
+              ontologies_set_calculator.calculate_ontology_set(col)
+            }
+          }
+        }
+        else {
+          val t = args(0)
+          val col = args(1)
+          ontologies_set_calculator.calculate_ontology_set(col)
+        }
       }
       else if (args.length == 1){
         if (args.head == "all"){
@@ -22,9 +54,6 @@ object main {
               db_filler.fill_db(t, col)
               calculate_suitability_score(col)
             }
-//            for (col <- column_l) {
-//              ontologies_set_calculator.calculate_ontology_set(col)
-//            }
           }
         }
         else {
@@ -35,9 +64,6 @@ object main {
             db_filler.fill_db(t, col)
             calculate_suitability_score(col)
           }
-//          for (col <- column_l) {
-//            ontologies_set_calculator.calculate_ontology_set(col)
-//          }
         }
       }
       else {
@@ -45,7 +71,6 @@ object main {
         val col = args(1)
         db_filler.fill_db(t, col)
         calculate_suitability_score(col)
-//        ontologies_set_calculator.calculate_ontology_set(col)
       }
     }
     else print_manual()
