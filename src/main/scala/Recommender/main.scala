@@ -10,6 +10,8 @@ object main {
     if (args.nonEmpty) {
       if(args.head.equals("-h"))
         print_manual()
+      else if (args.head.equals("view"))
+        db_handler.create_view()
       else if (args.head.equals("score")) {
         calculate_score()
         val table_l = config.get_gcm_table_list()
