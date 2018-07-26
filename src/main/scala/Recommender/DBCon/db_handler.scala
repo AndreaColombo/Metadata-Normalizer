@@ -431,7 +431,6 @@ object db_handler {
   def get_score_suitability(onto: String, term_type: String): (Double, Double) = {
     var result: (Double, Double) = (0.0,0.0)
     val db = Database.forConfig("gecotest2", conf)
-    println(onto)
     val q =
       sql"""
            select avg_score1, suitability
