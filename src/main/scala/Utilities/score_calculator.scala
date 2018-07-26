@@ -104,8 +104,8 @@ object score_calculator {
 
   def calculate_score(): Unit = {
     val range = db_handler.get_db_lenght()
-    calculate_ontology_score()
-    for (i <- 1 to range){
+//    calculate_ontology_score()
+    for (i <- range){
       val a = db_handler.get_onto_service_termtype(i)
       val onto = a._1
       val term_type = a._3

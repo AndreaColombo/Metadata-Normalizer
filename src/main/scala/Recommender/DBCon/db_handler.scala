@@ -269,16 +269,16 @@ object db_handler {
     score
   }
 
-  def get_db_lenght(): Int = {
+  def get_db_lenght(): List[Int] = {
     val db = Database.forConfig("gecotest2", conf)
-    var lenght = 0
+    var lenght: List[Int] = List()
     val q =
       sql"""
-           select count(id)
+           select id
            from public.apiresults
          """.as[Int]
 
-    val result_future = db.run(q).map(a => lenght = a.head)
+    val result_future = db.run(q).map(a => lenght = a.toList)
     Await.result(result_future, Duration.Inf)
     db.close()
     lenght
