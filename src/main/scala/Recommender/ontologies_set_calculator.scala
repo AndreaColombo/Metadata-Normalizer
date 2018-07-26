@@ -39,7 +39,7 @@ object ontologies_set_calculator {
           result :+= (t, onto1, coverage, weight1_sc1/terms1.size,weight1_suit/terms1.size)
         }
 
-        for (j <- i + 1 until ontos.length) {
+        for (j <- i + 1 until ontos.length/2) {
           val onto2 = ontos(j)._2
           val terms2 = db_handler.get_term_by_ontology(onto2, t).toSet
 

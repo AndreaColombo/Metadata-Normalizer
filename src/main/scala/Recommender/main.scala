@@ -21,8 +21,8 @@ object main {
         }
       }
       else if (args.head.equals("sets")){
-        if (args.length == 1){
-          if (args.head == "all"){
+        if (args.length == 2){
+          if (args(1) == "all"){
             val table_l = config.get_gcm_table_list()
             for (t <- table_l) {
               val column_l = config.get_termtype_list(t)
@@ -32,7 +32,7 @@ object main {
             }
           }
           else {
-            val t = args(0)
+            val t = args(1)
             val column_l = config.get_termtype_list(t)
             for (col <- column_l) {
               ontologies_set_calculator.calculate_ontology_set(col)
@@ -40,8 +40,8 @@ object main {
           }
         }
         else {
-          val t = args(0)
-          val col = args(1)
+          val t = args(1)
+          val col = args(2)
           ontologies_set_calculator.calculate_ontology_set(col)
         }
       }
