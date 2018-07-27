@@ -65,6 +65,7 @@ object annotator {
     }
     else {
       db_handler.user_feedback_insert(List(user_feedback_type(-1,false,table,column,null,raw_value,null,null,Some(source),Some(code),null,"ONLINE:ERROR  "+ols_get_status(source,ols_get_iri(source,code)))))
+      logger.info(s"Value $raw_value, best match found as $source $code but online resource not available")
     }
     result.distinct
   }
@@ -75,6 +76,7 @@ object annotator {
     if (user_feedback.nonEmpty) {
       try {
         db_handler.user_feedback_insert(user_feedback)
+        logger.info(s"Value $value, best match not found in online KB, user feedback")
       }
       catch {
         case e: BatchUpdateException => logger.info("User feedback exception",e.getNextException)
@@ -82,6 +84,7 @@ object annotator {
     }
     else {
       db_handler.user_feedback_insert(List(user_feedback_type(default_values.int,default_values.bool,table_name, term_type, null, value, null, null, null, null,null,"ONLINE:NONE")))
+      logger.info(s"Value $value, best match not found in online KB, user feedback not found")
     }
   }
 

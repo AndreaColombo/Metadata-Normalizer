@@ -2,10 +2,11 @@ package Enricher.Enrichment_engine
 
 import java.net.{SocketTimeoutException, URLEncoder}
 
+import Config.config
 import Config.config.get_ontologies_by_type
 import Enricher.DBCon.{db_handler, default_values, ontology_type, user_feedback_type}
 import Enricher.Enrichment_engine.annotator.logger
-import Recommender.Ontologies.Parsers.OlsParser.{countWords}
+import Recommender.Ontologies.Parsers.OlsParser.countWords
 import Utilities.Preprocessing
 import Utilities.score_calculator.get_match_score
 import com.fasterxml.jackson.core.JsonParseException
@@ -42,7 +43,7 @@ object Ols_interface {
       val iri = (j2 \ "iri").validate[String].get
       val score_num = get_match_score(get_score(term, prefLabel), service)
 
-      if (score_num > 6 && score_num > max_score) {
+      if (score_num >= config.get_threshold() && score_num > max_score) {
         if(ols_get_status(ontology,iri).contains("200")){
           max_score = score_num
           result = (ontology, ontology_id)
@@ -66,10 +67,17 @@ object Ols_interface {
   def ols_get_info(source: String, code: String): List[List[String]] = {
     var rows: Seq[List[String]] = List()
     val iri = ols_get_iri(source,code)
-
+    var attempts = 0
     val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
-    val status = ols_get_status(source,iri)
-    if(status.contains("200")) {
+    var status = ols_get_status(source,iri)
+    var ok = false
+
+    while (!status.contains("200") && attempts <= 5){
+      Thread.sleep(10000)
+      attempts += 1
+      status = ols_get_status(source,iri)
+    }
+    if(attempts<=5) {
       val response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
       val j = Json.parse(response.body)
       val prefLabel = (j \ "label").validate[String].get
@@ -106,9 +114,10 @@ object Ols_interface {
       else children = List("null")
 
       rows :+= List(ontology, ontology_id, prefLabel, xref.mkString(","), synonym, parents.mkString(","), children.mkString(","), part_of.mkString(","),description,iri)
+      attempts += 1
     }
     else {
-      logger.info(s"OLS resource not available for $source, $code")
+      logger.warn(s"Ols retrieval failed after $attempts attempts")
     }
     rows.toList.distinct
   }

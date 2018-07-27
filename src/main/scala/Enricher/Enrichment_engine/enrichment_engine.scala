@@ -3,10 +3,12 @@ package Enricher.Enrichment_engine
 
 import Config.config
 import Enricher.DBCon.{db_handler, default_values, user_feedback_type}
+import org.slf4j.LoggerFactory
 
 object enrichment_engine {
 
   def controller(column_name: String): Unit = {
+    val logger = LoggerFactory.getLogger(this.getClass)
     val table_name = config.get_table_by_column(column_name)
     db_handler.clean_user_feedback(table_name,column_name)
     val raw_values = db_handler.get_raw_values(table_name,column_name)
@@ -20,11 +22,13 @@ object enrichment_engine {
         //CHECK IF TYPE IS RAW
         if (result_syn.ttype == "raw") {
           println("Value found in syn")
+          logger.info(s"Value $raw_value found as RAW in local KB")
           db_handler.update_tid(raw_value, Some(result_syn.tid))
         }
         //CHECK IF RAW VALUE EXIST IN USER CHANGES
         else if (result_user_changes._1 != "null") {
           println("Value found in user changes")
+          logger.info(s"Value $raw_value found in user changes")
           //GET INFO AND INSERT IN GCM
           val source = result_user_changes._1
           val a = Ols_interface.ols_get_onto_info(source)
@@ -35,6 +39,7 @@ object enrichment_engine {
         }
         else if (result_syn.ttype == "syn") {
           println("Value found syn type")
+          logger.info(s"Value $raw_value found as SYN in local KB")
           val suggestion = db_handler.get_cv_support_by_tid(result_syn.tid)
           if (!db_handler.user_fb_exist(raw_value, suggestion.source, suggestion.code)) {
             db_handler.user_feedback_insert(List(user_feedback_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:SYN")))
@@ -42,6 +47,7 @@ object enrichment_engine {
         }
         else {
           println("Value found syn type")
+          logger.info(s"Value $raw_value found as PREF in local KB")
           val suggestion = db_handler.get_cv_support_by_tid(result_syn.tid)
           if (!db_handler.user_fb_exist(raw_value, suggestion.source, suggestion.code)) {
             db_handler.user_feedback_insert(List(user_feedback_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:PREF")))
@@ -60,6 +66,7 @@ object enrichment_engine {
         //BEST MATCH FOUND
         else {
           println("Best match found")
+          logger.info(s"Value $raw_value best match found in online KB")
           val source = source_code._1
           val a = Ols_interface.ols_get_onto_info(source)
           if (!db_handler.onto_exist(a.source)) {
