@@ -1,8 +1,8 @@
 package Enricher
 
 import Config.config.{get_gcm_table_list, get_termtype_list}
-import Enricher.DBCon.{default_values, db_handler, user_changes_type}
-import Enrichment_engine.annotator
+import Enricher.DBCon.{db_handler, default_values, user_changes_type}
+import Enrichment_engine.{Ols_interface, annotator}
 import scalaj.http.{Http, HttpOptions}
 import scalax.cli.Table
 import shapeless.Sized
@@ -67,7 +67,7 @@ object user_interface {
             val user_choice = input_source_code()
             val source = user_choice._1
             val code = user_choice._2
-            val prefLabel = annotator.ols_get_info(code,source).head(2)
+            val prefLabel = Ols_interface.ols_get_info(code,source).head(2)
             //INSERT IN USER REQUESTED CHOICE
             db_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, rv, source, code))
           }
@@ -75,12 +75,12 @@ object user_interface {
           else {
             table.print()
             val user_choice = get_input(i)
-            if(user_choice.equalsIgnoreCase("manual apiresults_insert")){
+            if(user_choice.equalsIgnoreCase("manual insert")){
               println("Please input manually source and iri")
               val user_choice = input_source_code()
               val source = user_choice._1
               val code = user_choice._2
-              val prefLabel = annotator.ols_get_info(source,code).head(2)
+              val prefLabel = Ols_interface.ols_get_info(source,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
               db_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, rv, source, code))
             }
