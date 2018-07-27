@@ -5,7 +5,7 @@ import java.net.{SocketTimeoutException, URLEncoder}
 import Config.config.get_ontologies_by_type
 import Enricher.DBCon.{db_handler, default_values, ontology_type, user_feedback_type}
 import Enricher.Enrichment_engine.annotator.logger
-import Recommender.Ontologies.Parsers.OlsParser.get_score
+import Recommender.Ontologies.Parsers.OlsParser.{countWords}
 import Utilities.Preprocessing
 import Utilities.score_calculator.get_match_score
 import com.fasterxml.jackson.core.JsonParseException
@@ -43,8 +43,10 @@ object Ols_interface {
       val score_num = get_match_score(get_score(term, prefLabel), service)
 
       if (score_num > 6 && score_num > max_score) {
-        max_score = score_num
-        result = (ontology, ontology_id)
+        if(ols_get_status(ontology,iri).contains("200")){
+          max_score = score_num
+          result = (ontology, ontology_id)
+        }
       }
     }
     result
@@ -148,5 +150,31 @@ object Ols_interface {
     }
     result
   }
-
+  def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): String = {
+    var score = ""
+    val term = termAnnotated.replace("-"," ").map(_.toLower)
+    val label = prefLabel.replace("-"," ")
+    var s = ""
+    if (term.length > label.length){
+      s = label.r.findAllIn(term).mkString
+      if (s.nonEmpty){
+        val diff = (countWords(termAnnotated) - countWords(prefLabel))*2
+        if (diff > 0)
+          score = "PREF - "+diff
+        else score = "PREF"
+      }
+      else score = "LOW"
+    }
+    else {
+      s = term.r.findAllIn(label).mkString
+      if (s.nonEmpty){
+        val diff = (countWords(prefLabel) - countWords(termAnnotated))*2
+        if (diff > 0)
+          score = "PREF - "+diff
+        else score = "PREF"
+      }
+      else score = "LOW"
+    }
+    score
+  }
 }
