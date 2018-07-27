@@ -152,7 +152,6 @@ object db_handler {
   def get_tid(source: String, code: String): Int = {
     val db = get_db()
     var tid = 0
-    println(source,code)
     val q = cv_support.filter(a => a.source === source && a.code === code).map(_.tid)
     val resultfuture = db.run(q.result).map(a => tid = a.head)
     Await.result(resultfuture, Duration.Inf)

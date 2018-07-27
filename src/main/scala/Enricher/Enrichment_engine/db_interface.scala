@@ -17,7 +17,7 @@ object db_interface {
         cv_support ++= db_insert(elem)
       }
       val label = res.head.apply("label")
-      val tid = db_handler.get_tid(res.head.apply("source"),res.head.apply("iri"))
+      val tid = db_handler.get_tid(res.head.apply("source"),res.head.apply("code"))
       db_handler.syn_insert(List(cv_support_syn_type(tid,raw_value,"raw")))
       db_handler.raw_insert(List(cv_support_raw_type(tid,raw_value,table_name,column_name,method)))
       db_handler.update_tid(raw_value,Some(tid))
@@ -90,7 +90,7 @@ object db_interface {
       val default:Map[String,String] = Map()
       var parents = ""
       try {
-        parents = res.find(a => a.apply("iri") == child_code).get.apply("parents")
+        parents = res.find(a => a.apply("code") == child_code).get.apply("parents")
       }
       catch {
         case e: NoSuchElementException =>
@@ -107,7 +107,7 @@ object db_interface {
         }
       }
 
-      parents = res.find(a => a.apply("iri")==child_code).get.apply("part_of")
+      parents = res.find(a => a.apply("code")==child_code).get.apply("part_of")
       if(parents!=null) {
         for(parent <- parents.split(",")) {
           val parent_tid = elems.find(a => a.code == parent).getOrElse(default_cv).tid
