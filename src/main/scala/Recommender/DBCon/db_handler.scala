@@ -375,7 +375,7 @@ object db_handler {
     val q =
       sql"""
            select *
-           from public.best_onto_per_term2
+           from public.best_onto_per_term
            where term_type = $term_type
          """.as[(String, String, String, String, String)]
 
@@ -434,7 +434,7 @@ object db_handler {
     val q =
       sql"""
            select avg_score1, suitability
-           from public.best_onto_per_term2
+           from public.best_onto_per_term
            where term_type ilike $term_type and ontology ilike $onto
          """.as[(Double, Double)]
     val result_future = db.run(q).map(a=>
@@ -521,7 +521,7 @@ object db_handler {
     val q3 = sqlu"""
                 create view best_onto_per_term as
                     SELECT term_type, ontology, avg(score1) as avg_score1, count(*)/max(nrv_count)::float as coverage, suitability
-                    FROM support_table2  NATURAL JOIN num_raw_values2
+                    FROM support_table  NATURAL JOIN num_raw_values
                     GROUP BY term_type,ontology, suitability
                     order by coverage desc, avg_score1 desc, suitability desc, term_type"""
     val createAction = DBIO.seq(q1,q2,q3)
