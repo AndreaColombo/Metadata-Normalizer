@@ -153,10 +153,11 @@ object Ols_interface {
   def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): String = {
     var score = ""
     val term = termAnnotated.replace("-"," ").map(_.toLower)
-    val label = prefLabel.replace("-"," ")
+    val label = prefLabel.replace("-"," ").map(_.toLower)
     var s = ""
     if (term.length > label.length){
       s = label.r.findAllIn(term).mkString
+      println("term "+s)
       if (s.nonEmpty){
         val diff = (countWords(termAnnotated) - countWords(prefLabel))*2
         if (diff > 0)
@@ -167,6 +168,7 @@ object Ols_interface {
     }
     else {
       s = term.r.findAllIn(label).mkString
+      println("label" +s)
       if (s.nonEmpty){
         val diff = (countWords(prefLabel) - countWords(termAnnotated))*2
         if (diff > 0)
