@@ -1,5 +1,6 @@
 package Recommender.Ontologies
 
+import Config.config
 import scalaj.http.{Http, HttpOptions}
 import Parsers._
 
@@ -11,7 +12,7 @@ trait Ontology {
 object Ontology {
 
   private class Recommender extends Ontology {
-    val apikey = "2338fb64-0246-4627-bf4d-4197bc8c9c64"
+    val apikey = config.get_bp_apikey()
     val url = "http://data.bioontology.org/recommender"
 
     private def get_results(keywords: String): List[List[String]] = {
@@ -44,7 +45,7 @@ object Ontology {
   }
 
   private class Bioportal extends Ontology {
-    val apikey = "2338fb64-0246-4627-bf4d-4197bc8c9c64"
+    val apikey = config.get_bp_apikey()
     val url = "https://data.bioontology.org/search"
 
     private def get_results(term: String): List[List[String]] = {

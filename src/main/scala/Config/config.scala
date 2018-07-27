@@ -12,14 +12,19 @@ object config  {
 
   def get_threshold():Int = conf.getInt("threshold_match")
 
-  def get_ontologies_by_type(term_type: String): List[String] = {
+  def get_table_by_column(term_type: String): String = {
     val table_list = conf.getObject("db_config").keySet()
     var table = ""
     for (elem <- table_list.asScala) {
-    val t = get_termtype_list(elem)
-    if (t.exists(_.equals(term_type)))
-      table = elem
+      val t = get_termtype_list(elem)
+      if (t.exists(_.equals(term_type)))
+        table = elem
     }
+    table
+  }
+
+  def get_ontologies_by_type(term_type: String): List[String] = {
+    val table = get_table_by_column(term_type)
     conf.getStringList(s"db_config.$table.$term_type.ontologies").asScala.toList
   }
 
@@ -30,4 +35,6 @@ object config  {
   def get_desc_limit(): Int = conf.getInt("ontology_depth.desc_depth")
 
   def get_gcm_table_list(): List[String] = conf.getObject("db_config").keySet().asScala.toList
+
+  def get_bp_apikey(): String = conf.getString("bioportal_apikey")
 }

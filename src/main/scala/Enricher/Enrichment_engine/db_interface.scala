@@ -37,11 +37,12 @@ object db_interface {
     val code = elem.apply("iri")
     val label = elem.apply("label")
     val description = elem.apply("description")
+    val iri = elem.apply("iri")
 
     //CHECK EXISTENCE OF SOURCE IN ONTOLOGY TABLE
     //IF DOESN'T EXIST INSERT
 
-    insert_elem ++= List(cv_support_type(default_values.int,source,code,label,description))
+    insert_elem ++= List(cv_support_type(default_values.int,source,code,label,description,iri))
     db_handler.cv_support_insert(insert_elem)
     val tid = db_handler.get_tid(source,code)
     support :+= cv_support(tid.toString,source,code,label)

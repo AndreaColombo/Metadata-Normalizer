@@ -21,7 +21,7 @@ object Tables {
   }
   val best_onto_set = TableQuery[best_ontos]
 
-  class ApiResults2(tag: Tag) extends Table[(Int, String, String, String, String, String, String, String, String, String, Double, Double, Double, Double, Double)](tag, Some("public"), "apiresults"){
+  class ApiResults2(tag: Tag) extends Table[(Int, String, String, String, String, String, String, String, String, String, Double, Double, Double, Double, Double, Boolean)](tag, Some("public"), "apiresults"){
     def id = column[Int]("id", O.AutoInc)
     def service = column[String]("service")
     def raw_value = column[String]("raw_value")
@@ -37,7 +37,8 @@ object Tables {
     def score_num1 = column[Double]("score_num1",O.Default(0.0))
     def score_num2 = column[Double]("score_num2",O.Default(0.0))
     def suitability = column[Double]("suitability",O.Default(0.0))
-    def * = (id,service,term_type,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,match_score,onto_score,score_num1,score_num2,suitability)
+    def ok = column[Boolean]("ok",O.Default(false))
+    def * = (id,service,term_type,raw_value,parsed_value,ontology,ontology_id,pref_label,synonym,score,match_score,onto_score,score_num1,score_num2,suitability,ok)
   }
   val apiresults = TableQuery[ApiResults2]
 }

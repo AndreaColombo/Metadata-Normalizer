@@ -9,11 +9,11 @@ object default_values{
   def bool = false
 }
 
-case class cv_support_type(tid: Int = default_values.int, source: String = default_values.string, code: String = default_values.string, label: String = default_values.string, description: String = default_values.string)
+case class cv_support_type(tid: Int = default_values.int, source: String = default_values.string, code: String = default_values.string, label: String = default_values.string, description: String = default_values.string,iri: String = default_values.string)
 case class cv_support_syn_type (tid: Int = default_values.int, label: String = default_values.string, ttype: String = default_values.string)
 case class cv_support_xref_type (tid: Int = default_values.int, source: String = default_values.string, code: String = default_values.string)
 case class cv_support_raw_type(tid: Int = default_values.int, label: String = default_values.string, table_name: String = default_values.string, column_name: String = default_values.string, method: Char = default_values.char)
-case class user_feedback_type (id: Int = default_values.int, resolved: Boolean = default_values.bool, table: String = default_values.string, column: String = default_values.string, tid: Option[Int] = Some(default_values.int), raw_value: String = default_values.string, parsed_value: Option[String] = Some(default_values.string), label: Option[String] = Some(default_values.string), source: Option[String] = Some(default_values.string), code: Option[String] = Some(default_values.string))
+case class user_feedback_type (id: Int = default_values.int, resolved: Boolean = default_values.bool, table: String = default_values.string, column: String = default_values.string, tid: Option[Int] = Some(default_values.int), raw_value: String = default_values.string, parsed_value: Option[String] = Some(default_values.string), label: Option[String] = Some(default_values.string), source: Option[String] = Some(default_values.string), code: Option[String] = Some(default_values.string), iri: Option[String]= Some(default_values.string), provenance: String = default_values.string)
 case class user_changes_type (id: Int = default_values.int, table_name: String = default_values.string, column_name: String = default_values.string, raw_value: String = default_values.string, source: String = default_values.string, code: String = default_values.string)
 case class ontology_type(source: String = default_values.string, title: Option[String] = Some(default_values.string), description: Option[String] = Some(default_values.string), url: Option[String] = Some(default_values.string))
 case class onto_support_hyp_type (tid_p: Int = default_values.int, tid_c: Int = default_values.int, rel_type:String = default_values.string)
@@ -37,11 +37,12 @@ object Tables {
     def code = column[String]("code",O.SqlType("VARCHAR(64)"))
     def label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
     def description = column[String]("description")
+    def iri = column[String]("iri")
 
     def idx = index("cv_support_source_code_key",(source,code),unique = true)
     def fk = foreignKey("ontology_source_fk",source,ontology)(_.source, onDelete = ForeignKeyAction.Cascade)
 
-    def * = (tid, source,code,label,description) <> (cv_support_type.tupled, cv_support_type.unapply)
+    def * = (tid, source,code,label,description,iri) <> (cv_support_type.tupled, cv_support_type.unapply)
   }
   val cv_support = TableQuery[cv_support]
 
@@ -129,10 +130,12 @@ object Tables {
     def source = column[Option[String]]("source")
     def code = column[Option[String]]("code")
     def resolved = column[Boolean]("resolved", O.Default(false))
+    def iri = column[Option[String]]("iri")
+    def provenance = column[String]("provenance")
 
     def idx = index("user_feedback_idx",(tid,raw_value,source,code),unique = true)
 
-    def * = (id, resolved, table_name, column_name, tid, raw_value, parsed_value, label, source, code) <> (user_feedback_type.tupled, user_feedback_type.unapply)
+    def * = (id, resolved, table_name, column_name, tid, raw_value, parsed_value, label, source, code, iri, provenance) <> (user_feedback_type.tupled, user_feedback_type.unapply)
   }
   val user_feedback = TableQuery[user_feedback]
 

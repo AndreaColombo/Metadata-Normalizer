@@ -6,7 +6,7 @@ import scala.util.control.Breaks._
 
 object ontologies_set_calculator {
 
-  def calculate_ontology_set(t: String): Unit = {
+  def calculate_ontology_set(t: String, threshold: Double = 0.90): Unit = {
 
     var result: Seq[(String, String, Double, Double, Double)] = List()
     var score1 = 0.0
@@ -14,8 +14,6 @@ object ontologies_set_calculator {
     val ontos = db_handler.get_best_onto_per_term(t)
     val a = db_handler.get_nrv(t)
     println(t + "\n")
-
-    val threshold = 0.90
 
     for (i <- 0 until ontos.length/4){
       val onto1 = ontos(i)._2

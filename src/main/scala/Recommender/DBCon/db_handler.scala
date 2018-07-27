@@ -63,7 +63,8 @@ object db_handler {
              set score_num1 = $score1,
              score_num2 = $score2,
              onto_score = $ontoScore,
-             match_score = $matchScore
+             match_score = $matchScore,
+             ok = true
              where id = $id
         """
 
@@ -272,11 +273,7 @@ object db_handler {
   def get_db_lenght(): List[Int] = {
     val db = Database.forConfig("gecotest2", conf)
     var lenght: List[Int] = List()
-    val q =
-      sql"""
-           select id
-           from public.apiresults
-         """.as[Int]
+    val q = apiresults.filter(_.ok === false).map(_.id).result
 
     val result_future = db.run(q).map(a => lenght = a.toList)
     Await.result(result_future, Duration.Inf)

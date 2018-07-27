@@ -1,12 +1,13 @@
 package Utilities
 
+import Config.config
 import Recommender.DBCon.db_handler
 import play.api.libs.json.Json
 import scalaj.http.{Http, HttpOptions}
 
 object score_calculator {
 
-  val apikey = "2338fb64-0246-4627-bf4d-4197bc8c9c64"
+  val apikey = config.get_bp_apikey()
   val url = "http://data.bioontology.org/recommender"
 
   def get_recommender_score (term: List[String], onto: String): Double = {
@@ -110,7 +111,7 @@ object score_calculator {
       val onto = a._1
       val term_type = a._3
       val onto_score = db_handler.get_onto_score(onto,term_type)
-      println(i)
+      println("\r"+i)
       val match_score = get_match_score(i, a._2)
 
       val k1 = 2

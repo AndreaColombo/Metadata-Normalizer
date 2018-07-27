@@ -94,12 +94,12 @@ object db_handler {
 
   def cv_support_insert(rows: List[cv_support_type]): Unit = {
 
-    var ok: Seq[(String, String, String, String)] = Seq()
+    var ok: Seq[(String, String, String, String, String)] = Seq()
     for (l <- rows) {
-      ok :+= (l.source,l.code,l.label,l.description)
+      ok :+= (l.source,l.code,l.label,l.description,l.iri)
     }
     val db = get_db()
-    val insertAction = cv_support.map(a=> (a.source,a.code,a.label,a.description)) ++= ok
+    val insertAction = cv_support.map(a=> (a.source,a.code,a.label,a.description,a.iri)) ++= ok
     try {
       val insert = db.run(insertAction)
       Await.result(insert, Duration.Inf)
@@ -187,13 +187,13 @@ object db_handler {
   }
 
   def user_feedback_insert(rows: List[user_feedback_type]): Unit = {
-    var ok: Seq[(String, String, Option[Int], String, Option[String], Option[String], Option[String], Option[String])] = Seq()
+    var ok: Seq[(String, String, Option[Int], String, Option[String], Option[String], Option[String], Option[String],Option[String],String)] = Seq()
 
     for (l <- rows) {
-      ok :+= (l.table, l.column, l.tid, l.raw_value, l.parsed_value, l.label, l.source, l.code)
+      ok :+= (l.table, l.column, l.tid, l.raw_value, l.parsed_value, l.label, l.source, l.code,l.iri,l.provenance)
     }
     val db = get_db()
-    val insertAction = user_feedback.map(a => (a.table_name, a.column_name, a.tid, a.raw_value, a.parsed_value, a.label, a.source, a.code)) ++= ok
+    val insertAction = user_feedback.map(a => (a.table_name, a.column_name, a.tid, a.raw_value, a.parsed_value, a.label, a.source, a.code,a.iri,a.provenance)) ++= ok
 
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
@@ -347,7 +347,7 @@ object db_handler {
 
   def get_cv_support_by_tid(tid: Int): cv_support_type = {
     val db = get_db()
-    var result = cv_support_type(-1,"","","","")
+    var result = cv_support_type()
     val q = cv_support.filter(_.tid===tid).result.headOption
     val f = db.run(q).map(a=>
       if(a.isDefined)

@@ -1,5 +1,6 @@
 package Recommender.Ontologies.Parsers
 
+import Config.config
 import Recommender.DBCon.db_handler
 import Recommender.Ontologies.Parsers.OlsParser.countWords
 import play.api.libs.json._
@@ -8,7 +9,7 @@ import scalaj.http.{Http, HttpOptions}
 
 
 object RecommenderParser {
-  val apikey = "2338fb64-0246-4627-bf4d-4197bc8c9c64"
+  val apikey = config.get_bp_apikey()
 
   def parse (s: String): List[List[String]] = {
     val j = Json.parse(s)

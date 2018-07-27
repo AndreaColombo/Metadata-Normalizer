@@ -28,6 +28,7 @@ object main {
             val table_l = config.get_gcm_table_list()
             for (t <- table_l) {
               val column_l = config.get_termtype_list(t)
+              
               for (col <- column_l) {
                 ontologies_set_calculator.calculate_ontology_set(col)
               }

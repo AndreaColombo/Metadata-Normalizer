@@ -40,11 +40,31 @@ object main extends App {
         db_handler.reset_db()
         db_handler.init()
       }
+      else if (args.length == 1){
+        if (args.head == "all"){
+          val table_l = config.get_gcm_table_list()
+          for (t <- table_l) {
+            val column_l = config.get_termtype_list(t)
+            for (col <- column_l) {
+              enrichment_engine.controller(col)
+            }
+          }
+        }
+        else {
+          val t = args(0)
+          val column_l = config.get_termtype_list(t)
+          for (col <- column_l) {
+            println(col)
+            enrichment_engine.controller(col)
+          }
+        }
+      }
       else {
-        enrichment_engine.controller(args(0))
+        val t = args(0)
+        val col = args(1)
+        enrichment_engine.controller(col)
       }
     }
-    else println("manuale")
   }
 
   def get_elapsed_time(d1: Long, d2: Long): Unit = {
