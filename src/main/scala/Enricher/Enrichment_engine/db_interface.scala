@@ -34,7 +34,7 @@ object db_interface {
     var support: List[cv_support] = List()
 
     val source = elem.apply("source")
-    val code = elem.apply("iri")
+    val code = elem.apply("code")
     val label = elem.apply("label")
     val description = elem.apply("description")
     val iri = elem.apply("iri")
