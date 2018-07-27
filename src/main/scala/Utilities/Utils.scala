@@ -2,6 +2,9 @@ package Utilities
 
 import java.io._
 
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
+
 object Utils {
 
   def escape (str: String) : String = {
@@ -43,6 +46,10 @@ object Utils {
     }
     writer.close()
     true
+  }
+
+  def get_timestamp(): String = {
+    DateTime.now.toString(DateTimeFormat.forPattern("yyyy_MM_dd_HH_mm_ss_SSS"))
   }
 
   //ELIMINATE DUPLICATES FROM LIST BASED ON CONDITIONS

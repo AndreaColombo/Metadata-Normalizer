@@ -137,7 +137,7 @@ object Ols_interface {
         val onto = (jj \ "ontology_name").validate[String].get
         val score_num = get_match_score(get_score(raw_value, label), "Ols")
         if (!rows.exists(_.code.get==id) && !db_handler.user_fb_exist(raw_value,onto,id))
-          rows :+= user_feedback_type(default_values.int, default_values.bool, table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString)
+          rows :+= user_feedback_type(default_values.int, default_values.bool, table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,Utilities.Utils.get_timestamp())
       }
     }
     rows.distinct

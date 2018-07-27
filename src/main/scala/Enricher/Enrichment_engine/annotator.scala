@@ -1,6 +1,5 @@
 package Enricher.Enrichment_engine
 
-import java.net.{SocketTimeoutException, URLEncoder}
 import java.sql.BatchUpdateException
 
 import Enricher.DBCon.{default_values, db_handler, user_feedback_type}
@@ -9,7 +8,7 @@ import Ols_interface.{ols_get_info,ols_search_term,ols_get_user_feedback,ols_get
 import util.control.Breaks._
 import Config.config.{get_anc_limit, get_desc_limit, get_ontologies_by_type}
 import org.apache.log4j._
-
+import Utilities.Utils.get_timestamp
 
 object annotator {
   val max_depth_anc: Int = get_anc_limit()
@@ -64,7 +63,7 @@ object annotator {
       }
     }
     else {
-      db_handler.user_feedback_insert(List(user_feedback_type(-1,false,table,column,null,raw_value,null,null,Some(source),Some(code),null,"ONLINE:ERROR  "+ols_get_status(source,ols_get_iri(source,code)))))
+      db_handler.user_feedback_insert(List(user_feedback_type(-1,resolved = false,table,column,null,raw_value,null,null,Some(source),Some(code),null,"ONLINE:ERROR  "+ols_get_status(source,ols_get_iri(source,code)),get_timestamp())))
       logger.info(s"Value $raw_value, best match found as $source $code but online resource not available")
     }
     result.distinct
@@ -83,7 +82,7 @@ object annotator {
       }
     }
     else {
-      db_handler.user_feedback_insert(List(user_feedback_type(default_values.int,default_values.bool,table_name, term_type, null, value, null, null, null, null,null,"ONLINE:NONE")))
+      db_handler.user_feedback_insert(List(user_feedback_type(default_values.int,default_values.bool,table_name, term_type, null, value, null, null, null, null,null,"ONLINE:NONE",get_timestamp())))
       logger.info(s"Value $value, best match not found in online KB, user feedback not found")
     }
   }

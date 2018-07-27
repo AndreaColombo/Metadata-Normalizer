@@ -13,7 +13,7 @@ case class cv_support_type(tid: Int = default_values.int, source: String = defau
 case class cv_support_syn_type (tid: Int = default_values.int, label: String = default_values.string, ttype: String = default_values.string)
 case class cv_support_xref_type (tid: Int = default_values.int, source: String = default_values.string, code: String = default_values.string)
 case class cv_support_raw_type(tid: Int = default_values.int, label: String = default_values.string, table_name: String = default_values.string, column_name: String = default_values.string, method: Char = default_values.char)
-case class user_feedback_type (id: Int = default_values.int, resolved: Boolean = default_values.bool, table: String = default_values.string, column: String = default_values.string, tid: Option[Int] = Some(default_values.int), raw_value: String = default_values.string, parsed_value: Option[String] = Some(default_values.string), label: Option[String] = Some(default_values.string), source: Option[String] = Some(default_values.string), code: Option[String] = Some(default_values.string), iri: Option[String]= Some(default_values.string), provenance: String = default_values.string)
+case class user_feedback_type (id: Int = default_values.int, resolved: Boolean = default_values.bool, table: String = default_values.string, column: String = default_values.string, tid: Option[Int] = Some(default_values.int), raw_value: String = default_values.string, parsed_value: Option[String] = Some(default_values.string), label: Option[String] = Some(default_values.string), source: Option[String] = Some(default_values.string), code: Option[String] = Some(default_values.string), iri: Option[String]= Some(default_values.string), provenance: String = default_values.string,timestamp: String = default_values.string)
 case class user_changes_type (id: Int = default_values.int, table_name: String = default_values.string, column_name: String = default_values.string, raw_value: String = default_values.string, source: String = default_values.string, code: String = default_values.string)
 case class ontology_type(source: String = default_values.string, title: Option[String] = Some(default_values.string), description: Option[String] = Some(default_values.string), url: Option[String] = Some(default_values.string))
 case class onto_support_hyp_type (tid_p: Int = default_values.int, tid_c: Int = default_values.int, rel_type:String = default_values.string)
@@ -132,10 +132,11 @@ object Tables {
     def resolved = column[Boolean]("resolved", O.Default(false))
     def iri = column[Option[String]]("iri")
     def provenance = column[String]("provenance")
+    def timestamp = column[String]("timestamp")
 
     def idx = index("user_feedback_idx",(tid,raw_value,source,code),unique = true)
 
-    def * = (id, resolved, table_name, column_name, tid, raw_value, parsed_value, label, source, code, iri, provenance) <> (user_feedback_type.tupled, user_feedback_type.unapply)
+    def * = (id, resolved, table_name, column_name, tid, raw_value, parsed_value, label, source, code, iri, provenance,timestamp) <> (user_feedback_type.tupled, user_feedback_type.unapply)
   }
   val user_feedback = TableQuery[user_feedback]
 

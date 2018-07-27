@@ -4,6 +4,7 @@ package Enricher.Enrichment_engine
 import Config.config
 import Enricher.DBCon.{db_handler, default_values, user_feedback_type}
 import org.slf4j.LoggerFactory
+import Utilities.Utils.get_timestamp
 
 object enrichment_engine {
 
@@ -42,7 +43,7 @@ object enrichment_engine {
           logger.info(s"Value $raw_value found as SYN in local KB")
           val suggestion = db_handler.get_cv_support_by_tid(result_syn.tid)
           if (!db_handler.user_fb_exist(raw_value, suggestion.source, suggestion.code)) {
-            db_handler.user_feedback_insert(List(user_feedback_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:SYN")))
+            db_handler.user_feedback_insert(List(user_feedback_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:SYN",get_timestamp())))
           }
         }
         else {
@@ -50,7 +51,7 @@ object enrichment_engine {
           logger.info(s"Value $raw_value found as PREF in local KB")
           val suggestion = db_handler.get_cv_support_by_tid(result_syn.tid)
           if (!db_handler.user_fb_exist(raw_value, suggestion.source, suggestion.code)) {
-            db_handler.user_feedback_insert(List(user_feedback_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:PREF")))
+            db_handler.user_feedback_insert(List(user_feedback_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:PREF",get_timestamp())))
           }
         }
       }

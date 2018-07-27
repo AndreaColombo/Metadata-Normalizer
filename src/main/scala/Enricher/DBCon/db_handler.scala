@@ -187,13 +187,13 @@ object db_handler {
   }
 
   def user_feedback_insert(rows: List[user_feedback_type]): Unit = {
-    var ok: Seq[(String, String, Option[Int], String, Option[String], Option[String], Option[String], Option[String],Option[String],String)] = Seq()
+    var ok: Seq[(String, String, Option[Int], String, Option[String], Option[String], Option[String], Option[String],Option[String],String,String)] = Seq()
 
     for (l <- rows) {
-      ok :+= (l.table, l.column, l.tid, l.raw_value, l.parsed_value, l.label, l.source, l.code,l.iri,l.provenance)
+      ok :+= (l.table, l.column, l.tid, l.raw_value, l.parsed_value, l.label, l.source, l.code,l.iri,l.provenance,l.timestamp)
     }
     val db = get_db()
-    val insertAction = user_feedback.map(a => (a.table_name, a.column_name, a.tid, a.raw_value, a.parsed_value, a.label, a.source, a.code,a.iri,a.provenance)) ++= ok
+    val insertAction = user_feedback.map(a => (a.table_name, a.column_name, a.tid, a.raw_value, a.parsed_value, a.label, a.source, a.code,a.iri,a.provenance,a.timestamp)) ++= ok
 
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
