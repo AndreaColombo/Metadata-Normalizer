@@ -65,7 +65,6 @@ object main extends App {
         enrichment_engine.controller(col)
       }
     }
-    Ols_interface.ols_get_info("doid","bbb")
   }
 
   def get_elapsed_time(d1: Long, d2: Long): Unit = {
