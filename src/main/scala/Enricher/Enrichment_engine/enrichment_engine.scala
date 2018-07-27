@@ -8,6 +8,7 @@ object enrichment_engine {
 
   def controller(column_name: String): Unit = {
     val table_name = config.get_table_by_column(column_name)
+    db_handler.clean_user_feedback(table_name,column_name)
     val raw_values = db_handler.get_raw_values(table_name,column_name)
     for (raw_value <- raw_values) {
       println(column_name)

@@ -425,4 +425,11 @@ object db_handler {
     db.close()
     res
   }
+
+  def clean_user_feedback(table: String, column: String): Unit = {
+    val q = user_feedback.filter(a => a.table_name === table && a.column_name === column && a.resolved === false).delete
+    val db = get_db()
+    Await.result(db.run(q),Duration.Inf)
+    db.close()
+  }
 }

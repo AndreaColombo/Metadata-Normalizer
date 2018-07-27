@@ -157,7 +157,6 @@ object Ols_interface {
     var s = ""
     if (term.length > label.length){
       s = label.r.findAllIn(term).mkString
-      println("term "+s)
       if (s.nonEmpty){
         val diff = (countWords(termAnnotated) - countWords(prefLabel))*2
         if (diff > 0)
@@ -168,7 +167,6 @@ object Ols_interface {
     }
     else {
       s = term.r.findAllIn(label).mkString
-      println("label" +s)
       if (s.nonEmpty){
         val diff = (countWords(prefLabel) - countWords(termAnnotated))*2
         if (diff > 0)
