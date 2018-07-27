@@ -43,10 +43,8 @@ object Ols_interface {
       val score_num = get_match_score(get_score(term, prefLabel), service)
 
       if (score_num > 6 && score_num > max_score) {
-        if(ols_get_status(ontology,iri).contains("200")) {
-          max_score = score_num
-          result = (ontology, ontology_id)
-        }
+        max_score = score_num
+        result = (ontology, ontology_id)
       }
     }
     result
