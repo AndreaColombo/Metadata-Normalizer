@@ -20,6 +20,7 @@ object db_interface {
       val tid = db_handler.get_tid(res.head.apply("source"),res.head.apply("code"))
       db_handler.syn_insert(List(cv_support_syn_type(tid,raw_value,"raw")))
       db_handler.raw_insert(List(cv_support_raw_type(tid,raw_value,table_name,column_name,method)))
+      println(tid)
       db_handler.update_tid(raw_value,Some(tid))
       insert_hyp(cv_support, res)
       unfold_hyp(tid)
