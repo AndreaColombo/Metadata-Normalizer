@@ -6,7 +6,7 @@ import scala.util.control.Breaks._
 
 object ontologies_set_calculator {
 
-  def calculate_ontology_set(t: String, threshold: Double = 0.90): Unit = {
+  def calculate_ontology_set(t: String, threshold: Double = 0.75): Unit = {
 
     var result: Seq[(String, String, Double, Double, Double)] = List()
     var score1 = 0.0
