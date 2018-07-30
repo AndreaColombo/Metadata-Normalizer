@@ -10,7 +10,7 @@ object db_interface {
 
   case class cv_support(tid: String, source: String, code: String, label: String)
 
-  def db_interface(res: List[Map[String, String]], raw_value: String = "", table_name: String, column_name: String, method: Char): Unit = {
+  def db_interface(res: List[Map[String, String]], raw_value: String, table_name: String, column_name: String, method: Char): Unit = {
     var cv_support: List[cv_support] = List()
     if (res.nonEmpty) {
       for (elem <- res) {
@@ -20,13 +20,6 @@ object db_interface {
       val tid = db_handler.get_tid(res.head.apply("source"),res.head.apply("code"))
       db_handler.syn_insert(List(cv_support_syn_type(tid,raw_value,"raw")))
       db_handler.raw_insert(List(cv_support_raw_type(tid,raw_value,table_name,column_name,method)))
-      if(tid != null){
-        println(tid)
-      }
-      else if (tid==null){
-        println("wtf")
-      }
-      else println("wtf2")
       db_handler.update_tid(raw_value,Some(tid))
       insert_hyp(cv_support, res)
       unfold_hyp(tid)

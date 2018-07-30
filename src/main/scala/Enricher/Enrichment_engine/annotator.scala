@@ -47,7 +47,7 @@ object annotator {
       val anc = get_hyp(parents, onto, 0,tmp.head(1))
 
       if(!db_handler.cv_support_exists(onto,tmp.head(1)))
-      result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8),"iri"->tmp.head.last)
+        result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8),"iri"->tmp.head.last)
 
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM

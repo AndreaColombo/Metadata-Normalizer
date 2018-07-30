@@ -41,7 +41,7 @@ object main extends App {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection")) {
         user_interface.get_user_feedback()
       }
-      else if (args(0).equals("reset")) {
+      else if (args(0).equals("reset")){
         db_handler.null_gcm()
         db_handler.reset_db()
         db_handler.init()

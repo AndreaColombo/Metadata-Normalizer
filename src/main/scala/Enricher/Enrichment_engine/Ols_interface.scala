@@ -49,6 +49,8 @@ object Ols_interface {
           result = (ontology, ontology_id)
         }
       }
+//      else if (score_num == max_score) {//flag conf
+//      }
     }
     result
   }
@@ -70,7 +72,6 @@ object Ols_interface {
     var attempts = 0
     val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
     var status = ols_get_status(source,iri)
-    var ok = false
 
     while (!status.contains("200") && attempts <= 5){
       Thread.sleep(10000)
@@ -114,7 +115,6 @@ object Ols_interface {
       else children = List("null")
 
       rows :+= List(ontology, ontology_id, prefLabel, xref.mkString(","), synonym, parents.mkString(","), children.mkString(","), part_of.mkString(","),description,iri)
-      attempts += 1
     }
     else {
       logger.warn(s"Ols retrieval failed after $attempts attempts")
