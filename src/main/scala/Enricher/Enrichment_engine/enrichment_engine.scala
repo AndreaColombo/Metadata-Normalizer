@@ -47,7 +47,7 @@ object enrichment_engine {
           }
         }
         else {
-          println("Value found syn type")
+          println("Value found pref type")
           logger.info(s"Value $raw_value found as PREF in local KB")
           val suggestion = db_handler.get_cv_support_by_tid(result_syn.tid)
           if (!db_handler.user_fb_exist(raw_value, suggestion.source, suggestion.code)) {

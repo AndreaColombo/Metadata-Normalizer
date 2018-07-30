@@ -16,7 +16,7 @@ object Preprocessing {
     for (s <- input){
       val raw_value = s
       var tmp = ""
-      val raw_input = raw_value.replace(""""""", "").replace("""\""", "").replace("/", ",").replace(";", ",").split(",")
+      val raw_input = raw_value.replace(""""""", "").replace("""\""", "").replace(";", ",").split(",")
 //      println("raw "+raw_value)
       for (a <- raw_input){
         val medium_value = line_parse(line_parse(a))
@@ -80,6 +80,10 @@ object Preprocessing {
     //TRATTINI
     if(str.contains("-")){
       str += "," + str.replace("-"," ")
+    }
+
+    if(str.contains("/")){
+      str += "," + str.replace("/"," ")
     }
     ltrim(rtrim(str))
   }

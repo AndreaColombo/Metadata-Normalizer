@@ -208,7 +208,7 @@ object db_handler {
     val default = (-1, "")
     val type_tid = t + "_tid"
     val q =
-    sql"""select distinct #$t as value
+    sql"""select distinct lower (#$t)
            from #$table
            where #$t IS NOT NULL AND
            #$type_tid IS NULL"""
@@ -265,14 +265,14 @@ object db_handler {
           sqlu"""
              update #$table_name
              set #$tid = ${new_tid.get}
-             where #$column_name = $value
+             where #$column_name ilike $value
             """
         }
         else {
           sqlu"""
              update #$table_name
              set #$tid = null
-            where #$column_name = $value
+             where #$column_name ilike $value
             """
         }
       val db = get_db()

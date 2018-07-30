@@ -51,7 +51,6 @@ object OlsParser {
         }
       }
     }
-
     if (s.nonEmpty){
       val diff = (countWords(prefLabel) - countWords(termAnnotated))*2
       if (diff > 0)
@@ -70,7 +69,7 @@ object OlsParser {
 
   def countWords(text: String): Int = {
     var counts = 0
-    for (rawWord <- text.split("[ ,!.-]+")) {
+    for (rawWord <- text.split("[ ,!.-7/]+")) {
       counts += 1
     }
     counts
