@@ -8,6 +8,7 @@ import Enrichment_engine.{Ols_interface, enrichment_engine}
 import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import org.slf4j.LoggerFactory
 
 object main extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
@@ -30,6 +31,11 @@ object main extends App {
   override def main(args: Array[String]): Unit = {
     //setup logger
     setup_logger()
+
+//    TODO Andrea please remove these two lines
+    LoggerFactory.getLogger(this.getClass).debug("test-debug")
+    LoggerFactory.getLogger(this.getClass).error("test-error")
+
     config.conf.getObject("db_config")
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection")) {
