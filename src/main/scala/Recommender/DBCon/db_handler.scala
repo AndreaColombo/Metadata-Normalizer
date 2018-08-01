@@ -371,9 +371,10 @@ object db_handler {
     val db = Database.forConfig("gecotest2", conf)
     val q =
       sql"""
-           select *
-           from public.best_onto_per_term
-           where term_type = $term_type
+            select *
+            from public.best_onto_per_term
+            where term_type = $term_type
+            and coverage > 0.05
          """.as[(String, String, String, String, String)]
 
     val result_future = db.run(q).map(a=>
