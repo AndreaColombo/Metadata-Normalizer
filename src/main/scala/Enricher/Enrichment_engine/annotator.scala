@@ -2,13 +2,11 @@ package Enricher.Enrichment_engine
 
 import java.sql.BatchUpdateException
 
-import Enricher.DBCon.{default_values, db_handler, user_feedback_type}
-import Ols_interface.{ols_get_info,ols_search_term,ols_get_user_feedback,ols_get_status,ols_get_iri}
-
-import util.control.Breaks._
 import Config.config.{get_anc_limit, get_desc_limit, get_ontologies_by_type}
-import org.apache.log4j._
+import Enricher.DBCon.{db_handler, default_values, user_feedback_type}
+import Enricher.Enrichment_engine.Ols_interface._
 import Utilities.Utils.get_timestamp
+import org.apache.log4j._
 
 object annotator {
   val max_depth_anc: Int = get_anc_limit()
@@ -16,20 +14,24 @@ object annotator {
 
   val logger: Logger = Logger.getLogger(this.getClass)
 
-  def search_term(raw_value: String, term_type: String): (String, String) = {
-    var res: List[(String, String, String, String, String, String, String, String)] = List()
-    var result: (String, String) = ("","")
+  def search_term(raw_value: String, term_type: String): search_term_result = {
+    var result = search_term_result(List(),0)
     val ontos = get_ontologies_by_type(term_type)
     var ok = false
+    var best_score = 0
     for (onto <- ontos if !ok){
       val tmp = ols_search_term(raw_value,onto)
-      breakable {
-        if (tmp._1 == "null")
-          break()
-        else {
-          result = (tmp._1,tmp._2)
-          ok = true
-        }
+      if (tmp.score==10){
+        result = tmp
+        ok = true
+      }
+      else if (tmp.score > best_score){
+        result = tmp
+        best_score = tmp.score
+      }
+      else if (tmp.score == best_score){
+        val l = result.options ++ tmp.options
+        result = search_term_result(l,tmp.score)
       }
     }
     result

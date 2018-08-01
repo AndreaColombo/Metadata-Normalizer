@@ -1,19 +1,17 @@
 package Enricher.DBCon
 
-import scala.concurrent._
-import slick.jdbc.PostgresProfile.api._
 import java.sql.{BatchUpdateException, SQLTransientConnectionException}
 
 import Config.config
+import Config.config._
+import Enricher.DBCon.Tables._
+import org.apache.log4j.Logger
+import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.meta.MTable
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import Tables.{cv_support, cv_support_raw, cv_support_syn, cv_support_xref, onto_support_hyp, onto_support_hyp_unfolded, ontology, user_changes, user_feedback}
-
+import scala.concurrent._
 import scala.concurrent.duration.Duration
-import slick.jdbc.meta.MTable
-import Config.config._
-import org.apache.log4j.Logger
-import slick.sql.SqlAction
 
 object db_handler {
   val logger: Logger = Logger.getLogger(this.getClass)
@@ -23,7 +21,7 @@ object db_handler {
   def db_name: String = _db_name
   def set_db_name(value: String): Unit = _db_name = value
 
-  protected def get_db(): Database = {
+  def get_db(): Database = {
     var db: Database = null
     var attempts = 0
     while(db==null & attempts != 5){
@@ -234,24 +232,32 @@ object db_handler {
   def get_cv_support_syn_by_value(raw_value: String): cv_support_syn_type = {
     var result = cv_support_syn_type()
     val db = get_db()
-    val q = cv_support_syn.filter(a => a.label === raw_value).result.headOption
+    val q = cv_support_syn.filter(a => a.label.toLowerCase === raw_value.toLowerCase).result.headOption
     val f = db.run(q).map(a =>
       if(a.isDefined)
-        result = cv_support_syn_type(a.get.tid, a.get.label,a.get.ttype))
+        result = a.get)
     Await.result(f, Duration.Inf)
     db.close()
     result
   }
 
-  def check_completeness(raw_value: String): Boolean = {
-    var result = false
-
-    val q = cv_support_syn.filter(a => a.label === raw_value && a.ttype === "raw").exists
-
+  def get_cv_support_raw(where: cv_support_raw => Rep[Boolean]): cv_support_raw_type = {
+    var result = cv_support_raw_type()
     val db = get_db()
+    cv_support_raw.filter(a => a.table_name === "biosample")
+    val q = for {
+      a: cv_support_raw <- cv_support_raw
+//      where(a)
+       if where(a)
+    } yield a
 
-    Await.result(db.run(q.result).map(a => result = a),Duration.Inf)
 
+    val f = db.run(q.result.headOption).map(a =>
+      if(a.isDefined)
+        result = a.get
+    )
+    Await.result(f, Duration.Inf)
+    db.close()
     result
   }
 
@@ -310,7 +316,7 @@ object db_handler {
   def get_raw_user_changes(table_name: String, column_name: String, raw_value: String): (String, String) = {
     val db = get_db()
     var result = ("null","null")
-    val q = user_changes.filter(a=>a.table_name===table_name && a.column_name===column_name && a.raw_value===raw_value).map(a=>(a.source,a.code))
+    val q = user_changes.filter(a=>a.table_name===table_name && a.column_name===column_name && a.raw_value.toLowerCase===raw_value.toLowerCase).map(a=>(a.source,a.code))
     val f = db.run(q.result).map(a=>
       if(a.nonEmpty)
         result=a.head

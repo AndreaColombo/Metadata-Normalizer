@@ -5,7 +5,6 @@ import java.net.{SocketTimeoutException, URLEncoder}
 import Config.config
 import Config.config.get_ontologies_by_type
 import Enricher.DBCon.{db_handler, default_values, ontology_type, user_feedback_type}
-import Enricher.Enrichment_engine.annotator.logger
 import Recommender.Ontologies.Parsers.OlsParser.countWords
 import Utilities.Preprocessing
 import Utilities.score_calculator.get_match_score
@@ -14,18 +13,19 @@ import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsValue, Json}
 import scalaj.http.{Http, HttpOptions}
 
+case class source_code_label(source: String, code: String, label: String)
+case class search_term_result(options: List[source_code_label], score: Int)
+
 object Ols_interface {
+  val logger = LoggerFactory.getLogger(this.getClass)
 
   def ols_get_status(source: String, iri: String): String = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get
 
-  def ols_search_term(term: String, onto: String): (String, String) = {
+  def ols_search_term(term: String, onto: String): search_term_result = {
     val url = "https://www.ebi.ac.uk/ols/api/search"
     val response = Http(url).param("q", term).param("fieldList", "label,short_form,synonym,ontology_name,iri").param("ontology", onto).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-    var max_score = 0
-    var result: (String, String)  = ("null", "null")
-    var j: JsValue = null
 
-    val logger = LoggerFactory.getLogger(this.getClass)
+    var j: JsValue = null
     try {
       j = (Json.parse(response) \ "response").get("docs")
     }
@@ -33,24 +33,29 @@ object Ols_interface {
       case e: JsonParseException => logger.info("json parse error",e)
     }
 
-    val service = "Ols"
     val range = j \\ "label"
+    var result = search_term_result(List(),0)
+
     for (i <- range.indices) {
       val j2 = j(i)
       val prefLabel = (j2 \ "label").validate[String].get
       val ontology = (j2 \ "ontology_name").validate[String].get
       val ontology_id = (j2 \ "short_form").validate[String].get
       val iri = (j2 \ "iri").validate[String].get
-      val score_num = get_match_score(get_score(term, prefLabel), service)
+      val synonyms = (j2 \ "synonym").validate[List[String]].getOrElse(List())
+      val score_num = get_score(term,prefLabel,synonyms)
 
-      if (score_num >= config.get_threshold() && score_num > max_score) {
+      if (score_num >= config.get_threshold() && score_num > result.score) {
         if(ols_get_status(ontology,iri).contains("200")){
-          max_score = score_num
-          result = (ontology, ontology_id)
+          result = search_term_result(List(source_code_label(ontology,ontology_id,prefLabel)),score_num)
         }
       }
-//      else if (score_num == max_score) {//flag conf
-//      }
+      else if (score_num >= config.get_threshold() && score_num == result.score) {
+        if(ols_get_status(ontology,iri).contains("200")) {
+          val l = result.options :+ source_code_label(ontology,ontology_id,prefLabel)
+          result = search_term_result(l,score_num)
+        }
+      }
     }
     result
   }
@@ -159,8 +164,9 @@ object Ols_interface {
     }
     result
   }
-  def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): String = {
-    var score = ""
+
+  def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): Int = {
+    var score = 0
     val term = termAnnotated.replace("-"," ").map(_.toLower)
     val label = prefLabel.replace("-"," ").map(_.toLower)
     var s = ""
@@ -169,21 +175,41 @@ object Ols_interface {
       if (s.nonEmpty){
         val diff = (countWords(termAnnotated) - countWords(prefLabel))*2
         if (diff > 0)
-          score = "PREF - "+diff
-        else score = "PREF"
+          score = 10-diff
+        else score = 10
       }
-      else score = "LOW"
     }
     else {
       s = term.r.findAllIn(label).mkString
       if (s.nonEmpty){
         val diff = (countWords(prefLabel) - countWords(termAnnotated))*2
         if (diff > 0)
-          score = "PREF - "+diff
-        else score = "PREF"
+          score = 10-diff
+        else score = 10
       }
-      else score = "LOW"
     }
-    score
+
+    var score_syn = 0
+    for (elem <- synonym_l) {
+      if (term.length > elem.length){
+        s = elem.r.findAllIn(term).mkString
+        if (s.nonEmpty){
+          val diff = (countWords(termAnnotated) - countWords(elem))*2
+          if (diff > 0)
+            score_syn = 10-1-diff
+          else score_syn = 10-1
+        }
+      }
+      else {
+        s = term.r.findAllIn(elem).mkString
+        if (s.nonEmpty){
+          val diff = (countWords(elem) - countWords(termAnnotated))*2
+          if (diff > 0)
+            score_syn = 10-1-diff
+          else score_syn = 10-1
+        }
+      }
+    }
+    math.max(score,score_syn)
   }
 }

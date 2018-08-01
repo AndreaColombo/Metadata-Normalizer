@@ -16,14 +16,16 @@
         </layout>
     </appender>
 
-    <!-- TODO Andrea remove this or set as DEBUG-->
     <logger name="Enricher">
-        <level value="INFO"/>
+        <level value="DEBUG"/>
     </logger>
 
-    <!-- TODO Andrea try with set as DEBUG and INFO or WARN-->
     <logger name="slick">
-        <level value="INFO"/>
+        <level value="WARN"/>
+    </logger>
+
+    <logger name="com.zaxxer.hikari">
+        <level value="WARN"/>
     </logger>
 
     <root>
