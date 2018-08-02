@@ -82,7 +82,6 @@ object enrichment_engine {
                 db_handler.syn_insert(List(cv_support_syn_type(tid,raw_value,"RAW")))
               }
             }
-            println(result)
             db_interface.db_interface(result, raw_value, table_name, column_name, 'O')
           }
           else {
