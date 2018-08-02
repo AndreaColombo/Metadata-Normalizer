@@ -26,12 +26,12 @@ object enrichment_engine {
       //LOCAL KB LOOKUP
       if (result_raw.tid != default_values.int) {
         //VALUE FOUND RAW
-        logger.info(s"Value \"$raw_value\" found as RAW in local KB")
+        logger.info(s"""Value "$raw_value" found as RAW in local KB""")
         db_handler.update_tid(raw_value, Some(result_syn.tid))
       }
       else if (result_user_changes._1 != "null") {
         //VALUE FOUND IN USER CHANGES
-        logger.info(s"Value \"$raw_value\" found in user changes")
+        logger.info(s"""Value "$raw_value" found in user changes""")
         val source = result_user_changes._1
         val a = Ols_interface.ols_get_onto_info(source)
         if (!db_handler.onto_exist(a.source)) {
@@ -42,14 +42,14 @@ object enrichment_engine {
       else if(result_syn.tid != default_values.int) {
         //VALUE FOUND PREF OR SYN
         if (result_syn.ttype == "pref") {
-          logger.info(s"Value \"$raw_value\" found as PREF in local KB")
+          logger.info(s"""Value "$raw_value" found as PREF in local KB""")
           val suggestion = db_handler.get_cv_support_by_tid(result_syn.tid)
           if (!db_handler.user_fb_exist(raw_value, suggestion.source, suggestion.code)) {
             db_handler.user_feedback_insert(List(user_feedback_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:PREF", get_timestamp())))
           }
         }
         else {
-          logger.info(s"Value \"$raw_value\" found as SYN in local KB")
+          logger.info(s"""Value "$raw_value" found as SYN in local KB""")
           val suggestion = db_handler.get_cv_support_by_tid(result_syn.tid)
           if (!db_handler.user_fb_exist(raw_value, suggestion.source, suggestion.code)) {
             db_handler.user_feedback_insert(List(user_feedback_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:SYN", get_timestamp())))
@@ -63,7 +63,7 @@ object enrichment_engine {
         //BEST MATCH FOUND
         if (result_search.options.nonEmpty) {
           if (result_search.options.length == 1) {
-            logger.info(s"Value \"$raw_value\" best match found in online KB")
+            logger.info(s"""Value "$raw_value" best match found in online KB""")
             val source = result_search.options.head.source
             val code = result_search.options.head.code
             val a = Ols_interface.ols_get_onto_info(source)
@@ -85,7 +85,7 @@ object enrichment_engine {
           }
           else {
             //MULTIPLE RESULTS, BEST MATCH UNDECIDED
-            logger.info(s"Best match undecided for value \"$raw_value\"")
+            logger.info(s"""Best match undecided for value "$raw_value"""")
             for (elem <- result_search.options){
               val source = elem.source
               val code = elem.code
