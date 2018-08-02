@@ -34,14 +34,6 @@ object main extends App {
     //setup logger
     setup_logger()
     config.conf.getObject("db_config")
-    val a = annotator.search_term("carcinoma (prostate)","disease")
-    println(a)
-    val b = Set("adenosquamous","prostate", "carcinoma")
-    val c = Set("prostate", "carcinoma")
-
-//    println(b.diff(c))
-
-
 
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection")) {
