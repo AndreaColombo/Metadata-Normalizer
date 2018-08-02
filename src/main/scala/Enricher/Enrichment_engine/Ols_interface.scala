@@ -168,53 +168,36 @@ object Ols_interface {
   }
 
   def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): Int = {
-    var score = 0
-    val term = termAnnotated.replace("-"," ").map(_.toLower)
-    val label = prefLabel.replace("-"," ").map(_.toLower)
+    val term = termAnnotated.replace("-"," ").replace("(","").replace(")","").map(_.toLower).split(" ").toSet
+    val label = prefLabel.replace("-"," ").replace("(","").replace(")","").map(_.toLower).split(" ").toSet
     var s = ""
     val pref = config.get_score("pref")
     val syn = config.get_score("syn")
     val penalty = config.get_excess_words_penalty()
-    if (term.length > label.length){
-      s = label.r.findAllIn(term).mkString
-      if (s.nonEmpty){
-        val diff = (countWords(termAnnotated) - countWords(prefLabel))*penalty
-        if (diff > 0)
-          score = pref-diff
-        else score = pref
-      }
+    var difference = 0
+    if (term.size > label.size) {
+      difference = term.diff(label).size
     }
     else {
-      s = term.r.findAllIn(label).mkString
-      if (s.nonEmpty){
-        val diff = (countWords(prefLabel) - countWords(termAnnotated))*penalty
-        if (diff > 0)
-          score = pref-diff
-        else score = pref
-      }
+      difference = label.diff(term).size
     }
+    val score = pref - difference * penalty
 
     var score_syn = 0
+    var max_score_syn = 0
     for (elem <- synonym_l) {
-      if (term.length > elem.length){
-        s = elem.r.findAllIn(term).mkString
-        if (s.nonEmpty){
-          val diff = (countWords(termAnnotated) - countWords(elem))*penalty
-          if (diff > 0)
-            score_syn = syn-diff
-          else score_syn = syn
-        }
+      val syn_set = elem.replace("-"," ").replace("(","").replace(")","").map(_.toLower).split(" ").toSet
+      var diff = 0
+      if (term.size>syn_set.size) {
+        diff = term.diff(syn_set).size
       }
       else {
-        s = term.r.findAllIn(elem).mkString
-        if (s.nonEmpty){
-          val diff = (countWords(elem) - countWords(termAnnotated))*penalty
-          if (diff > 0)
-            score_syn = syn-diff
-          else score_syn = syn
-        }
+        diff = syn_set.diff(term).size
       }
+      score_syn = syn - diff*penalty
+      if(score_syn>max_score_syn)
+        max_score_syn=score_syn
     }
-    math.max(score,score_syn)
+    math.max(score,max_score_syn)
   }
 }

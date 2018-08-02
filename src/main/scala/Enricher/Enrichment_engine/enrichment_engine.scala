@@ -3,7 +3,7 @@ package Enricher.Enrichment_engine
 
 import Config.config
 import Enricher.DBCon.Tables._
-import Enricher.DBCon.{cv_support_raw_type, db_handler, default_values, user_feedback_type}
+import Enricher.DBCon._
 import Utilities.Utils.get_timestamp
 import org.slf4j.LoggerFactory
 import slick.jdbc.PostgresProfile.api._
@@ -78,6 +78,7 @@ object enrichment_engine {
                 existing_value.column_name != column_name ||
                 existing_value.label != raw_value) {
                 db_handler.raw_insert(List(cv_support_raw_type(tid, raw_value, table_name, column_name, 'R')))
+                db_handler.syn_insert(List(cv_support_syn_type(tid,raw_value,"RAW")))
               }
             }
             val result = annotator.get_info(source,code, raw_value, table_name, column_name)

@@ -1,19 +1,20 @@
-+ nell'enrichment_engine, il controllo della riga 19/20 se il valore è presente in cv_support_syn con type="raw" va invece fatto nella tabella cv_supprt_raw
+﻿+ nell'enrichment_engine, il controllo della riga 19/20 se il valore è presente in cv_support_syn con type="raw" va invece fatto nella tabella cv_supprt_raw
 
-+ Dopo check di esistenza del source+code in cv_support, controllare anche se esiste già quel source+code in cv_support_raw con label diversa. Nel caso fare inserimento e anche in cv_support_syn (questo era il punto (3) dell'algoritmo 1-2-3)
++ Dopo check di esistenza del source+code in cv_support, controllare anche se esiste già quel source+code in cv_support_raw con label diversa. 
+Nel caso fare inserimento e anche in cv_support_syn (questo era il punto (3) dell'algoritmo 1-2-3)
 
 + gestione lower/upper case. Per i PREF e SYN si lascia il risultato da OLS. Per i raw, quando vengono letti dal GCM si fa 
 my_raw = select lower(disease), 
 quando si fa update
 update set tid = ? where lower(disease) = my_raw
 
-- USERFEEDBACK: Capire perchè indian/arabian viene tradotto nei parsed_value "indian", "arabian" e non c'è "indian/arabian" e "indian arabian".
++ USERFEEDBACK: Capire perchè indian/arabian viene tradotto nei parsed_value "indian", "arabian" e non c'è "indian/arabian" e "indian arabian".
 ANNOTATION: Quando calcoli il matchscore del raw value devi usare "indian arabian" (e non gli altri parsed values)
 
 + Aggiungere controllo anche sui sinonimi quando si chiama searchTerm (simile a come facevi in parte 1)
 https://www.ebi.ac.uk/ols/api/search?q=adult+primary+hepatocellular+carcinoma&fieldList=iri,label,short_form,obo_id,ontology_name,ontology_prefix,description,type,synonym
 
-+ Implementare lista che contiene i match preflabel o synonym con relativo matchscore
++ Implementare lista che contiene i match preflabel o synonym con relativo matchscore ?
 
 + Cambiare i punteggi:
 10 = preflabel exact
@@ -26,7 +27,7 @@ Spostare il threshold per inserire annotazione automatica a 5 (ora è 6)
 
 +Inserire in user_feedback quando ci sono più risultati con lo stesso matchscore (inserisci direttamente i valori che hanno lo stesso best match score, senza chiamare i parsed_values ecc). ONLINE:MULT_BEST
 
-- Nelle configurazioni aggiungere
++ Nelle configurazioni aggiungere
   --flag per attivare o meno scelta random quando ci sono best match score uguali
   --punteggio a best match preflabel = 10
   --punteggio a best match synonym = 9
