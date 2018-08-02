@@ -37,4 +37,11 @@ object config  {
   def get_gcm_table_list(): List[String] = conf.getObject("db_config").keySet().asScala.toList
 
   def get_bp_apikey(): String = conf.getString("bioportal_apikey")
+
+  def get_score(match_type: String): Int = conf.getInt("scores.match_score_"+match_type.toLowerCase)
+
+  def get_excess_words_penalty(): Int = conf.getInt("scores.excess_words_penalty")
+
+  def get_search_mode(): Boolean = conf.getBoolean("match_mode_random")
 }
+

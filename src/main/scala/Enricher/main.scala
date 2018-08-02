@@ -4,10 +4,12 @@ import java.util.Calendar
 
 import Config.config
 import Enricher.DBCon.db_handler
-import Enricher.Enrichment_engine.enrichment_engine
+import Enricher.DBCon.Tables._
+import Enrichment_engine.{Ols_interface, annotator, enrichment_engine}
 import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import slick.jdbc.PostgresProfile.api._
 
 
 object main extends App {
@@ -31,9 +33,7 @@ object main extends App {
   override def main(args: Array[String]): Unit = {
     //setup logger
     setup_logger()
-
     config.conf.getObject("db_config")
-
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection")) {
         user_interface.get_user_feedback()

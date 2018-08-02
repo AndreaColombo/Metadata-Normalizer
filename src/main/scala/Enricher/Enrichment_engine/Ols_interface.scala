@@ -9,7 +9,7 @@ import Recommender.Ontologies.Parsers.OlsParser.countWords
 import Utilities.Preprocessing
 import Utilities.score_calculator.get_match_score
 import com.fasterxml.jackson.core.JsonParseException
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsValue, Json}
 import scalaj.http.{Http, HttpOptions}
 
@@ -17,7 +17,7 @@ case class source_code_label(source: String, code: String, label: String)
 case class search_term_result(options: List[source_code_label], score: Int)
 
 object Ols_interface {
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   def ols_get_status(source: String, iri: String): String = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get
 
@@ -50,7 +50,7 @@ object Ols_interface {
           result = search_term_result(List(source_code_label(ontology,ontology_id,prefLabel)),score_num)
         }
       }
-      else if (score_num >= config.get_threshold() && score_num == result.score) {
+      else if (!config.get_search_mode() && score_num >= config.get_threshold() && score_num == result.score) {
         if(ols_get_status(ontology,iri).contains("200")) {
           val l = result.options :+ source_code_label(ontology,ontology_id,prefLabel)
           result = search_term_result(l,score_num)
@@ -170,22 +170,25 @@ object Ols_interface {
     val term = termAnnotated.replace("-"," ").map(_.toLower)
     val label = prefLabel.replace("-"," ").map(_.toLower)
     var s = ""
+    val pref = config.get_score("pref")
+    val syn = config.get_score("syn")
+    val penalty = config.get_excess_words_penalty()
     if (term.length > label.length){
       s = label.r.findAllIn(term).mkString
       if (s.nonEmpty){
-        val diff = (countWords(termAnnotated) - countWords(prefLabel))*2
+        val diff = (countWords(termAnnotated) - countWords(prefLabel))*penalty
         if (diff > 0)
-          score = 10-diff
-        else score = 10
+          score = pref-diff
+        else score = pref
       }
     }
     else {
       s = term.r.findAllIn(label).mkString
       if (s.nonEmpty){
-        val diff = (countWords(prefLabel) - countWords(termAnnotated))*2
+        val diff = (countWords(prefLabel) - countWords(termAnnotated))*penalty
         if (diff > 0)
-          score = 10-diff
-        else score = 10
+          score = pref-diff
+        else score = pref
       }
     }
 
@@ -194,19 +197,19 @@ object Ols_interface {
       if (term.length > elem.length){
         s = elem.r.findAllIn(term).mkString
         if (s.nonEmpty){
-          val diff = (countWords(termAnnotated) - countWords(elem))*2
+          val diff = (countWords(termAnnotated) - countWords(elem))*penalty
           if (diff > 0)
-            score_syn = 10-1-diff
-          else score_syn = 10-1
+            score_syn = syn-diff
+          else score_syn = syn
         }
       }
       else {
         s = term.r.findAllIn(elem).mkString
         if (s.nonEmpty){
-          val diff = (countWords(elem) - countWords(termAnnotated))*2
+          val diff = (countWords(elem) - countWords(termAnnotated))*penalty
           if (diff > 0)
-            score_syn = 10-1-diff
-          else score_syn = 10-1
+            score_syn = syn-diff
+          else score_syn = syn
         }
       }
     }
