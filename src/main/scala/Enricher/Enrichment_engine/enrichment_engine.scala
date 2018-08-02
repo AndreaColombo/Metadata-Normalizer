@@ -70,18 +70,19 @@ object enrichment_engine {
             if (!db_handler.onto_exist(a.source)) {
               db_handler.insert_ontology(a)
             }
-            if (db_handler.cv_support_exists(source, code)) {
+            val result = annotator.get_info(source,code, raw_value, table_name, column_name)
+            if (db_handler.cv_support_exists(source, code) && result.isEmpty) {
               val tid = db_handler.get_tid(source, code)
               val condition = (a: cv_support_raw) => a.tid === tid
               val existing_value = db_handler.get_cv_support_raw(condition)
               if (existing_value.table_name != table_name ||
-                existing_value.column_name != column_name ||
-                existing_value.label != raw_value) {
-                db_handler.raw_insert(List(cv_support_raw_type(tid, raw_value, table_name, column_name, 'R')))
+              existing_value.column_name != column_name ||
+              existing_value.label != raw_value) {
+                db_handler.raw_insert(List(cv_support_raw_type(tid, raw_value, table_name, column_name, 'O')))
                 db_handler.syn_insert(List(cv_support_syn_type(tid,raw_value,"RAW")))
               }
             }
-            val result = annotator.get_info(source,code, raw_value, table_name, column_name)
+            println(result)
             db_interface.db_interface(result, raw_value, table_name, column_name, 'O')
           }
           else {
