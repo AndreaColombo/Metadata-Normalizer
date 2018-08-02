@@ -140,7 +140,9 @@ object Ols_interface {
         val label = (jj \ "label").validate[String].get
         val id = (jj \ "short_form").validate[String].get
         val onto = (jj \ "ontology_name").validate[String].get
-        val score_num = get_match_score(get_score(raw_value, label), "Ols")
+        val synonyms = (jj \ "synonym").validate[List[String]].getOrElse(List())
+
+        val score_num = get_score(raw_value, label,synonyms)
         if (!rows.exists(_.code.get==id) && !db_handler.user_fb_exist(raw_value,onto,id))
           rows :+= user_feedback_type(default_values.int, default_values.bool, table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,Utilities.Utils.get_timestamp())
       }
