@@ -1,8 +1,10 @@
 package Recommender
 
 import Config.config
-import Utilities.score_calculator.{calculate_suitability_score,calculate_score,calculate_ontology_score}
+import Utilities.score_calculator.{calculate_ontology_score, calculate_score, calculate_suitability_score}
 import Recommender.DBCon.db_handler
+import play.api.libs.json.Json
+import scalaj.http.{Http, HttpOptions}
 
 object main {
 
@@ -76,7 +78,11 @@ object main {
         calculate_suitability_score(col)
       }
     }
-    else print_manual()
+    val url = "https://www.ebi.ac.uk/ols/api/search"
+    val term = "melanoma"
+    val response = Http(url).param("q",term).param("fieldList","label,short_form,synonym,ontology_name").param("rows","15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+
+      println(Json.prettyPrint(Json.parse(response)))
   }
 
   def print_manual(): Unit = {

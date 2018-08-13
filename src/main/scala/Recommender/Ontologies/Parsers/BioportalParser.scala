@@ -60,7 +60,7 @@ object BioportalParser {
       val ontology = ontology_raw.head
       val ontology_id = ontology_raw(1)
       val term_type = ""
-      val current = List(service,raw_value,parsed_value,ontology.map(_.toLower) ,ontology_id,prefLabel,synonym,score,term_type)
+      val current = List(service,raw_value,parsed_value,ontology.map(_.toLower),ontology_id,prefLabel,synonym,score,term_type)
       if (!rows.exists(p => p.equals(current)))
         rows :+= current
     }
