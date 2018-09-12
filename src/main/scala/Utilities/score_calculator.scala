@@ -30,7 +30,7 @@ object score_calculator {
       if (matchType.equalsIgnoreCase("HIGH")) score = 10
       else if (matchType.equalsIgnoreCase("GOOD")) score = 7
       else if (matchType.equalsIgnoreCase("MEDIUM")) score = 5
-      else if (matchType.equalsIgnoreCase("LOW")) score = 3
+      else if (matchType.equalsIgnoreCase("LOW")) score = 1
     }
     else {
       if (matchType.startsWith("PREF")) {
