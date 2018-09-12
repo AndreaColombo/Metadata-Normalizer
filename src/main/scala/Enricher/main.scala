@@ -4,12 +4,10 @@ import java.util.Calendar
 
 import Config.config
 import Enricher.DBCon.db_handler
-import Enricher.DBCon.Tables._
 import Enrichment_engine.{Ols_interface, annotator, enrichment_engine}
 import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import slick.jdbc.PostgresProfile.api._
 
 
 object main extends App {
