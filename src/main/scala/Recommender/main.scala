@@ -78,11 +78,6 @@ object main {
         calculate_suitability_score(col)
       }
     }
-    val url = "https://www.ebi.ac.uk/ols/api/search"
-    val term = "melanoma"
-    val response = Http(url).param("q",term).param("fieldList","label,short_form,synonym,ontology_name").param("rows","15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-
-      println(Json.prettyPrint(Json.parse(response)))
   }
 
   def print_manual(): Unit = {
