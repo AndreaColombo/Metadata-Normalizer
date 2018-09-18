@@ -15,7 +15,7 @@ object ontologies_set_calculator {
     val a = db_handler.get_nrv(t)
     println(t + "\n")
 
-    for (i <- 0 until ontos.length/4){
+    for (i <- 0 until ontos.length){
       val onto1 = ontos(i)._2
       val terms1 = db_handler.get_term_by_ontology(onto1, t).toSet
       breakable {
@@ -37,7 +37,7 @@ object ontologies_set_calculator {
           result :+= (t, onto1, coverage, weight1_sc1/terms1.size,weight1_suit/terms1.size)
         }
 
-        for (j <- i + 1 until ontos.length/2) {
+        for (j <- i + 1 until ontos.length) {
           val onto2 = ontos(j)._2
           val terms2 = db_handler.get_term_by_ontology(onto2, t).toSet
 
