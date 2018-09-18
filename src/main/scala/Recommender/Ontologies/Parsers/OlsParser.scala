@@ -40,7 +40,7 @@ object OlsParser {
     var diff_min = 23456
 
     for (syn <- synonym_l){
-      s3 = termAnnotated.replace("'","").map(_.toLower).r.findAllIn(syn.replace("'","").map(_.toLower)).mkString
+      s3 = termAnnotated.replace("-"," ").map(_.toLower).r.findAllIn(syn.replace("-"," ").map(_.toLower)).mkString
       if (s3.nonEmpty) {
         val diff = (countWords(syn) - countWords(termAnnotated))*2
         if(diff < diff_min){
