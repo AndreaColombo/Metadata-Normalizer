@@ -35,14 +35,12 @@ object db_filler {
       recsys3 = tmp2.splitAt(tmp2.length / 2)._1.mkString(",")
       recsys4 = tmp2.splitAt(tmp2.length / 2)._2.mkString(",")
     }
-//    println("bioportal inizio")
-//    println(s)
-//    db_handler.apiresults_insert(bioportal.input(s),column_name)
-//    println("bioportal fine")
-//    get_timestamp()
-//
-//
-//    println(s)
+
+    println("bioportal inizio")
+    db_handler.apiresults_insert(bioportal.input(s),column_name)
+    println("bioportal fine")
+    get_timestamp()
+
     if(split) {
       println("recsys 1 inizio")
       db_handler.apiresults_insert(recommender.input(recsys1), column_name)
@@ -70,15 +68,15 @@ object db_filler {
       db_handler.apiresults_insert(aa,column_name)
       println("recsys fine")
     }
-//    println("zooma inizio")
-//    db_handler.apiresults_insert(zooma.input(s),column_name)
-//    println("zooma fine")
-//    get_timestamp()
-//
-//    println("ols inizio")
-//    db_handler.apiresults_insert(ols.input(s),column_name)
-//    println("ols fine")
-//    get_timestamp()
+    println("zooma inizio")
+    db_handler.apiresults_insert(zooma.input(s),column_name)
+    println("zooma fine")
+    get_timestamp()
+
+    println("ols inizio")
+    db_handler.apiresults_insert(ols.input(s),column_name)
+    println("ols fine")
+    get_timestamp()
   }
 
   def get_timestamp(): Unit = {
