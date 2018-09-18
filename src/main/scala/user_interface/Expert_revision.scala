@@ -1,5 +1,6 @@
 package user_interface
 
+import Config.config
 import Enricher.DBCon.{db_handler, default_values, expert_preference_type}
 import user_interface.Expert_preference.input_source_code
 
@@ -8,18 +9,36 @@ import scala.io.StdIn
 object Expert_revision {
 
   def revision_routine(): Unit = {
-    var flag = true
+    display_prompt()
+    val user_selection = Expert_preference.get_choice(2)
+    var flag = user_selection == "1"
     while (flag) {
-      //CHIEDERE TABLE E COLUMN
+      println("Choose table")
+      val table_list = config.get_gcm_table_list()
+      for (i <- table_list.indices){
+        println(i+1 + " - " + table_list(i))
+      }
+      val table = table_list(Expert_preference.get_choice(table_list.length).toInt-1)
+
+      println("Choose column")
+      val column_list = config.get_termtype_list(table)
+      for (i <- column_list.indices){
+        println(i+1 + " - " + column_list(i))
+      }
+      val column = column_list(Expert_preference.get_choice(column_list.length).toInt-1)
+      println(table)
+      println(column)
+
       println("Input value to update")
       var value = StdIn.readLine()
-      while (db_handler.get_value_info(value).isEmpty){
+      while (db_handler.get_value_info(value,table,column).isEmpty){
         println("Value not valid")
         println("Input valid value")
         value = StdIn.readLine()
       }
       val source_code = input_source_code()
-      val tuples = db_handler.update_tid(value,null)
+      db_handler.update_tid(value,null,table,column)
+      val tuples = db_handler.get_value_info(value,table,column)
 
       for ((table_name, column_name) <- tuples) {
         db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, value, source_code._1, source_code._2))
@@ -41,5 +60,10 @@ object Expert_revision {
       else if(choice.equalsIgnoreCase("n"))
         flag = false
     }
+  }
+
+  def display_prompt(): Unit = {
+    println("1 - Start revision")
+    println("2 - Go back to home page")
   }
 }

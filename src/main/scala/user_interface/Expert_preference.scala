@@ -3,7 +3,6 @@ package user_interface
 import Config.config.{get_gcm_table_list, get_termtype_list}
 import Enricher.DBCon.{db_handler, default_values, expert_preference_type}
 import Enricher.Enrichment_engine.Ols_interface
-import org.slf4j.LoggerFactory
 import scalaj.http.{Http, HttpOptions}
 import scalax.cli.Table
 import shapeless.Sized
@@ -12,7 +11,6 @@ import scala.util.control.Breaks._
 import scala.io.StdIn
 
 object Expert_preference {
-  val logger = LoggerFactory.getLogger(this.getClass)
   val MANUAL_INSERT_RANGE = 3
   val POSSIBLE_CHOICES_RANGE = 4
 
@@ -23,15 +21,17 @@ object Expert_preference {
         for (rv <- raw_values){
           var i = 0
           val options = db_handler.get_user_feedback_infos(rv)
-          val table = Table(Sized("id","table name", "column name", "raw value", "parsed value","label","source","iri"))
+          val table = Table(Sized("id","table name", "column name", "raw value", "parsed value","label","source","code"))
+          println(rv)
           for (o <- options){
-            table.rows += Sized(i.toString,o.table,o.column,o.raw_value,o.parsed_value.get,o.label.get,o.source.get,o.code.get)
+            table.rows += Sized(i.toString,o.table,o.column,o.raw_value,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"))
             i+=1
           }
           table.alignments
           //CASE RAW VALUE NOT FOUND IN OLS LOOKUP
           if(!options.head.code.isDefined){
             table.print()
+            println()
             display_prompt(false)
             val user_choice = get_choice(MANUAL_INSERT_RANGE)
             //1 MANUAL INSERT
@@ -42,9 +42,9 @@ object Expert_preference {
               val source = user_sourcecode._1
               val code = user_sourcecode._2
               val prefLabel = Ols_interface.ols_get_info(code,source).head(2)
-
               //INSERT IN USER REQUESTED CHOICE
               db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
+              db_handler.set_resolved(rv)
             }
             else if (user_choice.equals("2")){
               breakable {
@@ -52,12 +52,17 @@ object Expert_preference {
               }
             }
             else if (user_choice.equals("3")){
+              println("Returning to home page")
+              println()
+              println()
               return
             }
           }
           //CASE RAW VALUE FOUND BUT NOT BEST MATCH
           else {
             table.print()
+            println()
+            display_prompt(true)
             val user_choice = get_choice(POSSIBLE_CHOICES_RANGE)
             if(user_choice.equals("1")){
               println("Please input manually source and cdoe")
@@ -73,6 +78,7 @@ object Expert_preference {
               val user_selection = get_choice(options.length)
               val a = options(user_selection.toInt)
               db_handler.insert_user_changes(expert_preference_type(default_values.int,a.table,a.column,a.raw_value,a.source.get,a.code.get))
+              db_handler.set_resolved(rv)
             }
             else if (user_choice.equals("3")){
               breakable {
@@ -80,13 +86,18 @@ object Expert_preference {
               }
             }
             else if (user_choice.equals("4")){
+              println("Returning to home page")
+              println()
+              println()
               return
             }
           }
-          db_handler.set_resolved(rv)
         }
       }
     }
+    println("Returning to home page")
+    println()
+    println()
   }
 
   def get_choice(range: Int): String = {
@@ -95,14 +106,14 @@ object Expert_preference {
     var id_choice = -1
     try id_choice = Integer.parseInt(user_choice)
     catch {
-      case e: NumberFormatException => logger.info(e.getMessage)
+      case e: NumberFormatException => e
     }
     while (id_choice <= 0 || id_choice > range){
       println("Invalid command")
       user_choice = StdIn.readLine()
       try id_choice = Integer.parseInt(user_choice)
       catch {
-        case e: NumberFormatException => logger.info(e.getMessage)
+        case e: NumberFormatException => e
       }
     }
     choice = id_choice.toString

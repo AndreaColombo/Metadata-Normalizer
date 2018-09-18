@@ -1,27 +1,24 @@
 package user_interface
 
-import Recommender.Ontologies.Ontology
-
 object main {
 
   def main(args: Array[String]): Unit = {
-    var exit = true
+    var exit = false
+    println(Config.config.get_gcm_table_list())
     while (!exit) {
       display_prompt()
-      if (args.nonEmpty) {
-        if (args(0).equals("1")) {
-          Expert_preference.get_user_feedback()
-        }
-        else if (args(0).equals("2")) {
-          Expert_revision.revision_routine()
-        }
-        else if (args(0).equals("3")) {
-          //EXPERT FEEDBACK
-        }
-        else exit = true
+      val selection = Expert_preference.get_choice(4)
+      if (selection.equals("1")) {
+        Expert_preference.get_user_feedback()
       }
+      else if (selection.equals("2")) {
+        Expert_revision.revision_routine()
+      }
+      else if (selection.equals("3")) {
+        //EXPERT FEEDBACK
+      }
+      else exit = true
     }
-    Expert_preference.get_choice(4)
   }
 
   def display_prompt(): Unit = {
@@ -29,5 +26,7 @@ object main {
     println("2 - Expert Revision")
     println("3 - Expert Feedback")
     println("4 - Exit")
+    println()
+    println()
   }
 }

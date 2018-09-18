@@ -261,55 +261,45 @@ object db_handler {
     result
   }
 
-  def update_tid(value: String, new_tid: Option[Int]): List[(String,String)] = {
-    val result = get_value_info(value)
-    for((table_name, column_name) <- result) {
-      val tid = column_name + "_tid"
-
-      val q =
-        if(new_tid.isDefined) {
-          sqlu"""
-             update #$table_name
-             set #$tid = ${new_tid.get}
-             where #$column_name ilike $value
-            """
-        }
-        else {
-          sqlu"""
-             update #$table_name
-             set #$tid = null
-             where #$column_name ilike $value
-            """
-        }
-      val db = get_db()
-
-      val f = db.run(q)
-      Await.result(f, Duration.Inf)
-      db.close()
-    }
-    result
+  def update_tid(value: String, new_tid: Option[Int],table_name: String, column_name: String): Unit = {
+    val tid = column_name + "_tid"
+    val q =
+      if(new_tid.isDefined) {
+        sqlu"""
+           update #$table_name
+           set #$tid = ${new_tid.get}
+           where #$column_name ilike $value
+          """
+      }
+      else {
+        sqlu"""
+           update #$table_name
+           set #$tid = null
+           where #$column_name ilike $value
+          """
+      }
+    val db = get_db()
+    val f = db.run(q)
+    Await.result(f, Duration.Inf)
+    db.close()
   }
 
-  def get_value_info(value: String): List[(String,String)] = {
+  def get_value_info(value: String, table_name: String, column_name: String): List[(String,String)] = {
     var result: List[(String,String)] = List()
-    for (table_name <- get_gcm_table_list()){
-      for(column_name <- get_termtype_list(table_name)){
-        val q =
-          sql"""
-                 select distinct #$column_name
-                 from #$table_name
-                 where #$column_name ilike $value
-            """.as[String]
-        val db = get_db()
-        val f = db.run(q).map(a =>
-          if(a.nonEmpty){
-            a.foreach(b => result:+= (table_name,column_name))
-          }
-        )
-        Await.result(f, Duration.Inf)
-        db.close()
+    val q =
+      sql"""
+             select distinct #$column_name
+             from #$table_name
+             where #$column_name ilike $value
+        """.as[String]
+    val db = get_db()
+    val f = db.run(q).map(a =>
+      if(a.nonEmpty){
+        a.foreach(b => result:+= (table_name,column_name))
       }
-    }
+    )
+    Await.result(f, Duration.Inf)
+    db.close()
     result
   }
 

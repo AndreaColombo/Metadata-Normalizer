@@ -27,7 +27,7 @@ object enrichment_engine {
       if (result_raw.tid != default_values.int) {
         //VALUE FOUND RAW
         logger.info(s"""Value "$raw_value" found as RAW in local KB""")
-        db_handler.update_tid(raw_value, Some(result_syn.tid))
+        db_handler.update_tid(raw_value, Some(result_syn.tid),table_name,column_name)
       }
       else if (result_user_changes._1 != "null") {
         //VALUE FOUND IN USER CHANGES
