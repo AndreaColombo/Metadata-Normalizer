@@ -18,19 +18,19 @@ object db_interface {
       }
       val label = res.head.apply("label")
       val tid = db_handler.get_tid(res.head.apply("source"),res.head.apply("code"))
-      db_handler.syn_insert(List(cv_support_syn_type(tid,raw_value,"raw")))
-      db_handler.raw_insert(List(cv_support_raw_type(tid,raw_value,table_name,column_name,method)))
+      db_handler.syn_insert(List(synonym_type(tid,raw_value,"raw")))
+      db_handler.raw_insert(List(raw_annotation_type(tid,raw_value,table_name,column_name,method)))
       db_handler.update_tid(raw_value,Some(tid))
       insert_hyp(cv_support, res)
       unfold_hyp(tid)
     }
   }
 
-  //INSERT ELEMENTS IN cv_support, syn, xref
+  //INSERT ELEMENTS IN vocabulary, syn, xref
   def db_insert (elem: Map[String,String]): List[cv_support]= {
-    var insert_elem: List[cv_support_type] = List()
-    var insert_xref: List[cv_support_xref_type] = List()
-    var insert_syn: List[cv_support_syn_type] = List()
+    var insert_elem: List[vocabulary_type] = List()
+    var insert_xref: List[reference_type] = List()
+    var insert_syn: List[synonym_type] = List()
     var support: List[cv_support] = List()
 
     val source = elem.apply("source")
@@ -42,7 +42,7 @@ object db_interface {
     //CHECK EXISTENCE OF SOURCE IN ONTOLOGY TABLE
     //IF DOESN'T EXIST INSERT
 
-    insert_elem ++= List(cv_support_type(default_values.int,source,code,label,description,iri))
+    insert_elem ++= List(vocabulary_type(default_values.int,source,code,label,description,iri))
     db_handler.cv_support_insert(insert_elem)
     val tid = db_handler.get_tid(source,code)
     support :+= cv_support(tid.toString,source,code,label)
@@ -53,12 +53,12 @@ object db_interface {
     if (elem.apply("xref") != "null")
       xref_l = elem.apply("xref").split(",").toList
 
-    insert_xref ++= List(cv_support_xref_type(tid, source, code))
+    insert_xref ++= List(reference_type(tid, source, code))
 
     for (xref <- xref_l if xref_l.nonEmpty) {
       val source = xref.split(":").head
       val code = xref
-      insert_xref ++= List(cv_support_xref_type(tid, source, code))
+      insert_xref ++= List(reference_type(tid, source, code))
     }
     db_handler.xref_insert(insert_xref)
     //END XREF
@@ -68,11 +68,11 @@ object db_interface {
     if (elem.apply("syn") != "null")
       syn_l = elem.apply("syn").split(",").toList
 
-    insert_syn ++= List(cv_support_syn_type(tid, label, "pref"))
+    insert_syn ++= List(synonym_type(tid, label, "pref"))
 
     for (syn <- syn_l if syn_l.nonEmpty) {
       val label = syn
-      insert_syn ++= List(cv_support_syn_type(tid, label, "syn"))
+      insert_syn ++= List(synonym_type(tid, label, "syn"))
     }
 
     db_handler.syn_insert(insert_syn)
@@ -82,7 +82,7 @@ object db_interface {
   }
 
   def insert_hyp(elems: List[cv_support], res:List[Map[String,String]]): Unit = {
-    var result: List[onto_support_hyp_type] = List()
+    var result: List[relationship_type] = List()
     val default_cv: cv_support = cv_support("null","null","null","null")
     for(elem <- elems){
       val child_tid = elem.tid
@@ -103,7 +103,7 @@ object db_interface {
         for(parent <- parents.split(",")) {
           val parent_tid = elems.find(a => a.code == parent).getOrElse(default_cv).tid
           if(parent_tid != "null")
-            result :+= onto_support_hyp_type(Integer.parseInt(parent_tid), Integer.parseInt(child_tid), "is_a")
+            result :+= relationship_type(Integer.parseInt(parent_tid), Integer.parseInt(child_tid), "is_a")
         }
       }
 
@@ -112,7 +112,7 @@ object db_interface {
         for(parent <- parents.split(",")) {
           val parent_tid = elems.find(a => a.code == parent).getOrElse(default_cv).tid
           if(parent_tid != "null")
-            result :+= onto_support_hyp_type(Integer.parseInt(parent_tid), Integer.parseInt(child_tid), "part_of")
+            result :+= relationship_type(Integer.parseInt(parent_tid), Integer.parseInt(child_tid), "part_of")
         }
       }
     }
@@ -126,12 +126,12 @@ object db_interface {
 
   def unfold_hyp(cur_tid: Int): Unit = {
     val tid_list = db_handler.get_tid_parent_distinct(cur_tid)
-    var unfolded: List[onto_support_hyp_unfolded_type] = List()
+    var unfolded: List[relationship_unfolded_type] = List()
     for (tid_parent_cur <- tid_list) {
       val distance = 1
       val onto_support_hyp_l = db_handler.get_onto_hyp(tid_parent_cur)
       for (onto_support_hyp <- onto_support_hyp_l){
-        unfolded :+= onto_support_hyp_unfolded_type(onto_support_hyp.tid_p,onto_support_hyp.tid_c,distance,onto_support_hyp.rel_type)
+        unfolded :+= relationship_unfolded_type(onto_support_hyp.tid_p,onto_support_hyp.tid_c,distance,onto_support_hyp.rel_type)
         unfolded ++= unfold_recursive(tid_parent_cur,onto_support_hyp.tid_c,distance+1,onto_support_hyp.rel_type)
       }
     }
@@ -141,13 +141,13 @@ object db_interface {
     db_handler.insert_unfolded(unfolded)
   }
 
-  def unfold_recursive(tid_parent_cur: Int, tid_child_cur: Int, distance: Int, rel_type_cur: String): List[onto_support_hyp_unfolded_type] = {
-    var result: List[onto_support_hyp_unfolded_type] = List()
+  def unfold_recursive(tid_parent_cur: Int, tid_child_cur: Int, distance: Int, rel_type_cur: String): List[relationship_unfolded_type] = {
+    var result: List[relationship_unfolded_type] = List()
     val onto_support_hyp_l = db_handler.get_onto_hyp(tid_child_cur)
 
     for (elem <- onto_support_hyp_l) {
       val rel_type = get_rel_type(rel_type_cur,elem.rel_type)
-      result :+= onto_support_hyp_unfolded_type(tid_parent_cur,elem.tid_c,distance,rel_type)
+      result :+= relationship_unfolded_type(tid_parent_cur,elem.tid_c,distance,rel_type)
       result ++= unfold_recursive(tid_parent_cur,elem.tid_c,distance+1,rel_type)
     }
     result

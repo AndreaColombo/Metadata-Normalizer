@@ -8,6 +8,7 @@ import Enrichment_engine.{Ols_interface, annotator, enrichment_engine}
 import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import user_interface.Expert_preference
 
 
 object main extends App {
@@ -35,7 +36,7 @@ object main extends App {
 
     if (args.nonEmpty) {
       if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection")) {
-        user_interface.get_user_feedback()
+        Expert_preference.get_user_feedback()
       }
       else if (args(0).equals("reset")){
         db_handler.null_gcm()
@@ -67,6 +68,7 @@ object main extends App {
         enrichment_engine.controller(col)
       }
     }
+
   }
 
   def get_elapsed_time(d1: Long, d2: Long): Unit = {

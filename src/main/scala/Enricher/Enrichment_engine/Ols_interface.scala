@@ -4,7 +4,7 @@ import java.net.{SocketTimeoutException, URLEncoder}
 
 import Config.config
 import Config.config.get_ontologies_by_type
-import Enricher.DBCon.{db_handler, default_values, ontology_type, user_feedback_type}
+import Enricher.DBCon.{db_handler, default_values, ontology_type, expert_choice_type}
 import Recommender.Ontologies.Parsers.OlsParser.countWords
 import Utilities.Preprocessing
 import Utilities.score_calculator.get_match_score
@@ -127,8 +127,8 @@ object Ols_interface {
     rows.toList.distinct
   }
 
-  def ols_get_user_feedback(raw_value: String, term_type: String, table_name: String): List[user_feedback_type] = {
-    var rows: List[user_feedback_type] = List()
+  def ols_get_user_feedback(raw_value: String, term_type: String, table_name: String): List[expert_choice_type] = {
+    var rows: List[expert_choice_type] = List()
     val parsed = Preprocessing.parse(List(raw_value)).split(",")
     for (value <- parsed) {
       val ontologies = get_ontologies_by_type(term_type)
@@ -144,7 +144,7 @@ object Ols_interface {
 
         val score_num = get_score(raw_value, label,synonyms)
         if (!rows.exists(_.code.get==id) && !db_handler.user_fb_exist(raw_value,onto,id))
-          rows :+= user_feedback_type(default_values.int, default_values.bool, table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,Utilities.Utils.get_timestamp())
+          rows :+= expert_choice_type(default_values.int, default_values.bool, table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,Utilities.Utils.get_timestamp())
       }
     }
     rows.distinct
@@ -168,7 +168,7 @@ object Ols_interface {
   }
 
   def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): Int = {
-    val term = termAnnotated.replace("-"," ").replace("(","").replace(")","").map(_.toLower).split(" ").toSet
+    val term = termAnnotated.replace("-"," ").replace("/"," ").replace("(","").replace(")","").map(_.toLower).split(" ").toSet
     val label = prefLabel.replace("-"," ").replace("(","").replace(")","").map(_.toLower).split(" ").toSet
     var s = ""
     val pref = config.get_score("pref")

@@ -1,51 +1,15 @@
-package Enricher
+package user_interface
 
 import Config.config.{get_gcm_table_list, get_termtype_list}
-import Enricher.DBCon.{db_handler, default_values, user_changes_type}
-import Enrichment_engine.{Ols_interface, annotator}
+import Enricher.DBCon.{db_handler, default_values, expert_preference_type}
+import Enricher.Enrichment_engine.Ols_interface
 import scalaj.http.{Http, HttpOptions}
 import scalax.cli.Table
 import shapeless.Sized
 
 import scala.io.StdIn
 
-object user_interface {
-
-  def revision_routine(): Unit = {
-    var flag = true
-    while (flag) {
-      println("Input value to update")
-      var value = StdIn.readLine()
-      while (db_handler.get_value_info(value).isEmpty){
-        println("Value not valid")
-        println("Input valid value")
-        value = StdIn.readLine()
-      }
-      val source_code = input_source_code()
-      val tuples = db_handler.update_tid(value,null)
-
-      for ((table_name, column_name) <- tuples) {
-        db_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, value, source_code._1, source_code._2))
-      }
-
-      println("Do you wish to update another value?")
-      println("y/n")
-
-      var choice = StdIn.readLine()
-      while (!choice.equalsIgnoreCase("y") && !choice.equalsIgnoreCase("n")){
-        println("unknown command")
-        println("type y/n")
-
-        choice = StdIn.readLine()
-      }
-
-      if(choice.equalsIgnoreCase("y")){
-        flag = true
-      }
-      else if(choice.equalsIgnoreCase("n"))
-        flag = false
-    }
-  }
+object Expert_preference {
 
   def get_user_feedback(): Unit = {
     for (table_name <- get_gcm_table_list()){
@@ -63,13 +27,13 @@ object user_interface {
           //CASE RAW VALUE NOT FOUND IN OLS LOOKUP
           if(!options.head.code.isDefined){
             table.print()
-            println("Please input manually source and iri")
+            display_prompt(false)
             val user_choice = input_source_code()
             val source = user_choice._1
             val code = user_choice._2
             val prefLabel = Ols_interface.ols_get_info(code,source).head(2)
             //INSERT IN USER REQUESTED CHOICE
-            db_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, rv, source, code))
+            db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
           }
           //CASE RAW VALUE FOUND BUT NOT BEST MATCH
           else {
@@ -82,11 +46,11 @@ object user_interface {
               val code = user_choice._2
               val prefLabel = Ols_interface.ols_get_info(source,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
-              db_handler.insert_user_changes(user_changes_type(default_values.int,table_name, column_name, rv, source, code))
+              db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
             }
             else {
               val a = options(user_choice.toInt)
-              db_handler.insert_user_changes(user_changes_type(default_values.int,a.table,a.column,a.raw_value,a.source.get,a.code.get))
+              db_handler.insert_user_changes(expert_preference_type(default_values.int,a.table,a.column,a.raw_value,a.source.get,a.code.get))
             }
           }
           db_handler.set_resolved(rv)
@@ -95,8 +59,20 @@ object user_interface {
     }
   }
 
+  def get_choice(range: Int): String = {
+    var choice = ""
+    var user_choice = StdIn.readLine()
+    var id_choice = -1
+    try id_choice = Integer.parseInt(user_choice)
+    catch {
+      case e: NumberFormatException => e
+    }
+
+    choice
+  }
+
+
   def get_input(range: Int): String = {
-    display_prompt()
     var user_choice = StdIn.readLine()
     var id_choice = -1
     try id_choice = Integer.parseInt(user_choice)
@@ -105,7 +81,6 @@ object user_interface {
     }
     while (!user_choice.equalsIgnoreCase("manual apiresults_insert") && ((id_choice<0) || (id_choice>range))) {
       println("Unknown command")
-      display_prompt()
       user_choice = StdIn.readLine()
       try id_choice = Integer.parseInt(user_choice)
       catch {
@@ -127,11 +102,11 @@ object user_interface {
     }
     val source = input
 
-    println("Please input iri in the form ONTO_XXXXXXXX")
+    println("Please input code in the form ONTO_XXXXXXXX")
     input = StdIn.readLine()
     while(!validate_code(source, input.map(_.toUpper))) {
-      println("Error, iri not valid")
-      println("Please input a valid iri")
+      println("Error, code not valid")
+      println("Please input a valid code")
       input = StdIn.readLine()
     }
     val code = input.map(_.toUpper)
@@ -140,10 +115,14 @@ object user_interface {
     (source,code)
   }
 
-  def display_prompt(): Unit = {
-    println("SELECT ID")
-    println("or")
-    println("MANUAL INSERT")
+  def display_prompt(flag: Boolean): Unit = {
+    println("1 - MANUAL INSERT")
+    if(flag) {
+      println("2 - SELECT ID")
+      println("3 - SKIP")
+    }
+    else println("2 - SKIP")
+
     println()
   }
 
@@ -154,6 +133,7 @@ object user_interface {
 
   //return true if iri is valid
   def validate_code(onto: String, code: String): Boolean = {
-    Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$onto/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F" + code).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get.contains("200")
+    val iri = Ols_interface.ols_get_iri(onto,code)
+    Ols_interface.ols_get_status(onto,iri).contains("200")
   }
 }

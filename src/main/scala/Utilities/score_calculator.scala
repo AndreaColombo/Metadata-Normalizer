@@ -36,16 +36,16 @@ object score_calculator {
       if (matchType.startsWith("PREF")) {
         if (matchType.contains("-")) {
           val lscore = matchType.split("-")
-          score = 10 - lscore(1).drop(1).toInt
+          score = config.get_score("pref") - lscore(1).drop(1).toInt
         }
-        else score = 10
+        else score = config.get_score("pref")
       }
       else if (matchType.startsWith("SYN")) {
         if (matchType.contains("-")) {
           val lscore = matchType.split("-")
-          score = 5 - lscore(1).drop(1).toInt
+          score = config.get_score("syn") - lscore(1).drop(1).toInt
         }
-        else score = 5
+        else score = config.get_score("syn")
       }
       else score = 1
     }
@@ -118,6 +118,7 @@ object score_calculator {
       val k2 = 2
 
       var score1 = match_score.toDouble * (k1 + onto_score.toDouble)
+
       var score2 = match_score.toDouble + (k2 * onto_score.toDouble)
 
       if (score1<0)
@@ -127,7 +128,6 @@ object score_calculator {
         score2=0
 
       db_handler.update_score(score1,score2,onto_score.toDouble,match_score,i)
-
     }
   }
 
