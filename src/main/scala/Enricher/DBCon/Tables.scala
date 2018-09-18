@@ -41,7 +41,7 @@ object Tables {
     def description = column[String]("description")
     def iri = column[String]("iri")
 
-    def idx = index("cv_support_source_code_key",(source,code),unique = true)
+    def idx = index("vocabulary_source_code_key",(source,code),unique = true)
     def fk = foreignKey("ontology_source_fk",source,ontology)(_.source, onDelete = ForeignKeyAction.Cascade)
 
     def * = (tid, source,code,label,description,iri) <> (vocabulary_type.tupled, vocabulary_type.unapply)
@@ -53,8 +53,8 @@ object Tables {
     def label = column[String]("label", O.SqlType("VARCHAR(128)"))
     def ttype = column[String]("type", O.SqlType("VARCHAR(4)"))
 
-    def pk = primaryKey("cv_support_syn_pkey", (tid,label,ttype))
-    def fk = foreignKey("cv_cvs_fk",tid, vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
+    def pk = primaryKey("synonym_pkey", (tid,label,ttype))
+    def fk = foreignKey("vocabulary_syn_fk",tid, vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
     def idx = index("syn_label_idx", label)
 
     def * = (tid, label,ttype) <> (synonym_type.tupled, synonym_type.unapply)
@@ -66,8 +66,8 @@ object Tables {
     def source = column[String]("source", O.SqlType("VARCHAR(128)"))
     def code = column[String]("code")
 
-    def pk = primaryKey("cv_support_xref_pley", (tid, source, code))
-    def fk = foreignKey("cv_cvx_fk",tid, vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
+    def pk = primaryKey("reference_pkey", (tid, source, code))
+    def fk = foreignKey("vocabulary_xref_fk",tid, vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
 
     def idx = index("xref_code_idx",code)
 
@@ -82,8 +82,8 @@ object Tables {
     def column_name = column[String]("column_name", O.SqlType("VARCHAR(32)"))
     def method = column[Char]("method")
 
-    def pk = primaryKey("cv_support_raw_pkey",(label,table_name,column_name))
-    def fk = foreignKey("cv_cvr_fk",tid,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
+    def pk = primaryKey("raw_pkey",(label,table_name,column_name))
+    def fk = foreignKey("vocabulary_raw_fk",tid,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
 
     def * = (tid,label,table_name,column_name,method) <> (raw_annotation_type.tupled, raw_annotation_type.unapply)
   }
@@ -95,11 +95,11 @@ object Tables {
     def tid_c = column[Int]("tid_child")
     def rel_type = column[String]("rel_type", O.SqlType("VARCHAR(8)"))
 
-    def pk = primaryKey("onto_support_hyp_pkey",(tid_p,tid_c,rel_type))
-    def fk_p = foreignKey("cv_ohp_fk",tid_p,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
-    def fk_c = foreignKey("cv_ohc_fk",tid_c,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
+    def pk = primaryKey("relationship_pkey",(tid_p,tid_c,rel_type))
+    def fk_p = foreignKey("vocabulary_rel_p_fk",tid_p,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
+    def fk_c = foreignKey("vocabulary_rel_c_fk",tid_c,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
 
-    def idx = index("ohc_idx",tid_c)
+    def idx = index("rel_idx",tid_c)
 
     def * = (tid_p, tid_c, rel_type) <> (relationship_type.tupled, relationship_type.unapply)
   }
@@ -111,11 +111,11 @@ object Tables {
     def distance = column[Int]("distance")
     def rel_type = column[String]("rel_type", O.SqlType("VARCHAR(8)"))
 
-    def pk = primaryKey("onto_support_hyp_unfolded_pk",(tid_a,tid_d,rel_type))
-    def fk_a = foreignKey("cv_oha_unfolded",tid_a,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
-    def fk_d = foreignKey("cv_ohd_unfolded",tid_d,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
+    def pk = primaryKey("relationship_unfolded_pk",(tid_a,tid_d,rel_type))
+    def fk_a = foreignKey("vocabulary_rel_a_unfolded",tid_a,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
+    def fk_d = foreignKey("vocabulary_rel_d_unfolded",tid_d,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
 
-    def idx = index("ohd_unfolded_idx", tid_d)
+    def idx = index("rel_unfolded_idx", tid_d)
 
     def * = (tid_a,tid_d,distance,rel_type) <> (relationship_unfolded_type.tupled, relationship_unfolded_type.unapply)
   }

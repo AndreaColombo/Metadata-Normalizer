@@ -21,9 +21,7 @@ object main {
         else exit = true
       }
     }
-    val ols = Ontology.apply("ols")
-    val a = ols.input("Ewing's Sarcoma")
-    a.foreach(println)
+    Expert_preference.get_choice(4)
   }
 
   def display_prompt(): Unit = {

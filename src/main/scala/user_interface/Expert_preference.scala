@@ -3,13 +3,18 @@ package user_interface
 import Config.config.{get_gcm_table_list, get_termtype_list}
 import Enricher.DBCon.{db_handler, default_values, expert_preference_type}
 import Enricher.Enrichment_engine.Ols_interface
+import org.slf4j.LoggerFactory
 import scalaj.http.{Http, HttpOptions}
 import scalax.cli.Table
 import shapeless.Sized
+import scala.util.control.Breaks._
 
 import scala.io.StdIn
 
 object Expert_preference {
+  val logger = LoggerFactory.getLogger(this.getClass)
+  val MANUAL_INSERT_RANGE = 3
+  val POSSIBLE_CHOICES_RANGE = 4
 
   def get_user_feedback(): Unit = {
     for (table_name <- get_gcm_table_list()){
@@ -28,19 +33,34 @@ object Expert_preference {
           if(!options.head.code.isDefined){
             table.print()
             display_prompt(false)
-            val user_choice = input_source_code()
-            val source = user_choice._1
-            val code = user_choice._2
-            val prefLabel = Ols_interface.ols_get_info(code,source).head(2)
-            //INSERT IN USER REQUESTED CHOICE
-            db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
+            val user_choice = get_choice(MANUAL_INSERT_RANGE)
+            //1 MANUAL INSERT
+            //2 SKIP
+            //3 BACK
+            if (user_choice.equals("1")){
+              val user_sourcecode = input_source_code()
+              val source = user_sourcecode._1
+              val code = user_sourcecode._2
+              val prefLabel = Ols_interface.ols_get_info(code,source).head(2)
+
+              //INSERT IN USER REQUESTED CHOICE
+              db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
+            }
+            else if (user_choice.equals("2")){
+              breakable {
+                break()
+              }
+            }
+            else if (user_choice.equals("3")){
+              return
+            }
           }
           //CASE RAW VALUE FOUND BUT NOT BEST MATCH
           else {
             table.print()
-            val user_choice = get_input(i)
-            if(user_choice.equalsIgnoreCase("manual insert")){
-              println("Please input manually source and iri")
+            val user_choice = get_choice(POSSIBLE_CHOICES_RANGE)
+            if(user_choice.equals("1")){
+              println("Please input manually source and cdoe")
               val user_choice = input_source_code()
               val source = user_choice._1
               val code = user_choice._2
@@ -48,9 +68,19 @@ object Expert_preference {
               //INSERT IN USER REQUESTED CHOICE
               db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
             }
-            else {
-              val a = options(user_choice.toInt)
+            else if (user_choice.equals("2")){
+              println("Please select an ID")
+              val user_selection = get_choice(options.length)
+              val a = options(user_selection.toInt)
               db_handler.insert_user_changes(expert_preference_type(default_values.int,a.table,a.column,a.raw_value,a.source.get,a.code.get))
+            }
+            else if (user_choice.equals("3")){
+              breakable {
+                break()
+              }
+            }
+            else if (user_choice.equals("4")){
+              return
             }
           }
           db_handler.set_resolved(rv)
@@ -65,29 +95,18 @@ object Expert_preference {
     var id_choice = -1
     try id_choice = Integer.parseInt(user_choice)
     catch {
-      case e: NumberFormatException => e
+      case e: NumberFormatException => logger.info(e.getMessage)
     }
-
-    choice
-  }
-
-
-  def get_input(range: Int): String = {
-    var user_choice = StdIn.readLine()
-    var id_choice = -1
-    try id_choice = Integer.parseInt(user_choice)
-    catch {
-      case e: NumberFormatException => e
-    }
-    while (!user_choice.equalsIgnoreCase("manual apiresults_insert") && ((id_choice<0) || (id_choice>range))) {
-      println("Unknown command")
+    while (id_choice <= 0 || id_choice > range){
+      println("Invalid command")
       user_choice = StdIn.readLine()
       try id_choice = Integer.parseInt(user_choice)
       catch {
-        case e: NumberFormatException => e
+        case e: NumberFormatException => logger.info(e.getMessage)
       }
     }
-    user_choice
+    choice = id_choice.toString
+    choice
   }
 
   def input_source_code(): (String, String) = {
@@ -120,8 +139,12 @@ object Expert_preference {
     if(flag) {
       println("2 - SELECT ID")
       println("3 - SKIP")
+      println("4 - BACK")
     }
-    else println("2 - SKIP")
+    else {
+      println("2 - SKIP")
+      println("3 - BACK")
+    }
 
     println()
   }

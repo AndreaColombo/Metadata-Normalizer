@@ -33,12 +33,9 @@ object main extends App {
     //setup logger
     setup_logger()
     config.conf.getObject("db_config")
-
+    db_handler.init()
     if (args.nonEmpty) {
-      if (args(0).equalsIgnoreCase("user") && args(1).equalsIgnoreCase("selection")) {
-        Expert_preference.get_user_feedback()
-      }
-      else if (args(0).equals("reset")){
+      if (args(0).equals("reset")){
         db_handler.null_gcm()
         db_handler.reset_db()
         db_handler.init()

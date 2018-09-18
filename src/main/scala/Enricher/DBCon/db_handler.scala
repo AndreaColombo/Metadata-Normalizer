@@ -42,7 +42,7 @@ object db_handler {
     db
   }
 
-  val tables = List(ontology,vocabulary,synonym,reference,raw_annotation,relationship,relationship_unfolded,expert_preference, expert_choice)
+  val tables = List(ontology,vocabulary,synonym,reference,raw_annotation,relationship,relationship_unfolded,expert_preference,expert_choice)
 
   def init(): Unit = {
     val db = get_db()
