@@ -4,7 +4,6 @@ object main {
 
   def main(args: Array[String]): Unit = {
     var exit = false
-    println(Config.config.get_gcm_table_list())
     while (!exit) {
       display_prompt()
       val selection = Expert_preference.get_choice(4)
