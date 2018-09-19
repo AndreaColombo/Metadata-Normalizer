@@ -16,7 +16,7 @@ object db_interface {
       for (elem <- res) {
         cv_support ++= db_insert(elem)
       }
-      val label = res.head.apply("pref_label")
+      val label = res.head.apply("label")
       val tid = db_handler.get_tid(res.head.apply("source"),res.head.apply("code"))
       db_handler.syn_insert(List(synonym_type(tid,raw_value,"raw")))
       db_handler.raw_insert(List(raw_annotation_type(tid,raw_value,table_name,column_name,method)))
@@ -35,7 +35,7 @@ object db_interface {
 
     val source = elem.apply("source")
     val code = elem.apply("code")
-    val label = elem.apply("pref_label")
+    val label = elem.apply("label")
     val description = elem.apply("description")
     val iri = elem.apply("iri")
 

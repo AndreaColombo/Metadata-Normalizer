@@ -49,19 +49,19 @@ object annotator {
       val anc = get_hyp(parents, onto, 0,tmp.head(1))
 
       if(!db_handler.cv_support_exists(onto,tmp.head(1)))
-        result :+= Map("source" -> onto, "code" -> tmp.head(1), "pref_label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8),"iri"->tmp.head.last)
+        result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8),"iri"->tmp.head.last)
 
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
 
       for (elem <- anc) {
         if(!db_handler.cv_support_exists(elem._1,elem._2))
-        result :+= Map("source" -> elem._1, "code" -> elem._2, "pref_label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
+        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
       }
 
       for (elem <- desc) {
         if (!db_handler.cv_support_exists(elem._1, elem._2))
-        result :+= Map("source" -> elem._1, "code" -> elem._2, "pref_label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
+        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
       }
     }
     else {

@@ -25,7 +25,7 @@ object Expert_preference {
           println()
           var i = 0
           val options = db_handler.get_user_feedback_infos(rv)
-          val table = Table(Sized("id","parsed value","pref_label","source","code","iri"))
+          val table = Table(Sized("id","parsed value","label","source","code","iri"))
           for (o <- options){
             table.rows += Sized((i+1).toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),o.iri.getOrElse("null"))
             i+=1

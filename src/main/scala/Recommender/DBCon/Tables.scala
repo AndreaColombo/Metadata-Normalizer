@@ -28,7 +28,7 @@ object Tables {
     def parsed_value = column[String]("parsed_value")
     def ontology = column[String]("ontology")
     def ontology_id = column[String]("ontology_id")
-    def pref_label = column[String]("pref_label")
+    def pref_label = column[String]("label")
     def synonym = column[String]("synonym")
     def score = column[String]("score")
     def term_type = column[String]("term_type")

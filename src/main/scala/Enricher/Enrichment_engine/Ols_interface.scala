@@ -23,7 +23,7 @@ object Ols_interface {
 
   def ols_search_term(term: String, onto: String): search_term_result = {
     val url = "https://www.ebi.ac.uk/ols/api/search"
-    val response = Http(url).param("q", term).param("fieldList", "pref_label,short_form,synonym,ontology_name,iri").param("ontology", onto).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+    val response = Http(url).param("q", term).param("fieldList", "label,short_form,synonym,ontology_name,iri").param("ontology", onto).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
 
     var j: JsValue = null
     try {
@@ -33,12 +33,12 @@ object Ols_interface {
       case e: JsonParseException => logger.info("json parse error",e)
     }
 
-    val range = j \\ "pref_label"
+    val range = j \\ "label"
     var result = search_term_result(List(),0)
 
     for (i <- range.indices) {
       val j2 = j(i)
-      val prefLabel = (j2 \ "pref_label").validate[String].get
+      val prefLabel = (j2 \ "label").validate[String].get
       val ontology = (j2 \ "ontology_name").validate[String].get
       val ontology_id = (j2 \ "short_form").validate[String].get
       val iri = (j2 \ "iri").validate[String].get
@@ -86,7 +86,7 @@ object Ols_interface {
     if(attempts<=5) {
       val response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
       val j = Json.parse(response.body)
-      val prefLabel = (j \ "pref_label").validate[String].get
+      val prefLabel = (j \ "label").validate[String].get
       val ontology = source
       val ontology_id = code
       val description = (j \ "description").validate[List[String]].getOrElse(List("null")).head
@@ -133,11 +133,11 @@ object Ols_interface {
     for (value <- parsed) {
       val ontologies = get_ontologies_by_type(term_type)
       val url = "https://www.ebi.ac.uk/ols/api/search"
-      val response = Http(url).param("q", value).param("fieldList", "pref_label,short_form,ontology_name").param("ontology", ontologies.mkString(",")).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+      val response = Http(url).param("q", value).param("fieldList", "label,short_form,ontology_name").param("ontology", ontologies.mkString(",")).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       val json = (Json.parse(response) \ "response").get("docs")
-      for (k <- (json \\ "pref_label").indices) {
+      for (k <- (json \\ "label").indices) {
         val jj = json(k)
-        val label = (jj \ "pref_label").validate[String].get
+        val label = (jj \ "label").validate[String].get
         val id = (jj \ "short_form").validate[String].get
         val onto = (jj \ "ontology_name").validate[String].get
         val synonyms = (jj \ "synonym").validate[List[String]].getOrElse(List())

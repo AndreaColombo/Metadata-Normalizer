@@ -68,7 +68,7 @@ object Ontology {
     val url = "https://www.ebi.ac.uk/ols/api/search"
 
     private def get_results(term: String): List[List[String]] = {
-      val response = Http(url).param("q",term).param("fieldList","pref_label,short_form,synonym,ontology_name").param("rows","15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+      val response = Http(url).param("q",term).param("fieldList","label,short_form,synonym,ontology_name").param("rows","15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       OlsParser.parse(response,term)
     }
 

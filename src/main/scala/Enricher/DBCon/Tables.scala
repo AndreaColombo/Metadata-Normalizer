@@ -38,20 +38,20 @@ object Tables {
     def tid = column[Int]("tid", O.AutoInc, O.PrimaryKey)
     def source = column[String]("source", O.SqlType("VARCHAR(32)"))
     def code = column[String]("code",O.SqlType("VARCHAR(64)"))
-    def pref_label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
+    def label = column[String]("label", O.SqlType("VARCHAR(128)"))
     def description = column[String]("description")
     def iri = column[String]("iri")
 
     def idx = index("vocabulary_source_code_key",(source,code),unique = true)
     def fk = foreignKey("ontology_source_fk",source,ontology)(_.source, onDelete = ForeignKeyAction.Cascade)
 
-    def * = (tid, source,code,pref_label,description,iri) <> (vocabulary_type.tupled, vocabulary_type.unapply)
+    def * = (tid, source,code,label,description,iri) <> (vocabulary_type.tupled, vocabulary_type.unapply)
   }
   val vocabulary = TableQuery[vocabulary]
 
   class synonym(tag: Tag) extends Table[synonym_type](tag,Some("public"), "synonym"){
     def tid = column[Int]("tid")
-    def label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
+    def label = column[String]("label", O.SqlType("VARCHAR(128)"))
     def ttype = column[String]("type", O.SqlType("VARCHAR(4)"))
 
     def pk = primaryKey("synonym_pkey", (tid,label,ttype))
@@ -78,7 +78,7 @@ object Tables {
 
   class raw_annotation(tag: Tag) extends Table[raw_annotation_type](tag, Some("public"),"raw_annotation"){
     def tid = column[Int]("tid")
-    def label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
+    def label = column[String]("label", O.SqlType("VARCHAR(128)"))
     def table_name = column[String]("table_name", O.SqlType("VARCHAR(32)"))
     def column_name = column[String]("column_name", O.SqlType("VARCHAR(32)"))
     def method = column[Char]("method")
@@ -129,7 +129,7 @@ object Tables {
     def raw_value = column[String]("raw_value")
     def tid = column[Option[Int]]("tid")
     def parsed_value = column[Option[String]]("parsed_value")
-    def label = column[Option[String]]("pref_label")
+    def label = column[Option[String]]("label")
     def source = column[Option[String]]("source")
     def code = column[Option[String]]("code")
     def resolved = column[Boolean]("resolved", O.Default(false))

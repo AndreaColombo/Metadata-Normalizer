@@ -97,7 +97,7 @@ object db_handler {
       ok :+= (l.source,l.code,l.label,l.description,l.iri)
     }
     val db = get_db()
-    val insertAction = vocabulary.map(a=> (a.source,a.code,a.pref_label,a.description,a.iri)) ++= ok
+    val insertAction = vocabulary.map(a=> (a.source,a.code,a.label,a.description,a.iri)) ++= ok
     try {
       val insert = db.run(insertAction)
       Await.result(insert, Duration.Inf)
@@ -451,11 +451,13 @@ object db_handler {
     val q = for {
       r <- raw_annotation if r.table_name === table_name && r.column_name === column_name
       v <- vocabulary if v.tid === r.tid
-    } yield expert_info_for_feedback(r.label.toString(),v.pref_label.toString(),v.source.toString(),v.code.toString(),v.iri.toString(),v.description.toString())
+    } yield (r.label,v.label,v.source,v.code,v.iri,v.description)
 
     val db = get_db()
 
-    val f = db.run(q.result).map(a => info = a.toList)
+    val f = db.run(q.result).map(_.foreach(println))
+    Await.result(f, Duration.Inf)
+    db.close()
 
     info
   }
