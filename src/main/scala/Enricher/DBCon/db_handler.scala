@@ -331,8 +331,8 @@ object db_handler {
     result
   }
 
-  def set_resolved(raw_value: String): Unit = {
-    val q = expert_choice.filter(_.raw_value===raw_value).map(_.resolved)
+  def set_resolved(raw_value: String, table_name: String, column_name: String): Unit = {
+    val q = expert_choice.filter(a => a.raw_value===raw_value && a.table_name===table_name && a.column_name === column_name).map(_.resolved)
     val update = q.update(true)
     val db = get_db()
     val f = db.run(update)
@@ -427,5 +427,24 @@ object db_handler {
     val db = get_db()
     Await.result(db.run(q),Duration.Inf)
     db.close()
+  }
+
+  def get_suggestions_raw(raw_value: String, table_name: String, column_name:String): List[String] = {
+    var suggestion: List[String] = List()
+    val value_clean = "%"+raw_value.replaceAll("[ ,!.\\-/]+","%")+"%"
+    val q =
+      sql"""
+         select distinct #$column_name
+         from #$table_name
+         where #$column_name ilike $value_clean
+         """.as[String]
+
+    val db = get_db()
+    val f = db.run(q).map(_.foreach(a =>
+    suggestion :+= a
+    ))
+    Await.result(f, Duration.Inf)
+    db.close()
+    suggestion
   }
 }

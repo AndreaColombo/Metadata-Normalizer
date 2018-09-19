@@ -1,8 +1,10 @@
 package user_interface
 
-import Recommender.Ontologies.Parsers.OlsParser
+import Enricher.DBCon.db_handler
+import org.slf4j.LoggerFactory
 
 object main {
+  val logger = LoggerFactory.getLogger(this.getClass)
 
   def main(args: Array[String]): Unit = {
     var exit = false
@@ -13,19 +15,19 @@ object main {
         Expert_preference.get_user_feedback()
       }
       else if (selection.equals("2")) {
-        Expert_revision.revision_routine()
+        Expert_correction.correction_routine()
       }
       else if (selection.equals("3")) {
         //EXPERT FEEDBACK
       }
       else exit = true
     }
-    println(OlsParser.countWords("b-a!c,d e.g/r"))
+    db_handler.get_suggestions_raw("b-cell","biosample","disease")
   }
 
   def display_prompt(): Unit = {
     println("1 - Expert Preference")
-    println("2 - Expert Revision")
+    println("2 - Expert Correction")
     println("3 - Expert Feedback")
     println("4 - Exit")
     println()

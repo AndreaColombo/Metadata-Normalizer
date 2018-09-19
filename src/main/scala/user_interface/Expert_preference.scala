@@ -19,12 +19,15 @@ object Expert_preference {
       for (column_name <- get_termtype_list(table_name)){
         val raw_values = db_handler.get_user_feedback_raw_values(table_name,column_name)
         for (rv <- raw_values){
+          println("Table: "+table_name)
+          println("Column: "+column_name)
+          println("Raw value: "+rv)
+          println()
           var i = 0
           val options = db_handler.get_user_feedback_infos(rv)
-          val table = Table(Sized("id","table name", "column name", "raw value", "parsed value","label","source","code"))
-          println(rv)
+          val table = Table(Sized("id","parsed value","label","source","code","iri"))
           for (o <- options){
-            table.rows += Sized(i.toString,o.table,o.column,o.raw_value,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"))
+            table.rows += Sized(i.toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),o.iri.getOrElse("null"))
             i+=1
           }
           table.alignments
@@ -44,7 +47,7 @@ object Expert_preference {
               val prefLabel = Ols_interface.ols_get_info(code,source).head(2)
               //INSERT IN USER REQUESTED CHOICE
               db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
-              db_handler.set_resolved(rv)
+              db_handler.set_resolved(rv,table_name,column_name)
             }
             else if (user_choice.equals("2")){
               breakable {
@@ -72,13 +75,14 @@ object Expert_preference {
               val prefLabel = Ols_interface.ols_get_info(source,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
               db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
+              db_handler.set_resolved(rv,table_name,column_name)
             }
             else if (user_choice.equals("2")){
               println("Please select an ID")
               val user_selection = get_choice(options.length)
               val a = options(user_selection.toInt)
               db_handler.insert_user_changes(expert_preference_type(default_values.int,a.table,a.column,a.raw_value,a.source.get,a.code.get))
-              db_handler.set_resolved(rv)
+              db_handler.set_resolved(rv,table_name,column_name)
             }
             else if (user_choice.equals("3")){
               breakable {
