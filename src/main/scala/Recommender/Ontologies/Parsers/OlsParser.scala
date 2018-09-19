@@ -50,8 +50,9 @@ object OlsParser {
       }
     }
 
-    var pref_diff = -1
-    var syn_diff = -1
+    val VERY_BIG_NUMBER = -58585858
+    var pref_diff = VERY_BIG_NUMBER
+    var syn_diff = VERY_BIG_NUMBER
 
     if (s.nonEmpty){
       pref_diff = (countWords(prefLabel) - countWords(termAnnotated)) * 2
@@ -59,7 +60,9 @@ object OlsParser {
     if (s3.nonEmpty) {
       syn_diff = (countWords(syn_found) - countWords(termAnnotated)) * 2
     }
-    if(pref_diff!= -1 && syn_diff != -1){
+    if(pref_diff!=VERY_BIG_NUMBER && syn_diff != VERY_BIG_NUMBER){
+      if(pref_diff<0) pref_diff=0
+      if(syn_diff<0) syn_diff=0
       val pref_score = Config.config.get_score("pref") - pref_diff
       val syn_score = Config.config.get_score("syn") - syn_diff
       if(pref_score>syn_score){
