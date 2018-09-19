@@ -109,8 +109,6 @@ object db_handler {
   }
 
   def syn_insert(rows: List[synonym_type]): Unit = {
-    var ok: Seq[(Int, String, String)] = Seq()
-
     val db = get_db()
     val insertAction = synonym ++= rows
     val insert = db.run(insertAction)
@@ -446,17 +444,20 @@ object db_handler {
     suggestion
   }
 
-  def get_info_for_feedback(table_name: String, column_name: String): List[expert_info_for_feedback] = {
+  def get_info_for_feedback(table_name: String, column_name: String, username: String): List[expert_info_for_feedback] = {
     var info: List[expert_info_for_feedback] = List()
-    val q = for {
-      r <- raw_annotation if r.table_name === table_name && r.column_name === column_name
-      v <- vocabulary if v.tid === r.tid
-    } yield (r.label,v.label,v.source,v.code,v.iri,v.description)
+    val q =
+      sql"""
+           select vocabulary.tid, label as raw_value, pref_label, source, code, iri, description
+           from vocabulary join raw_annotation on vocabulary.tid = raw_annotation.tid
+           where table_name ilike $table_name and column_name ilike $column_name and
+           label not in (select raw_value from expert_feedback where expert_username = $username)
+         """.as[(Int,String,String,String,String,String,String)]
 
     val db = get_db()
 
-    val f = db.run(q.result).map(_.foreach(a =>
-      info :+= expert_info_for_feedback(a._1,a._2,a._3,a._4,a._5,a._6)
+    val f = db.run(q).map(_.foreach(a =>
+      info :+= expert_info_for_feedback(a._1,a._2,a._3,a._4,a._5,a._6,a._7)
     ))
     Await.result(f, Duration.Inf)
     db.close()
@@ -473,7 +474,15 @@ object db_handler {
 
     Await.result(f, Duration.Inf)
     db.close()
-
     res
   }
+
+  def insert_expert_feedback(rows: List[expert_feedback_type]): Unit = {
+    val insertAction = expert_feedback ++= rows
+    val db = get_db()
+    val f = db.run(insertAction)
+    Await.result(f,Duration.Inf)
+    db.close()
+  }
+
 }

@@ -7,6 +7,16 @@ import scala.io.StdIn
 
 object Expert_correction {
 
+  def correct_value(value_to_correct: String,table: String, column: String): Unit = {
+    val source_code = input_source_code()
+    db_handler.update_tid(value_to_correct,None,table,column)
+    val tuples = db_handler.get_value_info(value_to_correct,table,column)
+
+    for ((table_name, column_name) <- tuples) {
+      db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, value_to_correct, source_code._1, source_code._2))
+    }
+  }
+
   def correction_routine(): Unit = {
     display_prompt()
     val user_selection = get_choice(2)
@@ -39,29 +49,17 @@ object Expert_correction {
           println
         }
       }
+      correct_value(value,table,column)
 
-      val source_code = input_source_code()
-      db_handler.update_tid(value,None,table,column)
-      val tuples = db_handler.get_value_info(value,table,column)
-
-      for ((table_name, column_name) <- tuples) {
-        db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, value, source_code._1, source_code._2))
-      }
       println("Do you wish to update another value?")
-      println("y/n")
+      println("1 - Yes")
+      println("2 - No")
+      val choice = get_choice(2)
 
-      var choice = StdIn.readLine()
-      while (!choice.equalsIgnoreCase("y") && !choice.equalsIgnoreCase("n")){
-        println("unknown command")
-        println("type y/n")
-
-        choice = StdIn.readLine()
-      }
-
-      if(choice.equalsIgnoreCase("y")){
+      if(choice.equalsIgnoreCase("1")){
         flag = true
       }
-      else if(choice.equalsIgnoreCase("n"))
+      else if(choice.equalsIgnoreCase("2"))
         flag = false
     }
   }

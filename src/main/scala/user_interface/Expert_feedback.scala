@@ -1,6 +1,6 @@
 package user_interface
 
-import Enricher.DBCon.db_handler
+import Enricher.DBCon.{db_handler, expert_feedback_type}
 import Utils._
 import scalax.cli.Table
 import shapeless.Sized
@@ -28,16 +28,37 @@ object Expert_feedback {
     val table_name = tmp._1
     val column = tmp._2
 
-    val info_for_rating = db_handler.get_info_for_feedback(table_name,column)
+    val info_for_rating = db_handler.get_info_for_feedback(table_name,column,username)
 
+    println("Hello "+username)
     println("You are currently rating annotations for")
     println("Table: "+table_name)
     println("Column: "+column)
-    val table = Table(Sized("id","parsed value","label","source","code","iri"))
+    println
+    println
 
     for (o <- info_for_rating){
+      val table = Table(Sized("Raw value","Preferred label","Source","Code","Iri","Description"))
       table.rows += Sized(o.raw,o.pref_label,o.source,o.code,o.iri,o.description)
       table.print()
+      println
+      println("Rate this annotation")
+      println("1 - EXACT")
+      println("2 - ALMOST EXACT")
+      println("3 - ACCEPTABLE")
+      println("4 - BAD")
+      val rating = get_choice(4).toInt
+      val row = expert_feedback_type(username,o.raw,table_name,column,o.tid,rating)
+      db_handler.insert_expert_feedback(List(row))
+      if (rating == 4){
+        println("Do you want to correct this annotation?")
+        println("1 - Yes")
+        println("2 - No")
+        val choice = get_choice(2).toInt
+        if(choice==1){
+          Expert_correction.correct_value(o.raw,table_name,column)
+        }
+      }
     }
 
   }
