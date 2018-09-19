@@ -25,9 +25,9 @@ object Expert_preference {
           println()
           var i = 0
           val options = db_handler.get_user_feedback_infos(rv)
-          val table = Table(Sized("id","parsed value","label","source","code","iri"))
+          val table = Table(Sized("id","parsed value","pref_label","source","code","iri"))
           for (o <- options){
-            table.rows += Sized(i.toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),o.iri.getOrElse("null"))
+            table.rows += Sized((i+1).toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),o.iri.getOrElse("null"))
             i+=1
           }
           table.alignments
@@ -68,7 +68,7 @@ object Expert_preference {
             display_prompt(true)
             val user_choice = get_choice(POSSIBLE_CHOICES_RANGE)
             if(user_choice.equals("1")){
-              println("Please input manually source and cdoe")
+              println("Please input manually source and code")
               val user_choice = input_source_code()
               val source = user_choice._1
               val code = user_choice._2
@@ -80,7 +80,7 @@ object Expert_preference {
             else if (user_choice.equals("2")){
               println("Please select an ID")
               val user_selection = get_choice(options.length)
-              val a = options(user_selection.toInt)
+              val a = options(user_selection.toInt-1)
               db_handler.insert_user_changes(expert_preference_type(default_values.int,a.table,a.column,a.raw_value,a.source.get,a.code.get))
               db_handler.set_resolved(rv,table_name,column_name)
             }

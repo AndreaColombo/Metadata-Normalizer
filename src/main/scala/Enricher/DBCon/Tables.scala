@@ -20,6 +20,7 @@ case class relationship_unfolded_type(tid_a: Int = default_values.int, tid_d: In
 case class expert_choice_type(id: Int = default_values.int, resolved: Boolean = default_values.bool, table: String = default_values.string, column: String = default_values.string, tid: Option[Int] = Some(default_values.int), raw_value: String = default_values.string, parsed_value: Option[String] = Some(default_values.string), label: Option[String] = Some(default_values.string), source: Option[String] = Some(default_values.string), code: Option[String] = Some(default_values.string), iri: Option[String]= Some(default_values.string), provenance: String = default_values.string, timestamp: String = default_values.string)
 case class expert_preference_type(id: Int = default_values.int, table_name: String = default_values.string, column_name: String = default_values.string, raw_value: String = default_values.string, source: String = default_values.string, code: String = default_values.string)
 case class expert_feedback_type(expert_username: String = default_values.string, raw_value: String = default_values.string, table_name: String = default_values.string, column_name: String = default_values.string, tid: Int = default_values.int)
+case class expert_info_for_feedback(raw: String = default_values.string, pref_label: String = default_values.string, source: String = default_values.string, code: String = default_values.string, iri: String = default_values.string, description: String = default_values.string)
 
 object Tables {
 
@@ -37,20 +38,20 @@ object Tables {
     def tid = column[Int]("tid", O.AutoInc, O.PrimaryKey)
     def source = column[String]("source", O.SqlType("VARCHAR(32)"))
     def code = column[String]("code",O.SqlType("VARCHAR(64)"))
-    def label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
+    def pref_label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
     def description = column[String]("description")
     def iri = column[String]("iri")
 
     def idx = index("vocabulary_source_code_key",(source,code),unique = true)
     def fk = foreignKey("ontology_source_fk",source,ontology)(_.source, onDelete = ForeignKeyAction.Cascade)
 
-    def * = (tid, source,code,label,description,iri) <> (vocabulary_type.tupled, vocabulary_type.unapply)
+    def * = (tid, source,code,pref_label,description,iri) <> (vocabulary_type.tupled, vocabulary_type.unapply)
   }
   val vocabulary = TableQuery[vocabulary]
 
   class synonym(tag: Tag) extends Table[synonym_type](tag,Some("public"), "synonym"){
     def tid = column[Int]("tid")
-    def label = column[String]("label", O.SqlType("VARCHAR(128)"))
+    def label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
     def ttype = column[String]("type", O.SqlType("VARCHAR(4)"))
 
     def pk = primaryKey("synonym_pkey", (tid,label,ttype))
@@ -77,7 +78,7 @@ object Tables {
 
   class raw_annotation(tag: Tag) extends Table[raw_annotation_type](tag, Some("public"),"raw_annotation"){
     def tid = column[Int]("tid")
-    def label = column[String]("label", O.SqlType("VARCHAR(128)"))
+    def label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
     def table_name = column[String]("table_name", O.SqlType("VARCHAR(32)"))
     def column_name = column[String]("column_name", O.SqlType("VARCHAR(32)"))
     def method = column[Char]("method")
@@ -128,7 +129,7 @@ object Tables {
     def raw_value = column[String]("raw_value")
     def tid = column[Option[Int]]("tid")
     def parsed_value = column[Option[String]]("parsed_value")
-    def label = column[Option[String]]("label")
+    def label = column[Option[String]]("pref_label")
     def source = column[Option[String]]("source")
     def code = column[Option[String]]("code")
     def resolved = column[Boolean]("resolved", O.Default(false))
@@ -169,5 +170,4 @@ object Tables {
     def * = (expert_username,raw_value,table_name,column_name,tid) <> (expert_feedback_type.tupled, expert_feedback_type.unapply)
   }
   val expert_feedback = TableQuery[expert_feedback]
-
 }

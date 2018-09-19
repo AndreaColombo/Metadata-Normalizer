@@ -12,12 +12,12 @@ object OlsParser {
     val parsed_value = termAnnotated
     val raw_value = lookup(termAnnotated)
     var score = "HIGH"
-    val range = j \\ "label"
+    val range = j \\ "pref_label"
 
     for (i <- range.indices){
       var deleted = false
       val j2 = j(i)
-      val prefLabel = (j2 \ "label").validate[String].get
+      val prefLabel = (j2 \ "pref_label").validate[String].get
       val ontology = (j2 \ "ontology_name").validate[String].get.split("_").head
       val ontology_id = (j2 \ "short_form").validate[String].get
       val id = ontology_id

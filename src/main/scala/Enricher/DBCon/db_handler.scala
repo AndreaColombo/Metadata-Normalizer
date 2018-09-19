@@ -97,7 +97,7 @@ object db_handler {
       ok :+= (l.source,l.code,l.label,l.description,l.iri)
     }
     val db = get_db()
-    val insertAction = vocabulary.map(a=> (a.source,a.code,a.label,a.description,a.iri)) ++= ok
+    val insertAction = vocabulary.map(a=> (a.source,a.code,a.pref_label,a.description,a.iri)) ++= ok
     try {
       val insert = db.run(insertAction)
       Await.result(insert, Duration.Inf)
@@ -244,10 +244,8 @@ object db_handler {
   def get_cv_support_raw(where: raw_annotation => Rep[Boolean]): raw_annotation_type = {
     var result = raw_annotation_type()
     val db = get_db()
-    raw_annotation.filter(a => a.table_name === "biosample")
     val q = for {
       a: raw_annotation <- raw_annotation
-//      where(a)
        if where(a)
     } yield a
 
@@ -446,5 +444,19 @@ object db_handler {
     Await.result(f, Duration.Inf)
     db.close()
     suggestion
+  }
+
+  def get_info_for_feedback(table_name: String, column_name: String): List[expert_info_for_feedback] = {
+    var info: List[expert_info_for_feedback] = List()
+    val q = for {
+      r <- raw_annotation if r.table_name === table_name && r.column_name === column_name
+      v <- vocabulary if v.tid === r.tid
+    } yield expert_info_for_feedback(r.label.toString(),v.pref_label.toString(),v.source.toString(),v.code.toString(),v.iri.toString(),v.description.toString())
+
+    val db = get_db()
+
+    val f = db.run(q.result).map(a => info = a.toList)
+
+    info
   }
 }
