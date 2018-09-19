@@ -1,8 +1,7 @@
 package user_interface
 
-import Config.config
 import Enricher.DBCon.{db_handler, default_values, expert_preference_type}
-import user_interface.Expert_preference.input_source_code
+import Utils._
 
 import scala.io.StdIn
 
@@ -10,22 +9,12 @@ object Expert_correction {
 
   def correction_routine(): Unit = {
     display_prompt()
-    val user_selection = Expert_preference.get_choice(2)
+    val user_selection = get_choice(2)
     var flag = user_selection == "1"
     while (flag) {
-      println("Choose table")
-      val table_list = config.get_gcm_table_list()
-      for (i <- table_list.indices){
-        println(i+1 + " - " + table_list(i))
-      }
-      val table = table_list(Expert_preference.get_choice(table_list.length).toInt-1)
-
-      println("Choose column")
-      val column_list = config.get_termtype_list(table)
-      for (i <- column_list.indices){
-        println(i+1 + " - " + column_list(i))
-      }
-      val column = column_list(Expert_preference.get_choice(column_list.length).toInt-1)
+      val tmp = Utils.choose_table_column()
+      val table = tmp._1
+      val column = tmp._2
       println(table)
       println(column)
 
@@ -40,7 +29,7 @@ object Expert_correction {
           for (i <- options.indices) {
             println(i + 1 + " - " + options(i))
           }
-          value = options(Expert_preference.get_choice(options.length).toInt - 1)
+          value = options(Utils.get_choice(options.length).toInt - 1)
           println("value chosen: " + value)
         }
         else {
@@ -52,7 +41,7 @@ object Expert_correction {
       }
 
       val source_code = input_source_code()
-      db_handler.update_tid(value,null,table,column)
+      db_handler.update_tid(value,None,table,column)
       val tuples = db_handler.get_value_info(value,table,column)
 
       for ((table_name, column_name) <- tuples) {

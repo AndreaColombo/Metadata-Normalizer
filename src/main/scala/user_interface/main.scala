@@ -3,6 +3,7 @@ package user_interface
 import Enricher.DBCon.db_handler
 import Enricher.Enrichment_engine.Ols_interface
 import org.slf4j.LoggerFactory
+import Utils._
 
 object main {
   val logger = LoggerFactory.getLogger(this.getClass)
@@ -11,7 +12,7 @@ object main {
     var exit = false
     while (!exit) {
       display_prompt()
-      val selection = Expert_preference.get_choice(4)
+      val selection = get_choice(4)
       if (selection.equals("1")) {
         Expert_preference.get_user_feedback()
       }

@@ -42,7 +42,7 @@ object db_handler {
     db
   }
 
-  val tables = List(ontology,vocabulary,synonym,reference,raw_annotation,relationship,relationship_unfolded,expert_preference,expert_choice)
+  val tables = List(ontology,vocabulary,synonym,reference,raw_annotation,relationship,relationship_unfolded,expert_preference,expert_choice,expert_feedback)
 
   def init(): Unit = {
     val db = get_db()
@@ -455,10 +455,25 @@ object db_handler {
 
     val db = get_db()
 
-    val f = db.run(q.result).map(_.foreach(println))
+    val f = db.run(q.result).map(_.foreach(a =>
+      info :+= expert_info_for_feedback(a._1,a._2,a._3,a._4,a._5,a._6)
+    ))
     Await.result(f, Duration.Inf)
     db.close()
 
     info
+  }
+
+  def get_username_list(): List[String] = {
+    var res: List[String] = List()
+    val q = expert_feedback.map(_.expert_username).distinct
+
+    val db = get_db()
+    val f = db.run(q.result).map(a => res = a.toList)
+
+    Await.result(f, Duration.Inf)
+    db.close()
+
+    res
   }
 }

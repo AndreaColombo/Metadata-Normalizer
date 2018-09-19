@@ -38,7 +38,7 @@ object Tables {
     def tid = column[Int]("tid", O.AutoInc, O.PrimaryKey)
     def source = column[String]("source", O.SqlType("VARCHAR(32)"))
     def code = column[String]("code",O.SqlType("VARCHAR(64)"))
-    def label = column[String]("label", O.SqlType("VARCHAR(128)"))
+    def label = column[String]("pref_label", O.SqlType("VARCHAR(128)"))
     def description = column[String]("description")
     def iri = column[String]("iri")
 
@@ -166,6 +166,7 @@ object Tables {
     //4 BAD
     def rating = column[Int]("rating")
 
+    def pk = primaryKey("expert_feedback_pkey",(expert_username,table_name,column_name))
     def fk = foreignKey("expert_feedback_fk",tid,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
     def * = (expert_username,raw_value,table_name,column_name,tid) <> (expert_feedback_type.tupled, expert_feedback_type.unapply)
   }
