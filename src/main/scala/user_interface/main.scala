@@ -1,13 +1,14 @@
 package user_interface
 
 import Enricher.DBCon.db_handler
+import Enricher.Enrichment_engine.Ols_interface
 import org.slf4j.LoggerFactory
 
 object main {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   def main(args: Array[String]): Unit = {
-    var exit = false
+    var exit = true
     while (!exit) {
       display_prompt()
       val selection = Expert_preference.get_choice(4)
@@ -22,7 +23,7 @@ object main {
       }
       else exit = true
     }
-    db_handler.get_suggestions_raw("b-cell","biosample","disease")
+    Ols_interface.ols_get_info("EFO","EFO_0003746")
   }
 
   def display_prompt(): Unit = {

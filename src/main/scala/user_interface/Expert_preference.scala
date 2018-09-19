@@ -44,7 +44,7 @@ object Expert_preference {
               val user_sourcecode = input_source_code()
               val source = user_sourcecode._1
               val code = user_sourcecode._2
-              val prefLabel = Ols_interface.ols_get_info(code,source).head(2)
+              val prefLabel = Ols_interface.ols_get_info(source,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
               db_handler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
               db_handler.set_resolved(rv,table_name,column_name)
