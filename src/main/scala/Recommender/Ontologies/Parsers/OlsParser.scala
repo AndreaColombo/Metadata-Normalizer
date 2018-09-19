@@ -34,13 +34,13 @@ object OlsParser {
 
   def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): String = {
     var score = ""
-    val s = termAnnotated.replace("-"," ").map(_.toLower).r.findAllIn(prefLabel.replace("-"," ").map(_.toLower)).mkString
+    val s = termAnnotated.replaceAll("[ ,!.\\-/]+"," ").map(_.toLower).r.findAllIn(prefLabel.replace("[ ,!.\\-/]+"," ").map(_.toLower)).mkString
     var s3 = ""
     var syn_found = ""
     var diff_min = 23456
 
     for (syn <- synonym_l){
-      s3 = termAnnotated.replace("-"," ").map(_.toLower).r.findAllIn(syn.replace("-"," ").map(_.toLower)).mkString
+      s3 = termAnnotated.replaceAll("[ ,!.\\-/]+"," ").map(_.toLower).r.findAllIn(syn.replaceAll("[ ,!.\\-/]+"," ").map(_.toLower)).mkString
       if (s3.nonEmpty) {
         val diff = (countWords(syn) - countWords(termAnnotated))*2
         if(diff < diff_min){
@@ -50,19 +50,19 @@ object OlsParser {
       }
     }
 
-    val VERY_BIG_NUMBER = -58585858
+    val VERY_BIG_NUMBER = Int.MaxValue
     var pref_diff = VERY_BIG_NUMBER
     var syn_diff = VERY_BIG_NUMBER
 
     if (s.nonEmpty){
       pref_diff = (countWords(prefLabel) - countWords(termAnnotated)) * 2
     }
+
     if (s3.nonEmpty) {
       syn_diff = (countWords(syn_found) - countWords(termAnnotated)) * 2
     }
-    if(pref_diff!=VERY_BIG_NUMBER && syn_diff != VERY_BIG_NUMBER){
-      if(pref_diff<0) pref_diff=0
-      if(syn_diff<0) syn_diff=0
+
+    if(pref_diff!=VERY_BIG_NUMBER || syn_diff != VERY_BIG_NUMBER){
       val pref_score = Config.config.get_score("pref") - pref_diff
       val syn_score = Config.config.get_score("syn") - syn_diff
       if(pref_score>syn_score){
@@ -70,15 +70,15 @@ object OlsParser {
       }
       else score = "SYN - "+syn_diff
     }
-
     else score = "LOW"
 
-      score
+    score
   }
 
   def countWords(text: String): Int = {
     var counts = 0
-    for (rawWord <- text.split("[ ,!.-7/]+")) {
+    for (rawWord <- text.split("[ ,!.\\-/]+")) {
+      println(rawWord)
       counts += 1
     }
     counts

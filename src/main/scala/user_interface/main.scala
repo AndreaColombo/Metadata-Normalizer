@@ -1,5 +1,7 @@
 package user_interface
 
+import Recommender.Ontologies.Parsers.OlsParser
+
 object main {
 
   def main(args: Array[String]): Unit = {
@@ -18,6 +20,7 @@ object main {
       }
       else exit = true
     }
+    println(OlsParser.countWords("b-a!c,d e.g/r"))
   }
 
   def display_prompt(): Unit = {

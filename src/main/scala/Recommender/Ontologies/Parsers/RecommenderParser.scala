@@ -33,7 +33,6 @@ object RecommenderParser {
       val synonym = synonym_l.mkString(",").map(_.toLower)
 
       if(match_type.equals("pref")){
-        val s = parsed_value.replace("-"," ").map(_.toLower).r.findAllIn(prefLabel.replace("-"," ").map(_.toLower)).mkString
         val diff = (countWords(prefLabel) - countWords(parsed_value))*2
         if (diff > 0)
           score = "PREF - "+diff
