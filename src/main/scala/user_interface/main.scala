@@ -8,7 +8,7 @@ object main {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   def main(args: Array[String]): Unit = {
-    var exit = true
+    var exit = false
     while (!exit) {
       display_prompt()
       val selection = Expert_preference.get_choice(4)
