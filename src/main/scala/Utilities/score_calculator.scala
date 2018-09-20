@@ -22,39 +22,26 @@ object score_calculator {
     score
   }
 
-  def get_match_score (id: Int, service: String): Int = {
-    var score = 0
-    val matchType = db_handler.get_match_type(id, service)
 
-    if (service.equalsIgnoreCase("zooma")) {
-      if (matchType.equalsIgnoreCase("HIGH")) score = 10
-      else if (matchType.equalsIgnoreCase("GOOD")) score = 7
-      else if (matchType.equalsIgnoreCase("MEDIUM")) score = 5
-      else if (matchType.equalsIgnoreCase("LOW")) score = 1
-    }
-    else {
-      if (matchType.startsWith("PREF")) {
-        if (matchType.contains("-")) {
-          val lscore = matchType.split("-")
-          score = config.get_score("pref") - lscore(1).drop(1).toInt
-        }
-        else score = config.get_score("pref")
-      }
-      else if (matchType.startsWith("SYN")) {
-        if (matchType.contains("-")) {
-          val lscore = matchType.split("-")
-          score = config.get_score("syn") - lscore(1).drop(1).toInt
-        }
-        else score = config.get_score("syn")
-      }
-      else score = 1
-    }
-    if(score<0)
-      score = 0
+  def get_words_distance(term: String, label: String): Int = {
+    val term_l = term.replaceAll("[()\\[\\]{}]","").split("[ ,!.\\-/]+")
+    val label_l = label.replaceAll("[()\\[\\]{}]","").split("[ ,!.\\-/]+")
+    val term_set = term_l.toSet
+    val label_set = label_l.toSet
 
-    score
+    //in common = words in common between the two sets
+    val in_common = term_set.intersect(label_set)
+
+    //excess = words not in common
+    val excess = (term_set ++ label_set) -- in_common
+
+    val deletion = term_set -- in_common
+    val insertion = label_set -- in_common
+
+    deletion.size * config.get_modifier("deletion") + insertion.size * config.get_modifier("insertion")
   }
-  def get_match_score (matchType: String, service: String): Int = {
+
+  def convert_score_num(matchType: String, service: String): Int = {
     var score = 0
 
     if (service.equalsIgnoreCase("zooma")) {
@@ -107,12 +94,13 @@ object score_calculator {
     val range = db_handler.get_db_lenght()
 //    calculate_ontology_score()
     for (i <- range){
-      val a = db_handler.get_onto_service_termtype(i)
-      val onto = a._1
-      val term_type = a._3
-      val onto_score = db_handler.get_onto_score(onto,term_type)
+      val tmp = db_handler.get_onto_service_matchtype(i)
+      val onto = tmp._1
+      val service = tmp._2
+      val match_type = tmp._3
+      val onto_score = db_handler.get_onto_score(onto)
       println("\r"+i)
-      val match_score = get_match_score(i, a._2)
+      val match_score = convert_score_num(match_type,service)
 
       val k1 = 2
       val k2 = 2
@@ -130,7 +118,6 @@ object score_calculator {
       db_handler.update_score(score1,score2,onto_score.toDouble,match_score,i)
     }
   }
-
 
   def calculate_suitability_score(t: String): Double = {
     val ontos = db_handler.get_ontology_by_type(t)

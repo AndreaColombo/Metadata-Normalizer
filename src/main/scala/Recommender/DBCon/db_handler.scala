@@ -252,7 +252,7 @@ object db_handler {
     result.toList
   }
 
-  def get_onto_score(onto: String, term_type: String): String = {
+  def get_onto_score(onto: String): String = {
     val db = Database.forConfig("gecotest2", conf)
     var score = "0"
     val q =
@@ -281,12 +281,12 @@ object db_handler {
     lenght
   }
 
-  def get_onto_service_termtype(id: Int): (String, String, String) = {
+  def get_onto_service_matchtype(id: Int): (String, String, String) = {
     var result = ("", "", "")
     val db = Database.forConfig("gecotest2", conf)
     val q =
       sql"""
-           select ontology, service, term_type
+           select ontology, service, score
            from public.apiresults
            where id = $id
          """.as[(String, String, String)]

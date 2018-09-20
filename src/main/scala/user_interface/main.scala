@@ -1,6 +1,5 @@
 package user_interface
 
-import Enricher.DBCon.db_handler
 import Enricher.Enrichment_engine.Ols_interface
 import org.slf4j.LoggerFactory
 import Utils._
@@ -20,7 +19,7 @@ object main {
         Expert_correction.correction_routine()
       }
       else if (selection.equals("3")) {
-        //EXPERT FEEDBACK
+        Expert_feedback.get_user_rating()
       }
       else exit = true
     }

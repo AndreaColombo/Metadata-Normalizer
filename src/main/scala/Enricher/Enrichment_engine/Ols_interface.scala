@@ -4,10 +4,10 @@ import java.net.{SocketTimeoutException, URLEncoder}
 
 import Config.config
 import Config.config.get_ontologies_by_type
-import Enricher.DBCon.{db_handler, default_values, ontology_type, expert_choice_type}
+import Enricher.DBCon.{db_handler, default_values, expert_choice_type, ontology_type}
 import Recommender.Ontologies.Parsers.OlsParser.countWords
-import Utilities.Preprocessing
-import Utilities.score_calculator.get_match_score
+import Utilities.{Preprocessing, score_calculator}
+import Utilities.score_calculator.convert_score_num
 import com.fasterxml.jackson.core.JsonParseException
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsValue, Json}
@@ -168,36 +168,21 @@ object Ols_interface {
   }
 
   def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): Int = {
-    val term = termAnnotated.replace("-"," ").replace("/"," ").replace("(","").replace(")","").map(_.toLower).split(" ").toSet
-    val label = prefLabel.replace("-"," ").replace("(","").replace(")","").map(_.toLower).split(" ").toSet
-    var s = ""
     val pref = config.get_score("pref")
     val syn = config.get_score("syn")
     val penalty = config.get_excess_words_penalty()
-    var difference = 0
-    if (term.size > label.size) {
-      difference = term.diff(label).size
-    }
-    else {
-      difference = label.diff(term).size
-    }
-    val score = pref - difference * penalty
+    val modifier = score_calculator.get_words_distance(termAnnotated,prefLabel)
+    val score = pref - modifier
 
     var score_syn = 0
     var max_score_syn = 0
     for (elem <- synonym_l) {
-      val syn_set = elem.replace("-"," ").replace("(","").replace(")","").map(_.toLower).split(" ").toSet
-      var diff = 0
-      if (term.size>syn_set.size) {
-        diff = term.diff(syn_set).size
-      }
-      else {
-        diff = syn_set.diff(term).size
-      }
-      score_syn = syn - diff*penalty
+      val syn_modifier = score_calculator.get_words_distance(termAnnotated,elem)
+      score_syn = syn - syn_modifier
       if(score_syn>max_score_syn)
         max_score_syn=score_syn
     }
+
     math.max(score,max_score_syn)
   }
 }
