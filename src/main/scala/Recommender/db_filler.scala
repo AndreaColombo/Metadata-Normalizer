@@ -68,10 +68,10 @@ object db_filler {
       db_handler.apiresults_insert(aa,column_name)
       println("recsys fine")
     }
-//    println("zooma inizio")
-//    db_handler.apiresults_insert(zooma.input(s),column_name)
-//    println("zooma fine")
-//    get_timestamp()
+    println("zooma inizio")
+    db_handler.apiresults_insert(zooma.input(s),column_name)
+    println("zooma fine")
+    get_timestamp()
 
     println("ols inizio")
     db_handler.apiresults_insert(ols.input(s),column_name)
