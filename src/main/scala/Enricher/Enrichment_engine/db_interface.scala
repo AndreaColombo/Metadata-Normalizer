@@ -10,20 +10,25 @@ object db_interface {
 
   case class cv_support(tid: String, source: String, code: String, label: String)
 
-  def db_interface(res: List[Map[String, String]], raw_value: String, table_name: String, column_name: String, method: Char): Unit = {
+  def db_interface(res: List[Map[String, String]], raw_value: String, table_name: String, column_name: String, method: Char,source:String, code:String): Unit = {
     var cv_support: List[cv_support] = List()
     if (res.nonEmpty) {
       for (elem <- res) {
         cv_support ++= db_insert(elem)
       }
-      val label = res.head.apply("label")
-      val tid = db_handler.get_tid(res.head.apply("source"),res.head.apply("code"))
-      db_handler.syn_insert(List(synonym_type(tid,raw_value,"raw")))
-      db_handler.raw_insert(List(raw_annotation_type(tid,raw_value,table_name,column_name,method)))
-      db_handler.update_tid(raw_value,Some(tid),table_name,column_name)
-      insert_hyp(cv_support, res)
-      unfold_hyp(tid)
+
     }
+    val mainTid: Int = db_handler.get_tid(source, code)
+
+    //TODO ARIF it is using the first result which is wrong
+    //      val tid = db_handler.get_tid(res.head.apply("source"),res.head.apply("code"))
+    //adding raw value to syn table as raw and also syn table as raw
+    db_handler.syn_insert(List(synonym_type(mainTid,raw_value,"raw")))
+    db_handler.raw_insert(List(raw_annotation_type(mainTid,raw_value,table_name,column_name,method)))
+    db_handler.update_tid(raw_value,Some(mainTid),table_name,column_name)
+    //TODO ARIF correct
+//    insert_hyp(cv_support, res)
+//    unfold_hyp(mainTid)
   }
 
   //INSERT ELEMENTS IN vocabulary, syn, xref

@@ -33,11 +33,13 @@ object enrichment_engine {
         //VALUE FOUND IN USER CHANGES
         logger.info(s"""Value "$raw_value" found in user changes""")
         val source = result_user_changes._1
+        val code = result_user_changes._2
         val a = Ols_interface.ols_get_onto_info(source)
         if (!db_handler.onto_exist(a.source)) {
           db_handler.insert_ontology(a)
         }
-        db_interface.db_interface(annotator.get_info(result_user_changes._1, result_user_changes._2, raw_value, table_name, column_name), raw_value, table_name, column_name, 'U')
+        //TODO ARIF check source code
+        db_interface.db_interface(annotator.get_info(result_user_changes._1, result_user_changes._2, raw_value, table_name, column_name), raw_value, table_name, column_name, 'U', source, code)
       }
       else if(result_syn.tid != default_values.int) {
         //VALUE FOUND PREF OR SYN
@@ -75,14 +77,17 @@ object enrichment_engine {
               val tid = db_handler.get_tid(source, code)
               val condition = (a: raw_annotation) => a.tid === tid
               val existing_value = db_handler.get_cv_support_raw(condition)
-              if (existing_value.table_name != table_name ||
-              existing_value.column_name != column_name ||
-              existing_value.label != raw_value) {
-                db_handler.raw_insert(List(raw_annotation_type(tid, raw_value, table_name, column_name, 'O')))
-                db_handler.syn_insert(List(synonym_type(tid,raw_value,"raw")))
-              }
+              //NOTE: ARIF no need to do here, it will do in  db_interface.db_interface( line around 89
+//              if (existing_value.table_name != table_name ||
+//              existing_value.column_name != column_name ||
+//              existing_value.label != raw_value) {
+//                db_handler.raw_insert(List(raw_annotation_type(tid, raw_value, table_name, column_name, 'O')))
+//                db_handler.syn_insert(List(synonym_type(tid,raw_value,"raw")))
+//              }
             }
-            db_interface.db_interface(result, raw_value, table_name, column_name, 'O')
+            //TODO ARIF ILLUMINA adds the tid of the first parent that insert into the db
+            //TODO ARIF I think the system is getting the first tid available in the voc. table
+            db_interface.db_interface(result, raw_value, table_name, column_name, 'O', source, code)
           }
           else {
             //MULTIPLE RESULTS, BEST MATCH UNDECIDED

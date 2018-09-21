@@ -21,6 +21,7 @@ object annotator {
     var best_score = 0.0
     for (onto <- ontos if !ok){
       val tmp = ols_search_term(raw_value,onto)
+      // TODO ARIF max score
       if (tmp.score==10){
         result = tmp
         ok = true
@@ -29,7 +30,7 @@ object annotator {
         result = tmp
         best_score = tmp.score
       }
-      else if (tmp.score == best_score){
+      else if (tmp.score == best_score){ //TODO ARIF add check also match_mode_random
         val l = result.options ++ tmp.options
         result = search_term_result(l,tmp.score)
       }
@@ -39,6 +40,8 @@ object annotator {
 
   def get_info(source: String, code: String, raw_value: String,table: String, column: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
+
+    //TODO before starting this check RAW table, then check
     val tmp = ols_get_info(source,code)
     if (tmp.nonEmpty) {
       val onto = tmp.head.head

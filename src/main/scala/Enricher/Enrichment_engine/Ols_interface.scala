@@ -45,6 +45,7 @@ object Ols_interface {
       val synonyms = (j2 \ "synonym").validate[List[String]].getOrElse(List())
       val score_num = get_score(term,prefLabel,synonyms)
 
+      //TODO ARIF add check max score also by using match_mode_random
       if (score_num >= config.get_threshold() && score_num > result.score) {
         if(ols_get_status(ontology,iri).contains("200")){
           result = search_term_result(List(source_code_label(ontology,ontology_id,prefLabel)),score_num)
@@ -71,6 +72,7 @@ object Ols_interface {
     iri_tmp.substring(0,iri_tmp.lastIndexOf("/")+1)+code
   }
 
+  //TODO ARIF change list of list of string into list of case classes
   def ols_get_info(source: String, code: String): List[List[String]] = {
     var rows: Seq[List[String]] = List()
     val iri = ols_get_iri(source,code)
@@ -83,6 +85,7 @@ object Ols_interface {
       attempts += 1
       status = ols_get_status(source,iri)
     }
+    //TODO ARIF no need to run ols_get_status seperately, you can run once then by checking response.code, you can get status as integer
     if(attempts<=5) {
       val response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
       val j = Json.parse(response.body)
@@ -90,7 +93,9 @@ object Ols_interface {
       val ontology = source
       val ontology_id = code
       val description = (j \ "description").validate[List[String]].getOrElse(List("null")).head
-      val synonym_l = (j \ "synonym").validate[List[String]].getOrElse(List("null"))
+      //TODO check all the type of synonyms
+      val synonym_l = (j \ "synonyms").validate[List[String]].getOrElse(List("null"))
+
       val synonym = synonym_l.mkString(",")
       val xref = (j \ "annotation" \ "database_cross_reference").validate[List[String]].getOrElse(List("null"))
 
