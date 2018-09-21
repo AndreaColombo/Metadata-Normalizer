@@ -121,7 +121,7 @@ object score_calculator {
       val terms = db_handler.get_parsed_by_ontology(onto)
       var recsys_score = 0.0
 
-      recsys_score = get_recommender_score(terms.take(50),onto)
+      recsys_score = get_recommender_score(terms.take(3),onto)
 
       insert :+= (onto,recsys_score)
     }
