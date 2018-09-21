@@ -30,7 +30,7 @@ object ZoomaParser {
             val ontology = (j4 \ "short_form").validate[String].get.split("_").head
             val ontology_id = (j4 \ "short_form").validate[String].get
             val id = ontology_id.substring(ontology_id.lastIndexOf("_") + 1)
-            val synonym = (j4 \ "synonyms").validate[List[String]].getOrElse(List("null")).mkString(",")
+            val synonym = (j4 \ "synonyms").validate[List[String]].getOrElse(List()).mkString(",")
             val term_type = ""
             val current = List(service,raw_value,parsed_value,ontology.map(_.toLower) ,ontology_id,prefLabel,synonym,score,term_type)
             if (!rows.exists(p => p.equals(current)))

@@ -20,7 +20,7 @@ object BioportalParser {
       val j2 = j(i)
       val prefLabel = (j2 \ "prefLabel").validate[String].get
       val matchType = (j2 \ "matchType").validate[String].get
-      val synonym_l = (j2 \ "synonym").validate[List[String]].getOrElse(List("null"))
+      val synonym_l = (j2 \ "synonym").validate[List[String]].getOrElse(List())
       val synonym = synonym_l.mkString(",")
       val url = (j2 \ "links" \ "self").validate[String].get
 

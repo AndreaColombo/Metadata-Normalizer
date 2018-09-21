@@ -29,7 +29,7 @@ object RecommenderParser {
       val ontology_id = ontology_raw(1).map(_.toLower)
       val j2 = Json.parse(Http(url).param("apikey", apikey).param("display_context", "false").param("pagesize", "15").header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body)
       val prefLabel = (j2 \ "prefLabel").validate[String].getOrElse("null").map(_.toLower)
-      val synonym_l = (j2 \ "synonym").validate[List[String]].getOrElse(List("null"))
+      val synonym_l = (j2 \ "synonym").validate[List[String]].getOrElse(List())
       val synonym = synonym_l.mkString(",").map(_.toLower)
 
       val score = get_score(parsed_value,match_type,prefLabel,synonym_l)
