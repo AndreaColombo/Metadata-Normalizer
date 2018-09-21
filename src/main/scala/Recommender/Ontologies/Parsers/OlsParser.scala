@@ -23,7 +23,7 @@ object OlsParser {
       val ontology = (j2 \ "ontology_name").validate[String].get.split("_").head
       val ontology_id = (j2 \ "short_form").validate[String].get
       val id = ontology_id
-      val synonym_l = (j2 \ "synonym").validate[List[String]].getOrElse(List("null"))
+      val synonym_l = (j2 \ "synonym").validate[List[String]].getOrElse(List())
       val synonym = synonym_l.mkString(":::")
       var term_type = ""
       score = get_score(termAnnotated,prefLabel,synonym_l)
@@ -43,7 +43,7 @@ object OlsParser {
 
     var score = ""
 
-    var max_score_syn = 0.0
+    var max_score_syn = Double.NegativeInfinity
     for (elem <- synonym_l) {
       val syn_modifier = score_calculator.get_words_distance(termAnnotated,elem)
       val score_syn = syn + syn_modifier
@@ -55,7 +55,8 @@ object OlsParser {
     if(score_label > max_score_syn){
       score = "PREF "+modifier.toString
     }
-    else score = "SYN "+syn_mod.toString
+    else
+      score = "SYN "+syn_mod.toString
 
     score
   }
