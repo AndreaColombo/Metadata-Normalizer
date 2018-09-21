@@ -27,7 +27,7 @@ object ZoomaParser {
           for (k <- range2) {
             val j4 = j3(k)
             val prefLabel = (j4 \ "label").validate[String].get
-            val ontology = (j4 \ "short_form").validate[String].get.split("_").head
+            val ontology = (j4 \ "ontology_name").validate[String].get//.split("_").head
             val ontology_id = (j4 \ "short_form").validate[String].get
             val id = ontology_id.substring(ontology_id.lastIndexOf("_") + 1)
             val synonym = (j4 \ "synonyms").validate[List[String]].getOrElse(List()).mkString(",")
