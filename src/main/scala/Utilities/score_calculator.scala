@@ -24,9 +24,11 @@ object score_calculator {
 
 
   def splitFunc(in:String): Array[String] = {
-    in.replaceAll("[()\\[\\]{}]","").split("[ ,!.\\-/]+")
+    in.toLowerCase.replaceAll("[()\\[\\]{}]","").split("[ ,!.\\-/]+")
   }
 
+
+  val DUMMY = "DUMMY"
 
   val penaltyDelete = -config.get_modifier("deletion")
   val penaltyInsert = -config.get_modifier("insertion")
@@ -51,8 +53,8 @@ object score_calculator {
   }
 
   def get_words_distance(term: String, label: String): Double = {
-    val rawList = splitFunc(term).toList
-    val labelList = splitFunc(label).toList
+    val rawList = DUMMY ::  splitFunc(term).toList
+    val labelList = DUMMY ::  splitFunc(label).toList
 
     val matrix = Array.ofDim[Double](rawList.length, labelList.length)
 
