@@ -24,37 +24,7 @@ object BioportalParser {
       val synonym = synonym_l.mkString(",")
       val url = (j2 \ "links" \ "self").validate[String].get
 
-
-      if(matchType.equals("prefLabel")){
-        val s = term.replace("-"," ").map(_.toLower).r.findAllIn(prefLabel.replace("-"," ").map(_.toLower)).mkString
-        val diff = (countWords(prefLabel) - countWords(term))*2
-        if (diff > 0)
-          score = "PREF - "+diff
-        else score = "PREF"
-      }
-      else {
-        val s2 = term.replace("-"," ").map(_.toLower).r.findAllIn(synonym.replace("-"," ").map(_.toLower)).mkString
-        var syn_found = ""
-        var diff_min = 23456
-        var s3 = ""
-
-        for (syn <- synonym_l){
-          s3 = term.replace("-"," ").map(_.toLower).r.findAllIn(syn.replace("-"," ").map(_.toLower)).mkString
-          if (s3.nonEmpty) {
-            val diff = countWords(syn) - countWords(term)
-            if(diff < diff_min){
-              diff_min = diff
-              syn_found = syn
-            }
-          }
-        }
-
-        val diff = (countWords(syn_found) - countWords(term))*2
-        if (diff > 0)
-          score = "SYN - "+diff
-        else score = "SYN"
-      }
-
+      val score = RecommenderParser.get_score(parsed_value,matchType,prefLabel,synonym_l)
 
       val ontology_raw = get_ontology(url)
       val ontology = ontology_raw.head

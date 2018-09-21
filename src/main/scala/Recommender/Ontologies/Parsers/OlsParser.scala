@@ -1,8 +1,10 @@
 package Recommender.Ontologies.Parsers
 
 
+import Config.config
 import play.api.libs.json._
 import Utilities.Preprocessing.lookup
+import Utilities.score_calculator
 
 object OlsParser {
   def parse(response: String, termAnnotated: String):List[List[String]] = {
@@ -33,44 +35,27 @@ object OlsParser {
   }
 
   def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): String = {
+    val pref = config.get_score("pref")
+    val syn = config.get_score("syn")
+    val penalty = config.get_excess_words_penalty()
+    val modifier = score_calculator.get_words_distance(termAnnotated,prefLabel)
+    val score_label = pref + modifier
+
     var score = ""
-    val s = termAnnotated.replaceAll("[ ,!.\\-/]+"," ").map(_.toLower).r.findAllIn(prefLabel.replace("[ ,!.\\-/]+"," ").map(_.toLower)).mkString
-    var s3 = ""
-    var syn_found = ""
-    var diff_min = 23456
 
-    for (syn <- synonym_l){
-      s3 = termAnnotated.replaceAll("[ ,!.\\-/]+"," ").map(_.toLower).r.findAllIn(syn.replaceAll("[ ,!.\\-/]+"," ").map(_.toLower)).mkString
-      if (s3.nonEmpty) {
-        val diff = (countWords(syn) - countWords(termAnnotated))*2
-        if(diff < diff_min){
-          diff_min = diff
-          syn_found = syn
-        }
-      }
+    var max_score_syn = 0.0
+    for (elem <- synonym_l) {
+      val syn_modifier = score_calculator.get_words_distance(termAnnotated,elem)
+      val score_syn = syn + syn_modifier
+      if(score_syn>max_score_syn)
+        max_score_syn = score_syn
     }
 
-    val VERY_BIG_NUMBER = Int.MaxValue
-    var pref_diff = VERY_BIG_NUMBER
-    var syn_diff = VERY_BIG_NUMBER
-
-    if (s.nonEmpty){
-      pref_diff = (countWords(prefLabel) - countWords(termAnnotated)) * 2
+    val syn_mod = max_score_syn-syn
+    if(score_label > max_score_syn){
+      score = "PREF "+modifier.toString
     }
-
-    if (s3.nonEmpty) {
-      syn_diff = (countWords(syn_found) - countWords(termAnnotated)) * 2
-    }
-
-    if(pref_diff!=VERY_BIG_NUMBER || syn_diff != VERY_BIG_NUMBER){
-      val pref_score = Config.config.get_score("pref") - pref_diff
-      val syn_score = Config.config.get_score("syn") - syn_diff
-      if(pref_score>syn_score){
-        score = "PREF - "+pref_diff
-      }
-      else score = "SYN - "+syn_diff
-    }
-    else score = "LOW"
+    else score = "SYN "+syn_mod.toString
 
     score
   }

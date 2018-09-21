@@ -15,10 +15,10 @@ object annotator {
   val logger: Logger = Logger.getLogger(this.getClass)
 
   def search_term(raw_value: String, term_type: String): search_term_result = {
-    var result = search_term_result(List(),0)
+    var result = search_term_result(List(),0.0)
     val ontos = get_ontologies_by_type(term_type)
     var ok = false
-    var best_score = 0
+    var best_score = 0.0
     for (onto <- ontos if !ok){
       val tmp = ols_search_term(raw_value,onto)
       if (tmp.score==10){

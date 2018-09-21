@@ -23,50 +23,87 @@ object score_calculator {
   }
 
 
-  def get_words_distance(term: String, label: String): Int = {
-    val term_l = term.replaceAll("[()\\[\\]{}]","").split("[ ,!.\\-/]+")
-    val label_l = label.replaceAll("[()\\[\\]{}]","").split("[ ,!.\\-/]+")
-    val term_set = term_l.toSet
-    val label_set = label_l.toSet
-
-    //in common = words in common between the two sets
-    val in_common = term_set.intersect(label_set)
-
-    //excess = words not in common
-    val excess = (term_set ++ label_set) -- in_common
-
-    val deletion = term_set -- in_common
-    val insertion = label_set -- in_common
-
-    deletion.size * config.get_modifier("deletion") + insertion.size * config.get_modifier("insertion")
+  def splitFunc(in:String): Array[String] = {
+    in.replaceAll("[()\\[\\]{}]","").split("[ ,!.\\-/]+")
   }
 
-  def convert_score_num(matchType: String, service: String): Int = {
-    var score = 0
+
+  val penaltyDelete = -config.get_modifier("deletion")
+  val penaltyInsert = -config.get_modifier("insertion")
+  val penaltyMismatch = -config.get_modifier("mismatch")
+  val penaltySwap = -config.get_modifier("swap")
+  val penaltyMatch = -config.get_modifier("match")
+
+  def similarity(first: String, second: String): Double = {
+    if (first == second)
+      penaltyMatch
+    else
+      penaltyMismatch
+  }
+
+
+  def swap(first: String, second: String, firstPrec: String, secondPrec: String): Double = {
+    if (first == secondPrec && firstPrec == second)
+      penaltySwap
+    else
+      Double.NegativeInfinity
+
+  }
+
+  def get_words_distance(term: String, label: String): Double = {
+    val rawList = splitFunc(term).toList
+    val labelList = splitFunc(label).toList
+
+    val matrix = Array.ofDim[Double](rawList.length, labelList.length)
+
+    for (i <- rawList.indices) {
+      matrix(i)(0) = i * penaltyDelete
+    }
+
+    for (j <- labelList.indices) {
+      matrix(0)(j) = j * penaltyInsert
+    }
+
+    for (i <- 1 until rawList.length) {
+      for (j <- 1 until labelList.length) {
+        val matchh = matrix(i - 1)(j - 1) + similarity(rawList(i), labelList(j))
+
+        val swapp =
+          if (i - 2 >= 0 && j - 2 >= 0)
+            matrix(i - 2)(j - 2) + swap(rawList(i), labelList(j), rawList(i - 1), labelList(j - 1))
+          else
+            Double.NegativeInfinity
+
+
+        val delete = matrix(i - 1)(j) + penaltyDelete
+        val insert = matrix(i)(j - 1) + penaltyInsert
+        matrix(i)(j) = List(matchh, swapp, delete, insert).max
+      }
+    }
+
+    val res = matrix(rawList.length - 1)(labelList.length - 1)
+    res
+  }
+
+  def convert_score_num(matchType: String, service: String): Double = {
+    var score = 0.0
 
     if (service.equalsIgnoreCase("zooma")) {
-      if (matchType.equalsIgnoreCase("HIGH")) score = 10
-      else if (matchType.equalsIgnoreCase("GOOD")) score = 7
-      else if (matchType.equalsIgnoreCase("MEDIUM")) score = 5
-      else if (matchType.equalsIgnoreCase("LOW")) score = 3
+      if (matchType.equalsIgnoreCase("HIGH")) score = 10.0
+      else if (matchType.equalsIgnoreCase("GOOD")) score = 7.0
+      else if (matchType.equalsIgnoreCase("MEDIUM")) score = 5.0
+      else if (matchType.equalsIgnoreCase("LOW")) score = 3.0
     }
     else {
       if (matchType.startsWith("PREF")) {
-        if (matchType.contains("-")) {
-          val lscore = matchType.split("-")
-          score = 10 - lscore(1).drop(1).toInt
-        }
-        else score = 10
+        score = config.get_score("pref")+matchType.split(" ").last.toDouble
       }
       else if (matchType.startsWith("SYN")) {
-        if (matchType.contains("-")) {
-          val lscore = matchType.split("-")
-          score = 5 - lscore(1).drop(1).toInt
-        }
-        else score = 5
+        score = config.get_score("syn")+matchType.split(" ").last.toDouble
       }
       else score = 1
     }
+
     if(score<0)
       score = 0
 
@@ -92,7 +129,7 @@ object score_calculator {
 
   def calculate_score(): Unit = {
     val range = db_handler.get_db_lenght()
-//    calculate_ontology_score()
+    calculate_ontology_score()
     for (i <- range){
       val tmp = db_handler.get_onto_service_matchtype(i)
       val onto = tmp._1

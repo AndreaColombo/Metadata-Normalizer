@@ -14,7 +14,7 @@ import play.api.libs.json.{JsValue, Json}
 import scalaj.http.{Http, HttpOptions}
 
 case class source_code_label(source: String, code: String, label: String)
-case class search_term_result(options: List[source_code_label], score: Int)
+case class search_term_result(options: List[source_code_label], score: Double)
 
 object Ols_interface {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
@@ -167,20 +167,20 @@ object Ols_interface {
     result
   }
 
-  def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): Int = {
+  def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): Double = {
     val pref = config.get_score("pref")
     val syn = config.get_score("syn")
     val penalty = config.get_excess_words_penalty()
     val modifier = score_calculator.get_words_distance(termAnnotated,prefLabel)
-    val score = pref - modifier
+    val score = pref + modifier
 
-    var score_syn = 0
-    var max_score_syn = 0
+    var score_syn = 0.0
+    var max_score_syn = 0.0
     for (elem <- synonym_l) {
       val syn_modifier = score_calculator.get_words_distance(termAnnotated,elem)
-      score_syn = syn - syn_modifier
+      score_syn = syn
       if(score_syn>max_score_syn)
-        max_score_syn=score_syn
+        max_score_syn= score_syn + syn_modifier
     }
 
     math.max(score,max_score_syn)

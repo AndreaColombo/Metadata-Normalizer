@@ -42,7 +42,7 @@ object config  {
 
   def get_excess_words_penalty(): Int = conf.getInt("scores.excess_words_penalty")
 
-  def get_modifier(mod: String): Int = conf.getInt("scores."+mod+"_modifier")
+  def get_modifier(mod: String): Double = conf.getDouble("score_modifiers."+mod)
 
   def get_search_mode(): Boolean = conf.getBoolean("match_mode_random")
 }

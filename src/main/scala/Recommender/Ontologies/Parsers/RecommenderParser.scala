@@ -5,6 +5,7 @@ import Recommender.DBCon.db_handler
 import Recommender.Ontologies.Parsers.OlsParser.countWords
 import play.api.libs.json._
 import Utilities.Preprocessing.lookup
+import Utilities.score_calculator
 import scalaj.http.{Http, HttpOptions}
 
 
@@ -19,7 +20,6 @@ object RecommenderParser {
     val l_match_type = j \\ "matchType"
     val l_url = j \\ "self"
     for (i <- l_parsed_value.indices) {
-      var score = ""
       val parsed_value = l_parsed_value(i).validate[String].get.map(_.toLower)
       val raw_value = lookup(parsed_value)
       val match_type = l_match_type(i).validate[String].get.map(_.toLower)
@@ -32,34 +32,8 @@ object RecommenderParser {
       val synonym_l = (j2 \ "synonym").validate[List[String]].getOrElse(List("null"))
       val synonym = synonym_l.mkString(",").map(_.toLower)
 
-      if(match_type.equals("pref")){
-        val diff = (countWords(prefLabel) - countWords(parsed_value))*2
-        if (diff > 0)
-          score = "PREF - "+diff
-        else score = "PREF"
-      }
-      else {
-        val s2 = parsed_value.replace("-"," ").map(_.toLower).r.findAllIn(synonym.replace("-"," ").map(_.toLower)).mkString
-        var syn_found = ""
-        var diff_min = 23456
-        var s3 = ""
+      val score = get_score(parsed_value,match_type,prefLabel,synonym_l)
 
-        for (syn <- synonym_l){
-          s3 = parsed_value.replace("-"," ").map(_.toLower).r.findAllIn(syn.replace("-"," ").map(_.toLower)).mkString
-          if (s3.nonEmpty) {
-            val diff = countWords(syn) - countWords(parsed_value)
-            if(diff < diff_min){
-              diff_min = diff
-              syn_found = syn
-            }
-          }
-        }
-
-        val diff = (countWords(syn_found) - countWords(parsed_value))*2
-        if (diff > 0)
-          score = "SYN - "+diff
-        else score = "SYN"
-      }
       if (prefLabel != "null") {
         val term_type = ""
         val db_current = db_handler.get_recsys(service)
@@ -69,6 +43,25 @@ object RecommenderParser {
       }
     }
     rows.toList.distinct
+  }
+
+  def get_score(term: String, match_type: String, label: String, synonym_l:List[String]): String = {
+    var min_syn_diff = Double.NegativeInfinity
+    var score = ""
+    if(match_type.equals("pref")){
+      val diff = score_calculator.get_words_distance(term,label)
+      score = "PREF "+diff
+    }
+    else {
+      for (syn <- synonym_l){
+        val diff = score_calculator.get_words_distance(term,syn)
+        if(diff>min_syn_diff){
+          score = "SYN "+diff
+          min_syn_diff=diff
+        }
+      }
+    }
+    score
   }
 
   private def get_ontology(s: String): List[String] = {

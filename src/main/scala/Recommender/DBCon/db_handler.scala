@@ -55,7 +55,7 @@ object db_handler {
     db.close()
   }
 
-  def update_score(score1: Double, score2: Double, ontoScore: Double, matchScore: Int, id: Int): Unit = {
+  def update_score(score1: Double, score2: Double, ontoScore: Double, matchScore: Double, id: Int): Unit = {
     val db = Database.forConfig("gecotest2", conf)
     val q =
       sqlu"""
