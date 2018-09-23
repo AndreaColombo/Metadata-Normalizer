@@ -94,7 +94,9 @@ object Ols_interface {
       val ontology_id = code
       val description = (j \ "description").validate[List[String]].getOrElse(List("null")).head
       //TODO check all the type of synonyms
-      val synonym_l = (j \ "synonyms").validate[List[String]].getOrElse(List("null"))
+      val synonym_l = (j \ "synonyms").validate[List[String]].getOrElse(List("null")).distinct
+      //TODO ARIF send distinct syn from the previous class ref: dn_interface line:84
+
 
       val synonym = synonym_l.mkString(",")
       val xref = (j \ "annotation" \ "database_cross_reference").validate[List[String]].getOrElse(List("null"))

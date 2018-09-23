@@ -71,6 +71,7 @@ object db_interface {
     //SYN
     var syn_l:List[String] = List()
     if (elem.apply("syn") != "null")
+      //TODO ARIF send synonym as list
       syn_l = elem.apply("syn").split(",").toList
 
     insert_syn ++= List(synonym_type(tid, label, "pref"))
@@ -80,7 +81,8 @@ object db_interface {
       insert_syn ++= List(synonym_type(tid, label, "syn"))
     }
 
-    db_handler.syn_insert(insert_syn)
+    //TODO ARIF send distinct syn from the previous class
+    db_handler.syn_insert(insert_syn.distinct)
     //END SYN
 
     support
