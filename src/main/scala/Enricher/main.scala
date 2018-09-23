@@ -8,6 +8,7 @@ import Enrichment_engine.{Ols_interface, annotator, enrichment_engine}
 import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import org.slf4j.{LoggerFactory}
 import user_interface.Expert_preference
 
 
@@ -30,40 +31,47 @@ object main extends App {
   }
 
   override def main(args: Array[String]): Unit = {
-    //setup logger
-    setup_logger()
-    config.conf.getObject("db_config")
-    db_handler.init()
-    if (args.nonEmpty) {
-      if (args(0).equals("reset")){
-        db_handler.null_gcm()
-        db_handler.reset_db()
-        db_handler.init()
-      }
-      else if (args.length == 1){
-        if (args.head == "all"){
-          val table_l = config.get_gcm_table_list()
-          for (t <- table_l) {
+    try {
+      //setup logger
+      setup_logger()
+      config.conf.getObject("db_config")
+      db_handler.init()
+      if (args.nonEmpty) {
+        if (args(0).equals("reset")) {
+          db_handler.null_gcm()
+          db_handler.reset_db()
+          db_handler.init()
+        }
+        else if (args.length == 1) {
+          if (args.head == "all") {
+            val table_l = config.get_gcm_table_list()
+            for (t <- table_l) {
+              val column_l = config.get_termtype_list(t)
+              for (col <- column_l) {
+                enrichment_engine.controller(col)
+              }
+            }
+          }
+          else {
+            val t = args(0)
             val column_l = config.get_termtype_list(t)
             for (col <- column_l) {
+              println(col)
               enrichment_engine.controller(col)
             }
           }
         }
         else {
           val t = args(0)
-          val column_l = config.get_termtype_list(t)
-          for (col <- column_l) {
-            println(col)
-            enrichment_engine.controller(col)
-          }
+          val col = args(1)
+          enrichment_engine.controller(col)
         }
       }
-      else {
-        val t = args(0)
-        val col = args(1)
-        enrichment_engine.controller(col)
-      }
+    }catch{
+      case e:Exception =>
+        val logger = LoggerFactory.getLogger(this.getClass)
+        e.printStackTrace()
+        logger.error("Error", e)
     }
 
   }
