@@ -48,8 +48,7 @@ object annotator {
       val parents = tmp.head(5)
       val children = tmp.head(6)
 
-      val desc = get_desc(children, onto, 0,tmp.head(1))
-      val anc = get_hyp(parents, onto, 0,tmp.head(1))
+
 
       if(!db_handler.cv_support_exists(onto,tmp.head(1)))
         result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8),"iri"->tmp.head.last)
@@ -57,15 +56,18 @@ object annotator {
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
 
-      for (elem <- anc) {
-        if(!db_handler.cv_support_exists(elem._1,elem._2))
-        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
-      }
-
-      for (elem <- desc) {
-        if (!db_handler.cv_support_exists(elem._1, elem._2))
-        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
-      }
+// TODO ARIF activate hyp
+      //      val desc = get_desc(children, onto, 0,tmp.head(1))
+      //      val anc = get_hyp(parents, onto, 0,tmp.head(1))
+//      for (elem <- anc) {
+//        if(!db_handler.cv_support_exists(elem._1,elem._2))
+//        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
+//      }
+//
+//      for (elem <- desc) {
+//        if (!db_handler.cv_support_exists(elem._1, elem._2))
+//        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
+//      }
     }
     else {
       db_handler.user_feedback_insert(List(expert_choice_type(-1,resolved = false,table,column,null,raw_value,null,null,Some(source),Some(code),null,"ONLINE:ERROR  "+ols_get_status(source,ols_get_iri(source,code)),get_timestamp())))

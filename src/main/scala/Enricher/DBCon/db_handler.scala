@@ -146,6 +146,8 @@ object db_handler {
 
 
   def get_tid(source: String, code: String): Int = {
+    logger.info("source: "+source)
+    logger.info("code: "+code)
     val db = get_db()
     var tid = 0
     val q = vocabulary.filter(a => a.source === source && a.code === code).map(_.tid)
