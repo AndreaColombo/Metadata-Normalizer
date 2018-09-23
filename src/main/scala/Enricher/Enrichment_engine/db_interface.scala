@@ -3,14 +3,16 @@ package Enricher.Enrichment_engine
 import java.sql.BatchUpdateException
 
 import Enricher.DBCon._
-import org.slf4j.{Logger, LoggerFactory}
+import org.apache.log4j.Logger
 
 
 object db_interface {
+  val logger: Logger = Logger.getLogger(this.getClass)
+
 
   case class cv_support(tid: String, source: String, code: String, label: String)
 
-  def db_interface(res: List[Map[String, String]], raw_value: String, table_name: String, column_name: String, method: Char,source:String, code:String): Unit = {
+  def db_interface(res: List[Map[String, String]], raw_value: String, table_name: String, column_name: String, method: Char, source: String, code: String): Unit = {
     var cv_support: List[cv_support] = List()
     if (res.nonEmpty) {
       for (elem <- res) {
@@ -18,21 +20,26 @@ object db_interface {
       }
 
     }
-    val mainTid: Int = db_handler.get_tid(source, code)
+    val mainTidOption = db_handler.get_tid_option(source, code)
 
-    //TODO ARIF it is using the first result which is wrong
-    //      val tid = db_handler.get_tid(res.head.apply("source"),res.head.apply("code"))
-    //adding raw value to syn table as raw and also syn table as raw
-    db_handler.syn_insert(List(synonym_type(mainTid,raw_value,"raw")))
-    db_handler.raw_insert(List(raw_annotation_type(mainTid,raw_value,table_name,column_name,method)))
-    db_handler.update_tid(raw_value,Some(mainTid),table_name,column_name)
-    //TODO ARIF correct
-//    insert_hyp(cv_support, res)
-//    unfold_hyp(mainTid)
+    mainTidOption match {
+      case Some(mainTid) =>
+
+        //TODO ARIF it is using the first result which is wrong
+        //      val tid = db_handler.get_tid(res.head.apply("source"),res.head.apply("code"))
+        //adding raw value to syn table as raw and also syn table as raw
+        db_handler.syn_insert(List(synonym_type(mainTid, raw_value, "raw")))
+        db_handler.raw_insert(List(raw_annotation_type(mainTid, raw_value, table_name, column_name, method)))
+        db_handler.update_tid(raw_value, Some(mainTid), table_name, column_name)
+      //TODO ARIF correct
+      //    insert_hyp(cv_support, res)
+      //    unfold_hyp(mainTid)
+      case None => logger.info("Skipped: " + raw_value + " - " + table_name + ":" + column_name)
+    }
   }
 
   //INSERT ELEMENTS IN vocabulary, syn, xref
-  def db_insert (elem: Map[String,String]): List[cv_support]= {
+  def db_insert(elem: Map[String, String]): List[cv_support] = {
     var insert_elem: List[vocabulary_type] = List()
     var insert_xref: List[reference_type] = List()
     var insert_syn: List[synonym_type] = List()
@@ -47,13 +54,13 @@ object db_interface {
     //CHECK EXISTENCE OF SOURCE IN ONTOLOGY TABLE
     //IF DOESN'T EXIST INSERT
 
-    insert_elem ++= List(vocabulary_type(default_values.int,source,code,label,description,iri))
+    insert_elem ++= List(vocabulary_type(default_values.int, source, code, label, description, iri))
     db_handler.cv_support_insert(insert_elem)
-    val tid = db_handler.get_tid(source,code)
-    support :+= cv_support(tid.toString,source,code,label)
+    val tid = db_handler.get_tid(source, code)
+    support :+= cv_support(tid.toString, source, code, label)
 
     //XREF
-    var xref_l:List[String] = List()
+    var xref_l: List[String] = List()
 
     if (elem.apply("xref") != "null")
       xref_l = elem.apply("xref").split(",").toList
@@ -69,9 +76,9 @@ object db_interface {
     //END XREF
 
     //SYN
-    var syn_l:List[String] = List()
+    var syn_l: List[String] = List()
     if (elem.apply("syn") != "null")
-      //TODO ARIF send synonym as list
+    //TODO ARIF send synonym as list
       syn_l = elem.apply("syn").split(",").toList
 
     insert_syn ++= List(synonym_type(tid, label, "pref"))
@@ -88,13 +95,13 @@ object db_interface {
     support
   }
 
-  def insert_hyp(elems: List[cv_support], res:List[Map[String,String]]): Unit = {
+  def insert_hyp(elems: List[cv_support], res: List[Map[String, String]]): Unit = {
     var result: List[relationship_type] = List()
-    val default_cv: cv_support = cv_support("null","null","null","null")
-    for(elem <- elems){
+    val default_cv: cv_support = cv_support("null", "null", "null", "null")
+    for (elem <- elems) {
       val child_tid = elem.tid
       val child_code = elem.code
-      val default:Map[String,String] = Map()
+      val default: Map[String, String] = Map()
       var parents = ""
       try {
         parents = res.find(a => a.apply("code") == child_code).get.apply("parents")
@@ -106,19 +113,19 @@ object db_interface {
           println(child_code)
           sys.exit(-1)
       }
-      if(parents!=null) {
-        for(parent <- parents.split(",")) {
+      if (parents != null) {
+        for (parent <- parents.split(",")) {
           val parent_tid = elems.find(a => a.code == parent).getOrElse(default_cv).tid
-          if(parent_tid != "null")
+          if (parent_tid != "null")
             result :+= relationship_type(Integer.parseInt(parent_tid), Integer.parseInt(child_tid), "is_a")
         }
       }
 
-      parents = res.find(a => a.apply("code")==child_code).get.apply("part_of")
-      if(parents!=null) {
-        for(parent <- parents.split(",")) {
+      parents = res.find(a => a.apply("code") == child_code).get.apply("part_of")
+      if (parents != null) {
+        for (parent <- parents.split(",")) {
           val parent_tid = elems.find(a => a.code == parent).getOrElse(default_cv).tid
-          if(parent_tid != "null")
+          if (parent_tid != "null")
             result :+= relationship_type(Integer.parseInt(parent_tid), Integer.parseInt(child_tid), "part_of")
         }
       }
@@ -126,7 +133,7 @@ object db_interface {
     try {
       db_handler.hyp_insert(result)
     }
-    catch  {
+    catch {
       case e: BatchUpdateException => e.getNextException.printStackTrace()
     }
   }
@@ -137,9 +144,9 @@ object db_interface {
     for (tid_parent_cur <- tid_list) {
       val distance = 1
       val onto_support_hyp_l = db_handler.get_onto_hyp(tid_parent_cur)
-      for (onto_support_hyp <- onto_support_hyp_l){
-        unfolded :+= relationship_unfolded_type(onto_support_hyp.tid_p,onto_support_hyp.tid_c,distance,onto_support_hyp.rel_type)
-        unfolded ++= unfold_recursive(tid_parent_cur,onto_support_hyp.tid_c,distance+1,onto_support_hyp.rel_type)
+      for (onto_support_hyp <- onto_support_hyp_l) {
+        unfolded :+= relationship_unfolded_type(onto_support_hyp.tid_p, onto_support_hyp.tid_c, distance, onto_support_hyp.rel_type)
+        unfolded ++= unfold_recursive(tid_parent_cur, onto_support_hyp.tid_c, distance + 1, onto_support_hyp.rel_type)
       }
     }
     //Remove duplicates and then keeps only relations with minimum distance
@@ -153,14 +160,14 @@ object db_interface {
     val onto_support_hyp_l = db_handler.get_onto_hyp(tid_child_cur)
 
     for (elem <- onto_support_hyp_l) {
-      val rel_type = get_rel_type(rel_type_cur,elem.rel_type)
-      result :+= relationship_unfolded_type(tid_parent_cur,elem.tid_c,distance,rel_type)
-      result ++= unfold_recursive(tid_parent_cur,elem.tid_c,distance+1,rel_type)
+      val rel_type = get_rel_type(rel_type_cur, elem.rel_type)
+      result :+= relationship_unfolded_type(tid_parent_cur, elem.tid_c, distance, rel_type)
+      result ++= unfold_recursive(tid_parent_cur, elem.tid_c, distance + 1, rel_type)
     }
     result
   }
 
-  def get_rel_type(rel_type1: String, rel_type2: String):String = if(rel_type1.equals(rel_type2)) rel_type1 else "mixed"
+  def get_rel_type(rel_type1: String, rel_type2: String): String = if (rel_type1.equals(rel_type2)) rel_type1 else "mixed"
 }
 
 

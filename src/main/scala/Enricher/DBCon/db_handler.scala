@@ -144,18 +144,20 @@ object db_handler {
     db.close()
   }
 
-
-  def get_tid(source: String, code: String): Int = {
+  def get_tid_option(source: String, code: String): Option[Int] = {
     logger.info("source: "+source)
     logger.info("code: "+code)
     val db = get_db()
-    var tid = 0
+    var tid: Option[Int] = None
     val q = vocabulary.filter(a => a.source === source && a.code === code).map(_.tid)
-    val resultfuture = db.run(q.result).map(a => tid = a.head)
+    val resultfuture = db.run(q.result).map(a => tid = a.headOption)
     Await.result(resultfuture, Duration.Inf)
     db.close()
     tid
   }
+
+  def get_tid(source: String, code: String): Int = get_tid_option(source, code).get
+
 
   def get_user_feedback_raw_values(table_name: String, column_name: String): List[String] = {
     val db = get_db()
