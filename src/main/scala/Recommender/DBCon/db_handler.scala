@@ -1,7 +1,8 @@
 package Recommender.DBCon
 
+import Config.config
 import Config.config.conf
-import Recommender.DBCon.Tables.{apiresults, ontologyScore, best_onto_set}
+import Recommender.DBCon.Tables.{apiresults, best_onto_set, ontologyScore}
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -367,6 +368,8 @@ object db_handler {
   }
 
   def get_best_onto_per_term(term_type: String): Seq[(String, String, String, String, String)] = {
+    val limit_set = config.get_best_onto_limit_for_set()
+
     var result = Seq(("", "", "", "", ""))
     val db = Database.forConfig("gecotest2", conf)
     val q =
@@ -375,7 +378,7 @@ object db_handler {
             from public.best_onto_per_term
             where term_type = $term_type
             and coverage > 0.05
-            limit 15
+            limit $limit_set
          """.as[(String, String, String, String, String)]
 
     val result_future = db.run(q).map(a=>

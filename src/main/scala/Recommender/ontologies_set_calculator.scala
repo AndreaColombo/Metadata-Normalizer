@@ -1,12 +1,13 @@
 package Recommender
 
+import Config.config
 import Recommender.DBCon.db_handler
 
 import scala.util.control.Breaks._
 
 object ontologies_set_calculator {
 
-  def calculate_ontology_set(t: String, threshold: Double = 0.75): Unit = {
+  def calculate_ontology_set(t: String, threshold: Double = config.get_best_onto_coverage_threshold_for_set()): Unit = {
 
     var result: Seq[(String, String, Double, Double, Double)] = List()
     var score1 = 0.0

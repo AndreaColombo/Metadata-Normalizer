@@ -45,5 +45,9 @@ object config  {
   def get_modifier(mod: String): Double = conf.getDouble("score_modifiers."+mod)
 
   def get_search_mode(): Boolean = conf.getBoolean("match_mode_random")
+
+  def get_best_onto_limit_for_set(): Int = conf.getInt("best_onto_limit_for_set")
+
+  def get_best_onto_coverage_threshold_for_set(): Double = conf.getDouble("get_best_onto_coverage_threshold_for_set")
 }
 
