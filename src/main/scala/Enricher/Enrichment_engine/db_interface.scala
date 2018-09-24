@@ -10,6 +10,7 @@ object db_interface {
   val logger: Logger = Logger.getLogger(this.getClass)
 
 
+  //TODO ARIF select a naming convention and apply that to all packages for classes and functions, package naming
   case class cv_support(tid: String, source: String, code: String, label: String)
 
   def db_interface(res: List[Map[String, String]], raw_value: String, table_name: String, column_name: String, method: Char, source: String, code: String): Unit = {
