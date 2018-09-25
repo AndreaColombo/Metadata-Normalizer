@@ -1,7 +1,7 @@
 package user_interface
 
-import Config.config
-import Enricher.Enrichment_engine.Ols_interface
+import config.Config
+import enricher.engine.Ols_interface
 import scalaj.http.{Http, HttpOptions}
 
 import scala.io.StdIn
@@ -9,14 +9,14 @@ import scala.io.StdIn
 object Utils {
   def choose_table_column(): (String, String) = {
     println("Choose table")
-    val table_list = config.get_gcm_table_list()
+    val table_list = Config.get_gcm_table_list()
     for (i <- table_list.indices){
       println(i+1 + " - " + table_list(i))
     }
     val table = table_list(get_choice(table_list.length).toInt-1)
 
     println("Choose column")
-    val column_list = config.get_termtype_list(table)
+    val column_list = Config.get_termtype_list(table)
     for (i <- column_list.indices){
       println(i+1 + " - " + column_list(i))
     }

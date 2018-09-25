@@ -16,7 +16,7 @@
         </layout>
     </appender>
 
-    <logger name="Enricher">
+    <logger name="enricher">
         <level value="DEBUG"/>
     </logger>
 

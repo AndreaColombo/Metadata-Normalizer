@@ -1,6 +1,6 @@
 package user_interface
 
-import Enricher.Enrichment_engine.Ols_interface
+import enricher.engine.Ols_interface
 import org.slf4j.LoggerFactory
 import Utils._
 
@@ -13,13 +13,13 @@ object main {
       display_prompt()
       val selection = get_choice(4)
       if (selection.equals("1")) {
-        Expert_preference.get_user_feedback()
+        ExpertPreference.get_user_feedback()
       }
       else if (selection.equals("2")) {
-        Expert_correction.correction_routine()
+        ExpertCorrection.correction_routine()
       }
       else if (selection.equals("3")) {
-        Expert_feedback.get_user_rating()
+        ExpertFeedback.get_user_rating()
       }
       else exit = true
     }
