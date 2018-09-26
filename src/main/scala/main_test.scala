@@ -1,14 +1,16 @@
 import config.Config
 import enricher.dbcon.DbHandler
-import enricher.engine.Ols_interface
+import javax.xml.ws.EndpointReference
 import recommender.ontologies.Parsers.OlsParser
 import utilities.ScoreCalculator
+import enricher.engine._
 
 object main_test {
 
   def main(args: Array[String]): Unit = {
-    val term = "c b"
-    val label = "b c e"
-    println(Ols_interface.ols_get_info("ncbitaxon","NCBITaxon_9606").head(4))
+
+    val a = Term("a","b","c",None,None,None,None,None,None,0,None,None)
+    
+
   }
 }
