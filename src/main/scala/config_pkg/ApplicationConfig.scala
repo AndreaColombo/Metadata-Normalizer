@@ -7,13 +7,13 @@ import scala.collection.JavaConverters._
 
 object ApplicationConfig  {
 
-  val parsedConfig: Config = ConfigFactory.parseFile(new File("src/main/scala/ApplicationConfig/application.conf"))
+  val parsedConfig: Config = ConfigFactory.parseFile(new File("src/main/scala/config_pkg/application.conf"))
   val conf: Config = ConfigFactory.load(parsedConfig)
 
-  def get_threshold():Int = conf.getInt("threshold_match")
+  def get_threshold() = conf.getDouble("threshold_match")
 
   def get_table_by_column(term_type: String): String = {
-    val table_list = conf.getObject("gecotest_andrea").keySet()
+    val table_list = conf.getObject("db_config").keySet()
     var table = ""
     for (elem <- table_list.asScala) {
       val t = get_termtype_list(elem)

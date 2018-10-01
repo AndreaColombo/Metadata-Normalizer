@@ -22,7 +22,7 @@ object Ols_interface {
   def ols_search_term(rawValue: RawValue): List[Term] = {
     val url = "https://www.ebi.ac.uk/ols/api/search"
     val ontos = get_ontologies_by_type(rawValue.column)
-    val response = Http(url).param("q", rawValue.value).param("fieldList", "iri,short_form,synonym,ontology_name,iri").param("ontology", ontos.mkString(",")).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+    val response = Http(url).param("q", rawValue.value).param("fieldList", "iri,short_form,synonym,ontology_name,iri").param("ontology", ontos.mkString(",")).param("rows", "15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
 
     var j: JsValue = null
     try {
@@ -42,7 +42,6 @@ object Ols_interface {
       val ontology_id = (j2 \ "short_form").validate[String].get
       val iri = (j2 \ "iri").validate[String].get
       val synonyms = (j2 \ "synonym").validate[List[String]].getOrElse(List())
-      val score_num = get_score(rawValue.value,prefLabel,synonyms)
 
       result :+= Term(ontology,ontology_id,iri,Some(rawValue))
 
@@ -90,7 +89,7 @@ object Ols_interface {
     if(attempts<=5) {
       val response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
       val j = Json.parse(response.body)
-      val prefLabel = (j \ "iri").validate[String].get
+      val prefLabel = (j \ "label").validate[String].get
       val ontology = (j \ "ontology_name").validate[String].get
       val ontology_id = (j \ "short_form").validate[String].get
       val description = (j \ "description").validate[List[String]].getOrElse(List("null")).head
@@ -128,7 +127,6 @@ object Ols_interface {
         Relation(a.term,get_rel_type(Term(source,"",a.term.right.get),Term(ontology,ontology_id,iri)))
       )
 
-      children.foreach(println)
       returned = Term(ontology,ontology_id,iri,None,Some(prefLabel),Some(description),Some(synonym++rel_synonym),Some(xref),Some(parents),Some(children))
 //    }
 //    else {
@@ -167,12 +165,14 @@ object Ols_interface {
     */
   def get_relatives(rel_url: String, ttype: RelationType.ttype): List[Relation] = {
     var parents_tmp: List[Relation] = List()
-    val p_status = Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.header("Status").get
-    if (rel_url != "null" && p_status.contains("200")){
-      val parents_json = (Json.parse(Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded").get("terms").validate[List[JsValue]].getOrElse(List())
-      parents_tmp = parents_json.map(a =>
-        Relation(Right((a \ "iri").validate[String].get),ttype)
-      )
+    if (rel_url != "null"){
+      val p_status = Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.header("Status").get
+      if(p_status.contains("200")) {
+        val parents_json = (Json.parse(Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded").get("terms").validate[List[JsValue]].getOrElse(List())
+        parents_tmp = parents_json.map(a =>
+          Relation(Right((a \ "iri").validate[String].get), ttype)
+        )
+      }
     }
     parents_tmp
   }
@@ -192,9 +192,9 @@ object Ols_interface {
         val onto = (jj \ "ontology_name").validate[String].get
         val synonyms = (jj \ "synonym").validate[List[String]].getOrElse(List())
 
-        val score_num = get_score(raw_value, label,synonyms)
-        if (!rows.exists(_.code.get==id) && !DbHandler.user_fb_exist(raw_value,onto,id))
-          rows :+= expert_choice_type(default_values.int, default_values.bool, table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,utilities.Utils.get_timestamp())
+//        val score_num = get_score(raw_value, label,synonyms)
+//        if (!rows.exists(_.code.get==id) && !DbHandler.user_fb_exist(raw_value,onto,id))
+//          rows :+= expert_choice_type(default_values.int, default_values.bool, table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,utilities.Utils.get_timestamp())
       }
     }
     rows.distinct
@@ -217,7 +217,7 @@ object Ols_interface {
     result
   }
 
-  def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): Double = {
+  def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[Synonym] = List()): Double = {
     val pref = config_pkg.ApplicationConfig.get_score("pref")
     val syn = config_pkg.ApplicationConfig.get_score("syn")
     val modifier = ScoreCalculator.get_words_distance(termAnnotated,prefLabel)
@@ -226,7 +226,7 @@ object Ols_interface {
     var score_syn = 0.0
     var max_score_syn = 0.0
     for (elem <- synonym_l) {
-      val syn_modifier = ScoreCalculator.get_words_distance(termAnnotated,elem)
+      val syn_modifier = ScoreCalculator.get_words_distance(termAnnotated,elem.label)
       score_syn = syn
       if(score_syn>max_score_syn)
         max_score_syn= score_syn + syn_modifier
