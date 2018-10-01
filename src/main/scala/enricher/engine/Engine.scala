@@ -1,7 +1,7 @@
 package enricher.engine
 
 
-import config.Config
+import config_pkg.ApplicationConfig
 import enricher.dbcon.Tables._
 import enricher.dbcon._
 import utilities.Utils.get_timestamp
@@ -13,7 +13,7 @@ object Engine {
 
   def controller(column_name: String): Unit = {
     val logger = LoggerFactory.getLogger(this.getClass)
-    val table_name = Config.get_table_by_column(column_name)
+    val table_name = ApplicationConfig.get_table_by_column(column_name)
     DbHandler.clean_user_feedback(table_name,column_name)
     val raw_values = DbHandler.get_raw_values(table_name,column_name)
     logger.info(column_name)
@@ -39,7 +39,7 @@ object Engine {
           DbHandler.insert_ontology(a)
         }
         //TODO ARIF check source code
-        DbInterface.db_interface(Annotator.get_info(result_user_changes._1, result_user_changes._2, raw_value, table_name, column_name), raw_value, table_name, column_name, 'U', source, code)
+//        DbInterface.db_interface(Annotator.get_info(result_user_changes._1, result_user_changes._2, raw_value, table_name, column_name), raw_value, table_name, column_name, 'U', source, code)
       }
       else if(result_syn.tid != default_values.int) {
         //VALUE FOUND PREF OR SYN
@@ -60,50 +60,50 @@ object Engine {
       }
 
       //ONLINE KB LOOKUP
-      else {
-        val result_search = Annotator.search_term(raw_value, column_name)
+//      else {
+//        val result_search = Annotator.search_term(raw_value, column_name)
         //BEST MATCH FOUND
-        if (result_search.options.nonEmpty) {
-          if (result_search.options.length == 1) {
-            logger.info(s"""Value "$raw_value" best match found in online KB""")
-            val source = result_search.options.head.source
-            val code = result_search.options.head.code
-            val a = Ols_interface.ols_get_onto_info(source)
-            if (!DbHandler.onto_exist(a.source)) {
-              DbHandler.insert_ontology(a)
-            }
-            val result = Annotator.get_info(source,code, raw_value, table_name, column_name)
-            if (DbHandler.cv_support_exists(source, code) && result.isEmpty) {
-              val tid = DbHandler.get_tid(source, code)
-              val condition = (a: raw_annotation) => a.tid === tid
-              val existing_value = DbHandler.get_cv_support_raw(condition)
-              //NOTE: ARIF no need to do here, it will do in  DbInterface.DbInterface( line around 89
+//        if (result_search.options.nonEmpty) {
+//          if (result_search.options.length == 1) {
+//            logger.info(s"""Value "$raw_value" best match found in online KB""")
+//            val source = result_search.options.head.source
+//            val code = result_search.options.head.code
+//            val a = Ols_interface.ols_get_onto_info(source)
+//            if (!DbHandler.onto_exist(a.source)) {
+//              DbHandler.insert_ontology(a)
+//            }
+//            val result = Annotator.get_info(source,code, raw_value, table_name, column_name)
+//            if (DbHandler.cv_support_exists(source, code) && result.isEmpty) {
+//              val tid = DbHandler.get_tid(source, code)
+//              val condition = (a: raw_annotation) => a.tid === tid
+//              val existing_value = DbHandler.get_cv_support_raw(condition)
+//              NOTE: ARIF no need to do here, it will do in  DbInterface.DbInterface( line around 89
 //              if (existing_value.table_name != table_name ||
 //              existing_value.column_name != column_name ||
-//              existing_value.label != raw_value) {
+//              existing_value.iri != raw_value) {
 //                DbHandler.raw_insert(List(raw_annotation_type(tid, raw_value, table_name, column_name, 'O')))
 //                DbHandler.syn_insert(List(synonym_type(tid,raw_value,"raw")))
 //              }
-            }
+//            }
             //TODO ARIF ILLUMINA adds the tid of the first parent that insert into the db
             //TODO ARIF I think the system is getting the first tid available in the voc. table
-            DbInterface.db_interface(result, raw_value, table_name, column_name, 'O', source, code)
-          }
-          else {
+//            DbInterface.db_interface(result, raw_value, table_name, column_name, 'O', source, code)
+//          }
+//          else {
             //MULTIPLE RESULTS, BEST MATCH UNDECIDED
-            logger.info(s"""Best match undecided for value "$raw_value"""")
-            for (elem <- result_search.options){
-              val source = elem.source
-              val code = elem.code
-              val label = elem.label
-              DbHandler.user_feedback_insert(List(expert_choice_type(default_values.int, default_values.bool, table_name, column_name, null, raw_value, null, Some(label), Some(source), Some(code), Some(Ols_interface.ols_get_iri(source,code)), "ONLINE:UNDECIDED "+result_search.score, get_timestamp())))
-            }
-          }
-        }
-        else {
-          Annotator.get_user_feedback(raw_value,table_name,column_name)
-        }
-      }
+//            logger.info(s"""Best match undecided for value "$raw_value"""")
+//            for (elem <- result_search.options){
+//              val source = elem.source
+//              val code = elem.code
+//              val label = elem.iri
+//              DbHandler.user_feedback_insert(List(expert_choice_type(default_values.int, default_values.bool, table_name, column_name, null, raw_value, null, Some(label), Some(source), Some(code), Some(Ols_interface.ols_get_iri(source,code)), "ONLINE:UNDECIDED "+result_search.score, get_timestamp())))
+//            }
+//          }
+//        }
+//        else {
+//          Annotator.get_user_feedback(raw_value,table_name,column_name)
+//        }
+//      }
     }
   }
 }

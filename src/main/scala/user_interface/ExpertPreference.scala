@@ -1,6 +1,6 @@
 package user_interface
 
-import config.Config.{get_gcm_table_list, get_termtype_list}
+import config_pkg.ApplicationConfig.{get_gcm_table_list, get_termtype_list}
 import enricher.dbcon.{DbHandler, default_values, expert_preference_type}
 import enricher.engine.Ols_interface
 import Utils._
@@ -23,7 +23,7 @@ object ExpertPreference {
           println()
           var i = 0
           val options = DbHandler.get_user_feedback_infos(rv)
-          val table = Table(Sized("id","parsed value","label","source","code","iri"))
+          val table = Table(Sized("id","parsed value","iri","source","code","iri"))
           for (o <- options){
             table.rows += Sized((i+1).toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),o.iri.getOrElse("null"))
             i+=1
@@ -42,7 +42,7 @@ object ExpertPreference {
               val user_sourcecode = input_source_code()
               val source = user_sourcecode._1
               val code = user_sourcecode._2
-              val prefLabel = Ols_interface.ols_get_info(source,code).head(2)
+//              val prefLabel = Ols_interface.ols_get_info(source,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
               DbHandler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
               DbHandler.set_resolved(rv,table_name,column_name)
@@ -70,7 +70,7 @@ object ExpertPreference {
               val user_choice = input_source_code()
               val source = user_choice._1
               val code = user_choice._2
-              val prefLabel = Ols_interface.ols_get_info(source,code).head(2)
+//              val prefLabel = Ols_interface.ols_get_info(source,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
               DbHandler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
               DbHandler.set_resolved(rv,table_name,column_name)

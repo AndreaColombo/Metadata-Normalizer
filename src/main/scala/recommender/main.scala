@@ -1,6 +1,6 @@
 package recommender
 
-import config.Config
+import config_pkg.ApplicationConfig
 import utilities.ScoreCalculator.{calculate_ontology_score, calculate_score, calculate_suitability_score}
 import recommender.dbcon.DbHandler
 import play.api.libs.json.Json
@@ -16,9 +16,9 @@ object main {
         DbHandler.create_view()
       else if (args.head.equals("score")) {
         calculate_score()
-        val table_l = Config.get_gcm_table_list()
+        val table_l = ApplicationConfig.get_gcm_table_list()
         for (t <- table_l) {
-          val column_l = Config.get_termtype_list(t)
+          val column_l = ApplicationConfig.get_termtype_list(t)
           for (col <- column_l) {
             calculate_suitability_score(col)
           }
@@ -27,9 +27,9 @@ object main {
       else if (args.head.equals("sets")){
         if (args.length == 2){
           if (args(1) == "all"){
-            val table_l = Config.get_gcm_table_list()
+            val table_l = ApplicationConfig.get_gcm_table_list()
             for (t <- table_l) {
-              val column_l = Config.get_termtype_list(t)
+              val column_l = ApplicationConfig.get_termtype_list(t)
               
               for (col <- column_l) {
                 OntologiesSetCalculator.calculate_ontology_set(col)
@@ -38,7 +38,7 @@ object main {
           }
           else {
             val t = args(1)
-            val column_l = Config.get_termtype_list(t)
+            val column_l = ApplicationConfig.get_termtype_list(t)
             for (col <- column_l) {
               OntologiesSetCalculator.calculate_ontology_set(col)
             }
@@ -52,9 +52,9 @@ object main {
       }
       else if (args.length == 1){
         if (args.head == "all"){
-          val table_l = Config.get_gcm_table_list()
+          val table_l = ApplicationConfig.get_gcm_table_list()
           for (t <- table_l) {
-            val column_l = Config.get_termtype_list(t)
+            val column_l = ApplicationConfig.get_termtype_list(t)
             for (col <- column_l) {
               DbFiller.fill_db(t, col)
               calculate_suitability_score(col)
@@ -63,7 +63,7 @@ object main {
         }
         else {
           val t = args(0)
-          val column_l = Config.get_termtype_list(t)
+          val column_l = ApplicationConfig.get_termtype_list(t)
           for (col <- column_l) {
             println(col)
             DbFiller.fill_db(t, col)

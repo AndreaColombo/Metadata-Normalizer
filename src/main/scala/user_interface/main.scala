@@ -23,7 +23,6 @@ object main {
       }
       else exit = true
     }
-    Ols_interface.ols_get_info("EFO","EFO_0003746")
   }
 
   def display_prompt(): Unit = {

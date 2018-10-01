@@ -1,6 +1,6 @@
 package recommender.dbcon
 
-import config.Config._
+import config_pkg.ApplicationConfig._
 import recommender.dbcon.Tables.{apiresults, best_onto_set, ontologyScore}
 import slick.jdbc.PostgresProfile.api._
 
@@ -10,7 +10,7 @@ import scala.concurrent.duration.Duration
 
 object DbHandler {
 
-  private val db = Database.forConfig("gecotest2", conf)
+  private val db = Database.forConfig("gecotest_andrea", conf)
 
   val setup2 = ontologyScore.schema.create
   val setup3  = best_onto_set.schema.create

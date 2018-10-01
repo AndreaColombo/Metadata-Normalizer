@@ -1,13 +1,13 @@
 package utilities
 
-import config.Config
+import config_pkg.ApplicationConfig
 import recommender.dbcon.DbHandler
 import play.api.libs.json.Json
 import scalaj.http.{Http, HttpOptions}
 
 object ScoreCalculator {
 
-  val apikey = Config.get_bp_apikey()
+  val apikey = ApplicationConfig.get_bp_apikey()
   val url = "http://data.bioontology.org/recommender"
 
   def get_recommender_score (term: List[String], onto: String): Double = {
@@ -30,11 +30,11 @@ object ScoreCalculator {
 
   val DUMMY = "DUMMY"
 
-  val penaltyDelete = -Config.get_modifier("deletion")
-  val penaltyInsert = -Config.get_modifier("insertion")
-  val penaltyMismatch = -Config.get_modifier("mismatch")
-  val penaltySwap = -Config.get_modifier("swap")
-  val penaltyMatch = -Config.get_modifier("match")
+  val penaltyDelete = -ApplicationConfig.get_modifier("deletion")
+  val penaltyInsert = -ApplicationConfig.get_modifier("insertion")
+  val penaltyMismatch = -ApplicationConfig.get_modifier("mismatch")
+  val penaltySwap = -ApplicationConfig.get_modifier("swap")
+  val penaltyMatch = -ApplicationConfig.get_modifier("match")
 
   def similarity(first: String, second: String): Double = {
     if (first == second)
@@ -98,10 +98,10 @@ object ScoreCalculator {
     }
     else {
       if (matchType.startsWith("PREF")) {
-        score = Config.get_score("pref")+matchType.split(" ").last.toDouble
+        score = ApplicationConfig.get_score("pref")+matchType.split(" ").last.toDouble
       }
       else if (matchType.startsWith("SYN")) {
-        score = Config.get_score("syn")+matchType.split(" ").last.toDouble
+        score = ApplicationConfig.get_score("syn")+matchType.split(" ").last.toDouble
       }
       else score = 1
     }

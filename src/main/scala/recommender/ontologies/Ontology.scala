@@ -1,6 +1,6 @@
 package recommender.ontologies
 
-import config.Config
+import config_pkg.ApplicationConfig
 import scalaj.http.{Http, HttpOptions}
 import Parsers._
 
@@ -12,7 +12,7 @@ trait Ontology {
 object Ontology {
 
   private class Recommender extends Ontology {
-    val apikey = Config.get_bp_apikey()
+    val apikey = ApplicationConfig.get_bp_apikey()
     val url = "http://data.bioontology.org/recommender"
 
     private def get_results(keywords: String): List[List[String]] = {
@@ -45,7 +45,7 @@ object Ontology {
   }
 
   private class Bioportal extends Ontology {
-    val apikey = Config.get_bp_apikey()
+    val apikey = ApplicationConfig.get_bp_apikey()
     val url = "https://data.bioontology.org/search"
 
     private def get_results(term: String): List[List[String]] = {
@@ -68,7 +68,7 @@ object Ontology {
     val url = "https://www.ebi.ac.uk/ols/api/search"
 
     private def get_results(term: String): List[List[String]] = {
-      val response = Http(url).param("q",term).param("fieldList","label,short_form,synonym,ontology_name").param("rows","15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+      val response = Http(url).param("q",term).param("fieldList","iri,short_form,synonym,ontology_name").param("rows","15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       OlsParser.parse(response,term)
     }
 

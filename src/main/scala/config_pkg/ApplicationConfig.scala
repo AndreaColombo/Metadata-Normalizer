@@ -1,19 +1,19 @@
-package config
+package config_pkg
 
 import java.io.File
 
 import com.typesafe.config.{Config, ConfigFactory}
 import scala.collection.JavaConverters._
 
-object Config  {
+object ApplicationConfig  {
 
-  val parsedConfig: Config = ConfigFactory.parseFile(new File("src/main/scala/Config/application.conf"))
+  val parsedConfig: Config = ConfigFactory.parseFile(new File("src/main/scala/ApplicationConfig/application.conf"))
   val conf: Config = ConfigFactory.load(parsedConfig)
 
   def get_threshold():Int = conf.getInt("threshold_match")
 
   def get_table_by_column(term_type: String): String = {
-    val table_list = conf.getObject("db_config").keySet()
+    val table_list = conf.getObject("gecotest_andrea").keySet()
     var table = ""
     for (elem <- table_list.asScala) {
       val t = get_termtype_list(elem)

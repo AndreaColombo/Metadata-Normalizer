@@ -51,7 +51,7 @@ object Tables {
 
   class synonym(tag: Tag) extends Table[synonym_type](tag,Some("public"), "synonym"){
     def tid = column[Int]("tid")
-    def label = column[String]("label", O.SqlType("VARCHAR(128)"))
+    def label = column[String]("iri", O.SqlType("VARCHAR(128)"))
     def ttype = column[String]("type", O.SqlType("VARCHAR(4)"))
 
     def pk = primaryKey("synonym_pkey", (tid,label,ttype))
@@ -78,7 +78,7 @@ object Tables {
 
   class raw_annotation(tag: Tag) extends Table[raw_annotation_type](tag, Some("public"),"raw_annotation"){
     def tid = column[Int]("tid")
-    def label = column[String]("label", O.SqlType("VARCHAR(128)"))
+    def label = column[String]("iri", O.SqlType("VARCHAR(128)"))
     def table_name = column[String]("table_name", O.SqlType("VARCHAR(32)"))
     def column_name = column[String]("column_name", O.SqlType("VARCHAR(32)"))
     def method = column[Char]("method")
@@ -129,7 +129,7 @@ object Tables {
     def raw_value = column[String]("raw_value")
     def tid = column[Option[Int]]("tid")
     def parsed_value = column[Option[String]]("parsed_value")
-    def label = column[Option[String]]("label")
+    def label = column[Option[String]]("iri")
     def source = column[Option[String]]("source")
     def code = column[Option[String]]("code")
     def resolved = column[Boolean]("resolved", O.Default(false))

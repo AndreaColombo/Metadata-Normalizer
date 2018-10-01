@@ -2,7 +2,7 @@ package enricher
 
 import java.util.Calendar
 
-import config.Config
+import config_pkg.ApplicationConfig
 import enricher.dbcon.DbHandler
 import engine.{Ols_interface, Annotator, Engine}
 import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
@@ -34,7 +34,7 @@ object main extends App {
     try {
       //setup logger
       setup_logger()
-      Config.conf.getObject("db_config")
+      ApplicationConfig.conf.getObject("db_config")
       DbHandler.init()
       if (args.nonEmpty) {
         if (args(0).equals("reset")) {
@@ -44,9 +44,9 @@ object main extends App {
         }
         else if (args.length == 1) {
           if (args.head == "all") {
-            val table_l = Config.get_gcm_table_list()
+            val table_l = ApplicationConfig.get_gcm_table_list()
             for (t <- table_l) {
-              val column_l = Config.get_termtype_list(t)
+              val column_l = ApplicationConfig.get_termtype_list(t)
               for (col <- column_l) {
                 Engine.controller(col)
               }
@@ -54,7 +54,7 @@ object main extends App {
           }
           else {
             val t = args(0)
-            val column_l = Config.get_termtype_list(t)
+            val column_l = ApplicationConfig.get_termtype_list(t)
             for (col <- column_l) {
               println(col)
               Engine.controller(col)

@@ -2,7 +2,7 @@ package enricher.engine
 
 import java.sql.BatchUpdateException
 
-import config.Config.{get_anc_limit, get_desc_limit, get_ontologies_by_type}
+import config_pkg.ApplicationConfig._
 import enricher.dbcon.{DbHandler, default_values, expert_choice_type}
 import enricher.engine.Ols_interface._
 import utilities.Utils.get_timestamp
@@ -14,30 +14,29 @@ object Annotator {
 
   val logger: Logger = Logger.getLogger(this.getClass)
 
-  def search_term(raw_value: String, term_type: String): search_term_result = {
-    var result = search_term_result(List(),0.0)
-    val ontos = get_ontologies_by_type(term_type)
-    var ok = false
-    var best_score = 0.0
-    for (onto <- ontos if !ok){
-      val tmp = ols_search_term(raw_value,onto)
-      // TODO ARIF max score
-      if (tmp.score==10){
-        result = tmp
-        ok = true
-      }
-      else if (tmp.score > best_score){
-        result = tmp
-        best_score = tmp.score
-      }
-      else if (tmp.score == best_score){ //TODO ARIF add check also match_mode_random
-        val l = result.options ++ tmp.options
-        result = search_term_result(l,tmp.score)
-      }
-    }
-    result
-  }
+//  def search_term(raw_value: String, term_type: String): Term = {
+//    var result = search_term_result(List(),0.0)
+//    val ontos = get_ontologies_by_type(term_type)
+//    var ok = false
+//    var best_score = 0.0
+//    val tmp = ols_search_term(raw_value,ontos)
+//     TODO ARIF max score
+//    if (tmp.score==get_score("pref")){
+//      result = tmp
+//      ok = true
+//    }
+//    else if (tmp.score > best_score){
+//      result = tmp
+//      best_score = tmp.score
+//    }
+//    else if (tmp.score == best_score){ //TODO ARIF add check also match_mode_random
+//      val l = result.options ++ tmp.options
+//      result = search_term_result(l,tmp.score)
+//    }
+//    result
+//  }
 
+  /*
   def get_info(source: String, code: String, raw_value: String,table: String, column: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
 
@@ -48,10 +47,8 @@ object Annotator {
       val parents = tmp.head(5)
       val children = tmp.head(6)
 
-
-
       if(!DbHandler.cv_support_exists(onto,tmp.head(1)))
-        result :+= Map("source" -> onto, "code" -> tmp.head(1), "label" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8),"iri"->tmp.head.last)
+        result :+= Map("source" -> onto, "code" -> tmp.head(1), "iri" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8),"iri"->tmp.head.last)
 
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
@@ -61,12 +58,12 @@ object Annotator {
       //      val anc = get_hyp(parents, onto, 0,tmp.head(1))
 //      for (elem <- anc) {
 //        if(!DbHandler.cv_support_exists(elem._1,elem._2))
-//        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
+//        result :+= Map("source" -> elem._1, "code" -> elem._2, "iri" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
 //      }
 //
 //      for (elem <- desc) {
 //        if (!DbHandler.cv_support_exists(elem._1, elem._2))
-//        result :+= Map("source" -> elem._1, "code" -> elem._2, "label" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
+//        result :+= Map("source" -> elem._1, "code" -> elem._2, "iri" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
 //      }
     }
     else {
@@ -75,6 +72,7 @@ object Annotator {
     }
     result.distinct
   }
+  */
 
   def get_user_feedback(value: String,table_name: String, term_type: String): Unit = {
     var user_feedback: List[expert_choice_type] = List()
@@ -94,8 +92,9 @@ object Annotator {
     }
   }
 
+  /*
   def get_desc(children: String, onto: String, depth: Int, previous_code: String): List[(String, String, String, String, String, String, String, String,String,String)] = {
-    var result: List[(String, String, String, String, String, String, String, String, String, String)] = List()
+      var result: List[(String, String, String, String, String, String, String, String, String, String)] = List()
     for (code <- children.split(",")) {
       if (code != "null") {
         val res = ols_get_info(onto,code)
@@ -131,6 +130,6 @@ object Annotator {
     }
     result
   }
-
+*/
 
 }

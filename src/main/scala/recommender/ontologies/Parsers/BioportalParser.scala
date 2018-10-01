@@ -1,13 +1,13 @@
 package recommender.ontologies.Parsers
 
-import config.Config
+import config_pkg.ApplicationConfig
 import recommender.ontologies.Parsers.OlsParser.countWords
 import play.api.libs.json._
 import utilities.Preprocessing.lookup
 
 
 object BioportalParser {
-  val apikey = Config.get_bp_apikey()
+  val apikey = ApplicationConfig.get_bp_apikey()
   def parse (str: String, term: String): List[List[String]] ={
     var rows:Seq[List[String]] = List()
     val service = "Bioportal"

@@ -48,7 +48,7 @@ object DbInterface {
 
     val source = elem.apply("source")
     val code = elem.apply("code")
-    val label = elem.apply("label")
+    val label = elem.apply("iri")
     val description = elem.apply("description")
     val iri = elem.apply("iri")
 

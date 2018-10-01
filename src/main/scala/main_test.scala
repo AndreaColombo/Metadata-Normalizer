@@ -1,16 +1,14 @@
-import config.Config
-import enricher.dbcon.DbHandler
-import javax.xml.ws.EndpointReference
-import recommender.ontologies.Parsers.OlsParser
-import utilities.ScoreCalculator
-import enricher.engine._
+import java.net.URLEncoder
+
+import enricher.engine.Ols_interface._
+import enricher.engine.{RawValue, Term}
 
 object main_test {
 
   def main(args: Array[String]): Unit = {
 
-    val a = Term("a","b","c",None,None,None,None,None,None,0,None,None)
-    
+    val terms = ols_search_term(RawValue("b cell lymphoma","biosample","disease")).map(_.fill).foreach(println)
+
 
   }
 }

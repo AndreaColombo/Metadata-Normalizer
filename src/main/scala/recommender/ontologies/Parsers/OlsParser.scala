@@ -1,7 +1,7 @@
 package recommender.ontologies.Parsers
 
 
-import config.Config
+import config_pkg.ApplicationConfig
 import play.api.libs.json._
 import utilities.Preprocessing.lookup
 import utilities.ScoreCalculator
@@ -14,12 +14,12 @@ object OlsParser {
     val parsed_value = termAnnotated
     val raw_value = lookup(termAnnotated)
     var score = "HIGH"
-    val range = j \\ "label"
+    val range = j \\ "iri"
 
     for (i <- range.indices){
       var deleted = false
       val j2 = j(i)
-      val prefLabel = (j2 \ "label").validate[String].get
+      val prefLabel = (j2 \ "iri").validate[String].get
       val ontology = (j2 \ "ontology_name").validate[String].get.split("_").head
       val ontology_id = (j2 \ "short_form").validate[String].get
       val id = ontology_id
@@ -35,9 +35,9 @@ object OlsParser {
   }
 
   def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): String = {
-    val pref = Config.get_score("pref")
-    val syn = Config.get_score("syn")
-    val penalty = Config.get_excess_words_penalty()
+    val pref = ApplicationConfig.get_score("pref")
+    val syn = ApplicationConfig.get_score("syn")
+    val penalty = ApplicationConfig.get_excess_words_penalty()
     val modifier = ScoreCalculator.get_words_distance(termAnnotated,prefLabel)
     val score_label = pref + modifier
 

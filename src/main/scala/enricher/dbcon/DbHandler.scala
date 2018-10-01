@@ -2,7 +2,7 @@ package enricher.dbcon
 
 import java.sql.{BatchUpdateException, SQLTransientConnectionException}
 
-import config.Config._
+import config_pkg.ApplicationConfig._
 import enricher.dbcon.Tables._
 import org.apache.log4j.Logger
 import slick.jdbc.PostgresProfile.api._
@@ -16,7 +16,7 @@ object DbHandler {
   val logger: Logger = Logger.getLogger(this.getClass)
 
 
-  private var _db_name = "gecotest2"
+  private var _db_name = "gecotest_andrea"
   def db_name: String = _db_name
   def set_db_name(value: String): Unit = _db_name = value
 
@@ -451,10 +451,10 @@ object DbHandler {
     var info: List[expert_info_for_feedback] = List()
     val q =
       sql"""
-           select vocabulary.tid, label as raw_value, pref_label, source, code, iri, description
+           select vocabulary.tid, iri as raw_value, pref_label, source, code, iri, description
            from vocabulary join raw_annotation on vocabulary.tid = raw_annotation.tid
            where table_name ilike $table_name and column_name ilike $column_name and
-           label not in (select raw_value from expert_feedback where expert_username = $username)
+           iri not in (select raw_value from expert_feedback where expert_username = $username)
          """.as[(Int,String,String,String,String,String,String)]
 
     val db = get_db()

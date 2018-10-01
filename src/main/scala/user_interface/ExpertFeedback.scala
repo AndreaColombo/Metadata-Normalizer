@@ -38,7 +38,7 @@ object ExpertFeedback {
     println
 
     for (o <- info_for_rating){
-      val table = Table(Sized("Raw value","Preferred label","Source","Code","Iri","Description"))
+      val table = Table(Sized("Raw value","Preferred iri","Source","Code","Iri","Description"))
       table.rows += Sized(o.raw,o.pref_label,o.source,o.code,o.iri,o.description)
       table.print()
       println
