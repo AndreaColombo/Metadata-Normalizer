@@ -115,8 +115,6 @@ object Ols_interface {
         Xref(a.source,a.source+"_"+a.code,a.url)
       )
 
-
-      xref.foreach(println)
       val children_url = (j \ "_links" \ "hierarchicalChildren" \ "href").validate[String].getOrElse("null")
       val parents_url = (j \ "_links" \ "parents" \ "href").validate[String].getOrElse("null")
       val part_of_url = (j \ "_links" \ "part_of" \ "href").validate[String].getOrElse("null")
