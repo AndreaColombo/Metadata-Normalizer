@@ -98,10 +98,10 @@ object ScoreCalculator {
     }
     else {
       if (matchType.startsWith("PREF")) {
-        score = ApplicationConfig.get_score("pref")+matchType.split(" ").last.toDouble
+        score = ApplicationConfig.get_match_score("pref")+matchType.split(" ").last.toDouble
       }
       else if (matchType.startsWith("SYN")) {
-        score = ApplicationConfig.get_score("syn")+matchType.split(" ").last.toDouble
+        score = ApplicationConfig.get_match_score("syn")+matchType.split(" ").last.toDouble
       }
       else score = 1
     }

@@ -19,3 +19,4 @@ libraryDependencies += "com.github.wookietreiber" %% "scala-cli-tools" % "0.2.0"
 libraryDependencies += "org.slf4j" % "slf4j-log4j12" % "1.7.25"
 libraryDependencies += "org.typelevel" %% "cats-core" % "1.2.0"
 scalacOptions += "-Ypartial-unification"
+\

@@ -35,8 +35,8 @@ object OlsParser {
   }
 
   def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): String = {
-    val pref = ApplicationConfig.get_score("pref")
-    val syn = ApplicationConfig.get_score("syn")
+    val pref = ApplicationConfig.get_match_score("pref")
+    val syn = ApplicationConfig.get_match_score("syn")
     val penalty = ApplicationConfig.get_excess_words_penalty()
     val modifier = ScoreCalculator.get_words_distance(termAnnotated,prefLabel)
     val score_label = pref + modifier

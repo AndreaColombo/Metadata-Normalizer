@@ -47,11 +47,11 @@ object Utils {
 
   def input_source_code(): (String, String) = {
 
-    println("Please input source")
+    println("Please input ontology")
     var input = StdIn.readLine()
     while(!validate_source(input)) {
-      println("Error, source not valid")
-      println("Please input a valid source")
+      println("Error, ontology not valid")
+      println("Please input a valid ontology")
       input = StdIn.readLine()
       println(!validate_source(input))
     }
@@ -70,7 +70,7 @@ object Utils {
     (source,code)
   }
 
-  //return true if source is valid
+  //return true if ontology is valid
   def validate_source(source: String): Boolean = {
     Http("https://www.ebi.ac.uk/ols/api/ontologies/"+source).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get.contains("200")
   }

@@ -27,7 +27,7 @@ object DbInterface {
       case Some(mainTid) =>
 
         //TODO ARIF it is using the first result which is wrong
-        //      val tid = DbHandler.get_tid(res.head.apply("source"),res.head.apply("code"))
+        //      val tid = DbHandler.get_tid(res.head.apply("ontology"),res.head.apply("code"))
         //adding raw value to syn table as raw and also syn table as raw
         DbHandler.synonym_insert(List(synonym_type(mainTid, raw_value, "raw")))
         DbHandler.raw_insert(List(raw_annotation_type(mainTid, raw_value, table_name, column_name, method)))
@@ -46,7 +46,7 @@ object DbInterface {
     var insert_syn: List[synonym_type] = List()
     var support: List[cv_support] = List()
 
-    val source = elem.apply("source")
+    val source = elem.apply("ontology")
     val code = elem.apply("code")
     val label = elem.apply("iri")
     val description = elem.apply("description")

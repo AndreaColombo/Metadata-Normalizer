@@ -107,19 +107,22 @@ object DbHandler {
     db.close()
   }
 
-  def vocabulary_insert(rows: vocabulary_type): Unit = {
+  def vocabulary_insert(rows: vocabulary_type): Int = {
 
     var ok: (String, String, String, String, String) = (rows.source,rows.code,rows.label,rows.description,rows.iri)
     val db = get_db()
-    val insertAction = vocabulary.map(a=> (a.source,a.code,a.label,a.description,a.iri)) += ok
+    var new_tid = -1
+    val insertAction = (vocabulary returning vocabulary.map(_.tid) into ((vocabulary,tid) => vocabulary.copy(tid=tid))) += rows
+//    val insertAction = vocabulary += rows
     try {
-      val insert = db.run(insertAction)
+      val insert = db.run(insertAction).map(a => new_tid = a.tid)
       Await.result(insert, Duration.Inf)
     }
     catch {
-      case e: BatchUpdateException => e.getNextException.printStackTrace()
+      case e: BatchUpdateException => logger.info(e.getNextException)
     }
     db.close()
+    new_tid
   }
 
   def synonym_insert(rows: List[synonym_type]): Unit = {
@@ -157,7 +160,7 @@ object DbHandler {
   }
 
   def get_tid_option(source: String, code: String): Option[Int] = {
-    logger.info("source: "+source)
+    logger.info("ontology: "+source)
     logger.info("code: "+code)
     val db = get_db()
     var tid: Option[Int] = None
@@ -464,7 +467,7 @@ object DbHandler {
     var info: List[expert_info_for_feedback] = List()
     val q =
       sql"""
-           select vocabulary.tid, iri as raw_value, pref_label, source, code, iri, description
+           select vocabulary.tid, iri as raw_value, pref_label, ontology, code, iri, description
            from vocabulary join raw_annotation on vocabulary.tid = raw_annotation.tid
            where table_name ilike $table_name and column_name ilike $column_name and
            iri not in (select raw_value from expert_feedback where expert_username = $username)

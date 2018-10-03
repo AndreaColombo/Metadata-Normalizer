@@ -38,7 +38,7 @@ object ApplicationConfig  {
 
   def get_bp_apikey(): String = conf.getString("bioportal_apikey")
 
-  def get_score(match_type: String): Int = conf.getInt("scores.match_score_"+match_type.toLowerCase)
+  def get_match_score(match_type: String): Int = conf.getInt("scores.match_score_"+match_type.toLowerCase)
 
   def get_excess_words_penalty(): Int = conf.getInt("scores.excess_words_penalty")
 

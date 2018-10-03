@@ -21,7 +21,7 @@ object Annotator {
 //    var best_score = 0.0
 //    val tmp = ols_search_term(raw_value,ontos)
 //     TODO ARIF max score
-//    if (tmp.score==get_score("pref")){
+//    if (tmp.score==get_match_score("pref")){
 //      result = tmp
 //      ok = true
 //    }
@@ -37,18 +37,18 @@ object Annotator {
 //  }
 
   /*
-  def get_info(source: String, code: String, raw_value: String,table: String, column: String): List[Map[String, String]] = {
+  def get_info(ontology: String, code: String, raw_value: String,table: String, column: String): List[Map[String, String]] = {
     var result: List[Map[String, String]] = List()
 
     //TODO before starting this check RAW table, then check
-    val tmp = ols_get_info(source,code)
+    val tmp = ols_get_info(ontology,code)
     if (tmp.nonEmpty) {
       val onto = tmp.head.head
       val parents = tmp.head(5)
       val children = tmp.head(6)
 
       if(!DbHandler.cv_support_exists(onto,tmp.head(1)))
-        result :+= Map("source" -> onto, "code" -> tmp.head(1), "iri" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8),"iri"->tmp.head.last)
+        result :+= Map("ontology" -> onto, "code" -> tmp.head(1), "iri" -> tmp.head(2), "xref" -> tmp.head(3), "syn" -> tmp.head(4), "parents" -> tmp.head(5), "part_of" -> tmp.head(7),"description"->tmp.head(8),"iri"->tmp.head.last)
 
       //IN DESC CI SONO I DISCENDENTI DEL CURRENT TERM
       //IN ANC I SONO GLI ANCESTORS DEL CURRENT TERM
@@ -58,17 +58,17 @@ object Annotator {
       //      val anc = get_hyp(parents, onto, 0,tmp.head(1))
 //      for (elem <- anc) {
 //        if(!DbHandler.cv_support_exists(elem._1,elem._2))
-//        result :+= Map("source" -> elem._1, "code" -> elem._2, "iri" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
+//        result :+= Map("ontology" -> elem._1, "code" -> elem._2, "iri" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
 //      }
 //
 //      for (elem <- desc) {
 //        if (!DbHandler.cv_support_exists(elem._1, elem._2))
-//        result :+= Map("source" -> elem._1, "code" -> elem._2, "iri" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
+//        result :+= Map("ontology" -> elem._1, "code" -> elem._2, "iri" -> elem._3, "xref" -> elem._4, "syn" -> elem._5, "parents" -> elem._6, "part_of" -> elem._8,"description"->elem._9,"iri"->elem._10)
 //      }
     }
     else {
-      DbHandler.user_feedback_insert(List(expert_choice_type(-1,resolved = false,table,column,null,raw_value,null,null,Some(source),Some(code),null,"ONLINE:ERROR  "+ols_get_status(source,ols_get_iri(source,code)),get_timestamp())))
-      logger.info(s"Value $raw_value, best match found as $source $code but online resource not available")
+      DbHandler.user_feedback_insert(List(expert_choice_type(-1,resolved = false,table,column,null,raw_value,null,null,Some(ontology),Some(code),null,"ONLINE:ERROR  "+ols_get_status(ontology,ols_get_iri(ontology,code)),get_timestamp())))
+      logger.info(s"Value $raw_value, best match found as $ontology $code but online resource not available")
     }
     result.distinct
   }

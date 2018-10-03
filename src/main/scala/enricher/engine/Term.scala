@@ -26,7 +26,7 @@ case class RawValue(value: String, table: String, column: String)
 /**
   *
   * @param rawValue
-  * @param source
+  * @param ontology
   * @param code
   * @param iri
   * @param prefLabel
@@ -38,7 +38,7 @@ case class RawValue(value: String, table: String, column: String)
   * @param depth
   * @param tid
   */
-case class Term(source: ontology_type,
+case class Term(ontology: ontology_type,
                 code: String,
                 iri: String,
                 rawValue: Option[RawValue] = None,
@@ -53,29 +53,37 @@ case class Term(source: ontology_type,
 
   //SAVE TERM TO LOCAL KB AND ASSIGN TID
   def saveToKB(): Term = {
-    //TODO ADD CHECK EXISTENCE OF TERM IN KB
-    val vocabulary = vocabulary_type(-1,this.source.source,this.code,this.prefLabel.get,this.description.get,this.iri)
-    insert_ontology(this.source)
-    println(vocabulary)
-    vocabulary_insert(vocabulary)
-    val new_tid = get_tid(this.source.source,this.code)
-    val synonyms = this.synonyms.get.map(a =>
-      synonym_type(
-        new_tid,
-        a.label,
-        a.ttype.toString
-      )
-    )
-    val references = this.xref.get.map(a =>
-      reference_type(
-        new_tid,
-        a.source,
-        a.code,
-        a.url
-      )
-    )
 
-    val raw = raw_annotation_type(
+    //TODO ADD CHECK EXISTENCE OF TERM IN KB maybe done
+    val vocabulary = vocabulary_type(-1,this.ontology.source,this.code,this.prefLabel.get,this.description.get,this.iri)
+    if(!onto_exist(this.ontology.source))
+      insert_ontology(this.ontology)
+
+    val existing_tid = get_tid_option(this.ontology.source,this.code)
+
+    if(existing_tid.isDefined){
+      this.copy(tid = existing_tid)
+    }
+    else {
+      val new_tid = vocabulary_insert(vocabulary)
+      val synonyms = this.synonyms.get.map(a =>
+        synonym_type(
+          new_tid,
+          a.label,
+          a.ttype.toString
+        )
+      )
+
+      val references = this.xref.get.map(a =>
+        reference_type(
+          new_tid,
+          a.source,
+          a.code,
+          a.url
+        )
+      )
+
+      val raw = raw_annotation_type(
         new_tid,
         this.rawValue.get.value,
         this.rawValue.get.table,
@@ -83,20 +91,21 @@ case class Term(source: ontology_type,
         'O'
       )
 
-    synonym_insert(synonyms)
-    reference_insert(references)
-    raw_insert(List(raw))
-    this.copy(tid=Some(new_tid))
+      synonym_insert(synonyms)
+      reference_insert(references)
+      raw_insert(List(raw))
+      this.copy(tid=Some(new_tid))
+    }
   }
 
   //FILL OPTIONAL FIELDS OF TERM
-  def fill(): Term = Term.fill(this.source.source,this.iri)
+  def fill(): Term = Term.fill(this.ontology.source,this.iri)
 }
 
 object Term {
 
   //FILL OPTIONAL FIELDS OF TERM
-//  def fill(source: String, code: String): Term = fill(Term(source,code,Ols_interface.ols_get_iri(source,code)))
+//  def fill(ontology: String, code: String): Term = fill(Term(ontology,code,Ols_interface.ols_get_iri(ontology,code)))
 
   def fill(source: String, iri: String): Term = {
     ols_get_info(source,iri)
