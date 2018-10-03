@@ -43,7 +43,8 @@ object Ols_interface {
       val iri = (j2 \ "iri").validate[String].get
       val synonyms = (j2 \ "synonym").validate[List[String]].getOrElse(List())
 
-      result :+= Term(ontology,ontology_id,iri,Some(rawValue))
+      val source = ols_get_onto_info(ontology)
+      result :+= Term(source,ontology_id,iri,Some(rawValue))
 
       //TODO ARIF add check max score also by using match_mode_random
 //      if (score_num >= get_threshold() && score_num > result.score) {
@@ -78,7 +79,8 @@ object Ols_interface {
     val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
     var status = ols_get_status(source,iri)
 
-    var returned: Term = Term(source,"",iri)
+    val ontology = ols_get_onto_info(source)
+    var returned: Term = Term(ontology,"",iri)
 
     while (!status.contains("200") && attempts <= 5){
       Thread.sleep(10000)
@@ -90,7 +92,6 @@ object Ols_interface {
       val response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
       val j = Json.parse(response.body)
       val prefLabel = (j \ "label").validate[String].get
-      val ontology = (j \ "ontology_name").validate[String].get
       val ontology_id = (j \ "short_form").validate[String].get
       val description = (j \ "description").validate[List[String]].getOrElse(List("null")).head
       //TODO check all the type of synonyms
@@ -115,7 +116,6 @@ object Ols_interface {
         Xref(a.source,a.source+"_"+a.code,a.url)
       )
 
-      synonym.foreach(println)
       val children_url = (j \ "_links" \ "hierarchicalChildren" \ "href").validate[String].getOrElse("null")
       val parents_url = (j \ "_links" \ "parents" \ "href").validate[String].getOrElse("null")
       val part_of_url = (j \ "_links" \ "part_of" \ "href").validate[String].getOrElse("null")
@@ -125,7 +125,7 @@ object Ols_interface {
       val parents = parents_tmp ++ part_of
 
       val children = get_relatives(children_url, RelationType.PART_OF).map(a =>
-        Relation(a.term,get_rel_type(Term(source,"",a.term.right.get),Term(ontology,ontology_id,iri)))
+        Relation(a.term,get_rel_type(Term(ontology,"",a.term.right.get),Term(ontology,ontology_id,iri)))
       )
 
       returned = Term(ontology,ontology_id,iri,None,Some(prefLabel),Some(description),Some(synonym++rel_synonym),Some(xref),Some(parents),Some(children))
@@ -144,7 +144,7 @@ object Ols_interface {
     * @return
     */
   def get_rel_type(child: Term, parent: Term): RelationType.ttype = {
-    val url = s"https://www.ebi.ac.uk/ols/api/ontologies/${child.source}/terms/"+URLEncoder.encode(URLEncoder.encode(child.iri, "UTF-8"), "UTF-8")
+    val url = s"https://www.ebi.ac.uk/ols/api/ontologies/${child.source.source}/terms/"+URLEncoder.encode(URLEncoder.encode(child.iri, "UTF-8"), "UTF-8")
     val response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
 
     val j = Json.parse(response)
@@ -208,8 +208,8 @@ object Ols_interface {
     if(response.header("status").get.contains("200")) {
       val json = Json.parse(response.body)
       val source = onto
-      val title = (json \ "config_pkg").get("title").validate[String].getOrElse(null)
-      val description = (json \ "config_pkg").get("description").validate[String].getOrElse(null)
+      val title = (json \ "config").get("title").validate[String].getOrElse(null)
+      val description = (json \ "config").get("description").validate[String].getOrElse(null)
       result = ontology_type(source,Some(title),Some(description),Some(url))
     }
     else {

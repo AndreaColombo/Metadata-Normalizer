@@ -142,8 +142,6 @@ object DbHandler {
 
 
   def raw_insert(rows: List[raw_annotation_type]): Unit = {
-    var ok: Seq[(Int, String, String, String, Char)] = Seq()
-
     val db = get_db()
     Await.result(db.run(raw_annotation ++= rows),Duration.Inf)
     db.close()

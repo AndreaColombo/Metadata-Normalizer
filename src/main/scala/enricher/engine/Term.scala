@@ -2,7 +2,7 @@ package enricher.engine
 
 import Ols_interface._
 import enricher.dbcon.DbHandler._
-import enricher.dbcon.{reference_type, synonym_type, vocabulary_type}
+import enricher.dbcon._
 
 object RelationType extends Enumeration {
   type ttype = Value
@@ -38,7 +38,7 @@ case class RawValue(value: String, table: String, column: String)
   * @param depth
   * @param tid
   */
-case class Term(source: String,
+case class Term(source: ontology_type,
                 code: String,
                 iri: String,
                 rawValue: Option[RawValue] = None,
@@ -54,9 +54,11 @@ case class Term(source: String,
   //SAVE TERM TO LOCAL KB AND ASSIGN TID
   def saveToKB(): Term = {
     //TODO ADD CHECK EXISTENCE OF TERM IN KB
-    val vocabulary = vocabulary_type(-1,this.code,this.prefLabel.get,this.description.get,this.iri)
+    val vocabulary = vocabulary_type(-1,this.source.source,this.code,this.prefLabel.get,this.description.get,this.iri)
+    insert_ontology(this.source)
+    println(vocabulary)
     vocabulary_insert(vocabulary)
-    val new_tid = get_tid(this.source,this.code)
+    val new_tid = get_tid(this.source.source,this.code)
     val synonyms = this.synonyms.get.map(a =>
       synonym_type(
         new_tid,
@@ -72,16 +74,27 @@ case class Term(source: String,
         a.url
       )
     )
+
+    val raw = raw_annotation_type(
+        new_tid,
+        this.rawValue.get.value,
+        this.rawValue.get.table,
+        this.rawValue.get.column,
+        'O'
+      )
+
     synonym_insert(synonyms)
     reference_insert(references)
+    raw_insert(List(raw))
     this.copy(tid=Some(new_tid))
   }
 
   //FILL OPTIONAL FIELDS OF TERM
-  def fill(): Term = Term.fill(this.source,this.iri)
+  def fill(): Term = Term.fill(this.source.source,this.iri)
 }
 
 object Term {
+
   //FILL OPTIONAL FIELDS OF TERM
 //  def fill(source: String, code: String): Term = fill(Term(source,code,Ols_interface.ols_get_iri(source,code)))
 
