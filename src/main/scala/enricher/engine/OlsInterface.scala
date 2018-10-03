@@ -97,11 +97,11 @@ object Ols_interface {
       //TODO check all the type of synonyms
       val synonym_l = (j \ "synonyms").validate[List[String]].getOrElse(List("null")).distinct
       val exact_syn = (j \ "annotation" \ "has_exact_synonym").validate[List[String]].getOrElse(List("null")).distinct
-      val related_syn = (j \ "annotation" \ "has_related_synonym").validate[List[String]].getOrElse(List("null")).distinct
+      val related_syn = (j \ "annotation" \ "has_related_synonym").validate[List[String]].getOrElse(List()).distinct
       //TODO ARIF send distinct syn from the previous class ref: db_interface line:84
 
       var synonym_l_fin = (synonym_l ++ exact_syn).filterNot(_.equals("null"))
-      if(synonym_l_fin.isEmpty) synonym_l_fin = List("null")
+      if(synonym_l_fin.isEmpty) synonym_l_fin = List()
 
       val synonym = synonym_l.map(f => Synonym(f,SynonymType.SYN))
       val rel_synonym = related_syn.map(f => Synonym(f,SynonymType.RELATED))
