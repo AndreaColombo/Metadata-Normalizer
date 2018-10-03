@@ -1,6 +1,8 @@
 package enricher.engine
 
 import Ols_interface._
+import enricher.dbcon.DbHandler._
+import enricher.dbcon.{reference_type, synonym_type, vocabulary_type}
 
 object RelationType extends Enumeration {
   type ttype = Value
@@ -9,7 +11,7 @@ object RelationType extends Enumeration {
 
 object SynonymType extends Enumeration {
   type ttype = Value
-  val EXACT, RELATED = Value
+  val SYN, RELATED = Value
 }
 
 case class Synonym(label: String, ttype: SynonymType.ttype)
@@ -48,9 +50,30 @@ case class Term(source: String,
                 children: Option[List[Relation]] = None,
                 depth: Int = 0,
                 tid: Option[Int] = None) {
+
   //SAVE TERM TO LOCAL KB AND ASSIGN TID
   def saveToKB(): Term = {
-    val new_tid = 0
+    //TODO ADD CHECK EXISTENCE OF TERM IN KB
+    val vocabulary = vocabulary_type(-1,this.code,this.prefLabel.get,this.description.get,this.iri)
+    vocabulary_insert(vocabulary)
+    val new_tid = get_tid(this.source,this.code)
+    val synonyms = this.synonyms.get.map(a =>
+      synonym_type(
+        new_tid,
+        a.label,
+        a.ttype.toString
+      )
+    )
+    val references = this.xref.get.map(a =>
+      reference_type(
+        new_tid,
+        a.source,
+        a.code,
+        a.url
+      )
+    )
+    synonym_insert(synonyms)
+    reference_insert(references)
     this.copy(tid=Some(new_tid))
   }
 

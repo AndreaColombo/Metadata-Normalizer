@@ -102,7 +102,7 @@ object Ols_interface {
       var synonym_l_fin = (synonym_l ++ exact_syn).filterNot(_.equals("null"))
       if(synonym_l_fin.isEmpty) synonym_l_fin = List("null")
 
-      val synonym = synonym_l.map(f => Synonym(f,SynonymType.EXACT))
+      val synonym = synonym_l.map(f => Synonym(f,SynonymType.SYN))
       val rel_synonym = related_syn.map(f => Synonym(f,SynonymType.RELATED))
 
       val xref = (j \ "obo_xref").validate[List[JsValue]].getOrElse(List()).map(a =>
@@ -115,6 +115,7 @@ object Ols_interface {
         Xref(a.source,a.source+"_"+a.code,a.url)
       )
 
+      synonym.foreach(println)
       val children_url = (j \ "_links" \ "hierarchicalChildren" \ "href").validate[String].getOrElse("null")
       val parents_url = (j \ "_links" \ "parents" \ "href").validate[String].getOrElse("null")
       val part_of_url = (j \ "_links" \ "part_of" \ "href").validate[String].getOrElse("null")

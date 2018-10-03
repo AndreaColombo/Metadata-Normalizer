@@ -89,7 +89,7 @@ object DbHandler {
     Await.result(f,Duration.Inf)
   }
 
-  def cv_support_insert(rows: List[vocabulary_type]): Unit = {
+  def vocabulary_insert(rows: List[vocabulary_type]): Unit = {
 
     var ok: Seq[(String, String, String, String, String)] = Seq()
     for (l <- rows) {
@@ -107,7 +107,22 @@ object DbHandler {
     db.close()
   }
 
-  def syn_insert(rows: List[synonym_type]): Unit = {
+  def vocabulary_insert(rows: vocabulary_type): Unit = {
+
+    var ok: (String, String, String, String, String) = (rows.source,rows.code,rows.label,rows.description,rows.iri)
+    val db = get_db()
+    val insertAction = vocabulary.map(a=> (a.source,a.code,a.label,a.description,a.iri)) += ok
+    try {
+      val insert = db.run(insertAction)
+      Await.result(insert, Duration.Inf)
+    }
+    catch {
+      case e: BatchUpdateException => e.getNextException.printStackTrace()
+    }
+    db.close()
+  }
+
+  def synonym_insert(rows: List[synonym_type]): Unit = {
     val db = get_db()
     val insertAction = synonym ++= rows
     val insert = db.run(insertAction)
@@ -115,7 +130,7 @@ object DbHandler {
     db.close()
   }
 
-  def xref_insert(rows: List[reference_type]): Unit = {
+  def reference_insert(rows: List[reference_type]): Unit = {
     var ok: Seq[(Int, String, String)] = Seq()
 
     val db = get_db()

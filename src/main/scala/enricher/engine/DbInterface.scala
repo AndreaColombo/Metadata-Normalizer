@@ -29,7 +29,7 @@ object DbInterface {
         //TODO ARIF it is using the first result which is wrong
         //      val tid = DbHandler.get_tid(res.head.apply("source"),res.head.apply("code"))
         //adding raw value to syn table as raw and also syn table as raw
-        DbHandler.syn_insert(List(synonym_type(mainTid, raw_value, "raw")))
+        DbHandler.synonym_insert(List(synonym_type(mainTid, raw_value, "raw")))
         DbHandler.raw_insert(List(raw_annotation_type(mainTid, raw_value, table_name, column_name, method)))
         DbHandler.update_tid(raw_value, Some(mainTid), table_name, column_name)
       //TODO ARIF correct
@@ -56,7 +56,7 @@ object DbInterface {
     //IF DOESN'T EXIST INSERT
 
     insert_elem ++= List(vocabulary_type(default_values.int, source, code, label, description, iri))
-    DbHandler.cv_support_insert(insert_elem)
+    DbHandler.vocabulary_insert(insert_elem)
     val tid = DbHandler.get_tid(source, code)
     support :+= cv_support(tid.toString, source, code, label)
 
@@ -73,7 +73,7 @@ object DbInterface {
       val code = xref
       insert_xref ++= List(reference_type(tid, source, code))
     }
-    DbHandler.xref_insert(insert_xref)
+    DbHandler.reference_insert(insert_xref)
     //END XREF
 
     //SYN
@@ -90,7 +90,7 @@ object DbInterface {
     }
 
     //TODO ARIF send distinct syn from the previous class
-    DbHandler.syn_insert(insert_syn.distinct)
+    DbHandler.synonym_insert(insert_syn.distinct)
     //END SYN
 
     support

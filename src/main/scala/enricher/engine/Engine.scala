@@ -82,7 +82,7 @@ object Engine {
 //              existing_value.column_name != column_name ||
 //              existing_value.iri != raw_value) {
 //                DbHandler.raw_insert(List(raw_annotation_type(tid, raw_value, table_name, column_name, 'O')))
-//                DbHandler.syn_insert(List(synonym_type(tid,raw_value,"raw")))
+//                DbHandler.synonym_insert(List(synonym_type(tid,raw_value,"raw")))
 //              }
 //            }
             //TODO ARIF ILLUMINA adds the tid of the first parent that insert into the db
