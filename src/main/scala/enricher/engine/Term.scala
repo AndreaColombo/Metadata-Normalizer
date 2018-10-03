@@ -16,7 +16,7 @@ case class Synonym(label: String, ttype: SynonymType.ttype)
 
 case class Relation(term: Either[Term, String], ttype: RelationType.ttype)
 
-case class Xref(source: String, code: String)
+case class Xref(source: String, code: String, url: Option[String])
 
 case class ScoredTerm(term: Term, score: Double)
 

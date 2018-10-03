@@ -108,13 +108,15 @@ object Ols_interface {
       val xref = (j \ "obo_xref").validate[List[JsValue]].getOrElse(List()).map(a =>
         Xref(
           (a \ "database").validate[String].getOrElse("null"),
-          (a \ "id").validate[String].get
+          (a \ "id").validate[String].get,
+          (a \ "url").validate[String].asOpt
         )
-      ).map(a =>
-        Xref(a.source,a.source+"_"+a.code)
+      ).filterNot(_.source=="null").map(a =>
+        Xref(a.source,a.source+"_"+a.code,a.url)
       )
 
 
+      xref.foreach(println)
       val children_url = (j \ "_links" \ "hierarchicalChildren" \ "href").validate[String].getOrElse("null")
       val parents_url = (j \ "_links" \ "parents" \ "href").validate[String].getOrElse("null")
       val part_of_url = (j \ "_links" \ "part_of" \ "href").validate[String].getOrElse("null")
@@ -166,7 +168,7 @@ object Ols_interface {
   def get_relatives(rel_url: String, ttype: RelationType.ttype): List[Relation] = {
     var parents_tmp: List[Relation] = List()
     if (rel_url != "null"){
-      val p_status = Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.header("Status").get
+       val p_status = Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.header("Status").get
       if(p_status.contains("200")) {
         val parents_json = (Json.parse(Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded").get("terms").validate[List[JsValue]].getOrElse(List())
         parents_tmp = parents_json.map(a =>
