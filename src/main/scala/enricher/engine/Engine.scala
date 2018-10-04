@@ -4,6 +4,7 @@ package enricher.engine
 import config_pkg.ApplicationConfig
 import enricher.dbcon.Tables._
 import enricher.dbcon._
+import enricher.engine.Ols_interface.{get_score, ols_search_term}
 import utilities.Utils.get_timestamp
 import org.slf4j.LoggerFactory
 import slick.jdbc.PostgresProfile.api._
@@ -14,15 +15,17 @@ object Engine {
   def controller(column_name: String): Unit = {
     val logger = LoggerFactory.getLogger(this.getClass)
     val table_name = ApplicationConfig.get_table_by_column(column_name)
+    val threshold = ApplicationConfig.get_threshold()
     DbHandler.clean_user_feedback(table_name,column_name)
     val raw_values = DbHandler.get_raw_values(table_name,column_name)
     logger.info(column_name)
     for (raw_value <- raw_values) {
       val condition = (a: raw_annotation) => a.table_name === table_name && a.column_name === column_name && a.label.toLowerCase === raw_value.toLowerCase
       val result_raw = DbHandler.get_cv_support_raw(condition)
-
       val result_syn = DbHandler.get_cv_support_syn_by_value(raw_value.map(_.toLower))
       val result_user_changes = DbHandler.get_raw_user_changes(table_name, column_name, raw_value.map(_.toLower))
+      val rv = RawValue(raw_value,table_name,column_name)
+
       //LOCAL KB LOOKUP
       if (result_raw.tid != default_values.int) {
         //VALUE FOUND RAW
@@ -57,52 +60,40 @@ object Engine {
           }
         }
       }
-
       //ONLINE KB LOOKUP
-//      else {
-//        val result_search = Annotator.search_term(raw_value, column_name)
+      else {
+        val terms_ordered = ols_search_term(rv).map(_.fill()).map(_.copy(rawValue = Some(rv))).map(a =>
+          ScoredTerm(a,get_score(a.rawValue.get.value,a.prefLabel.get,a.synonyms.get.map(_.label)))
+        ).sortWith(_.score >_.score)
+
+        val terms_filtered = terms_ordered.filter(_.score > threshold)
+
         //BEST MATCH FOUND
-//        if (result_search.options.nonEmpty) {
-//          if (result_search.options.length == 1) {
-//            logger.info(s"""Value "$raw_value" best match found in online KB""")
-//            val ontology = result_search.options.head.ontology
-//            val code = result_search.options.head.code
-//            val a = Ols_interface.ols_get_onto_info(ontology)
-//            if (!DbHandler.onto_exist(a.ontology)) {
-//              DbHandler.insert_ontology(a)
-//            }
-//            val result = Annotator.get_info(ontology,code, raw_value, table_name, column_name)
-//            if (DbHandler.cv_support_exists(ontology, code) && result.isEmpty) {
-//              val tid = DbHandler.get_tid(ontology, code)
-//              val condition = (a: raw_annotation) => a.tid === tid
-//              val existing_value = DbHandler.get_cv_support_raw(condition)
-//              NOTE: ARIF no need to do here, it will do in  DbInterface.DbInterface( line around 89
-//              if (existing_value.table_name != table_name ||
-//              existing_value.column_name != column_name ||
-//              existing_value.iri != raw_value) {
-//                DbHandler.raw_insert(List(raw_annotation_type(tid, raw_value, table_name, column_name, 'O')))
-//                DbHandler.synonym_insert(List(synonym_type(tid,raw_value,"raw")))
-//              }
-//            }
-            //TODO ARIF ILLUMINA adds the tid of the first parent that insert into the db
-            //TODO ARIF I think the system is getting the first tid available in the voc. table
-//            DbInterface.db_interface(result, raw_value, table_name, column_name, 'O', ontology, code)
-//          }
-//          else {
-            //MULTIPLE RESULTS, BEST MATCH UNDECIDED
-//            logger.info(s"""Best match undecided for value "$raw_value"""")
-//            for (elem <- result_search.options){
-//              val ontology = elem.ontology
-//              val code = elem.code
-//              val label = elem.iri
-//              DbHandler.user_feedback_insert(List(expert_choice_type(default_values.int, default_values.bool, table_name, column_name, null, raw_value, null, Some(label), Some(ontology), Some(code), Some(Ols_interface.ols_get_iri(ontology,code)), "ONLINE:UNDECIDED "+result_search.score, get_timestamp())))
-//            }
-//          }
-//        }
-//        else {
-//          Annotator.get_user_feedback(raw_value,table_name,column_name)
-//        }
-//      }
+        if(terms_filtered.nonEmpty){
+          val best_term = terms_filtered.head
+
+          val matchModeRandom = ApplicationConfig.get_search_mode()
+
+          if(!matchModeRandom) {
+            val best_terms = terms_filtered.filter(_.score == best_term.score)
+            //BEST MATCH UNDECIDED
+            if (best_terms.nonEmpty) {
+              logger.info(s"""Best match undecided for value "$raw_value"""")
+              //insert in user fb best terms
+            }
+            //BEST MATCH DECIDED
+            else {
+              logger.info(s"""Value "$raw_value" best match found in online KB with match mode not random""")
+              best_term.term.saveToKB()
+            }
+          }
+          //BEST MATCH FOUND WITH MATCH MODE RANDOM
+          else {
+            logger.info(s"""Value "$raw_value" best match found in online KB with match mode random""")
+            best_term.term.saveToKB()
+          }
+        }
+      }
     }
   }
 }

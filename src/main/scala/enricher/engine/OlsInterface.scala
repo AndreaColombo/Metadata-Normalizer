@@ -10,6 +10,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsValue, Json}
 import scalaj.http.{Http, HttpOptions}
 import RelationType._
+import utilities.Utils.get_timestamp
 
 case class source_code_iri(source: String, code: String, iri: String)
 case class search_term_result(options: List[source_code_iri], score: Double)
@@ -171,11 +172,11 @@ object Ols_interface {
     parents_tmp
   }
 
-  def ols_get_user_feedback(raw_value: String, term_type: String, table_name: String): List[expert_choice_type] = {
+  def ols_get_user_feedback(rawValue: RawValue): List[expert_choice_type] = {
     var rows: List[expert_choice_type] = List()
-    val parsed = Preprocessing.parse(List(raw_value)).split(",")
+    val parsed = Preprocessing.parse(List(rawValue.value)).split(",")
     for (value <- parsed) {
-      val ontologies = get_ontologies_by_type(term_type)
+      val ontologies = get_ontologies_by_type(rawValue.column)
       val url = "https://www.ebi.ac.uk/ols/api/search"
       val response = Http(url).param("q", value).param("fieldList", "iri,short_form,ontology_name").param("ontology", ontologies.mkString(",")).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       val json = (Json.parse(response) \ "response").get("docs")
@@ -185,13 +186,17 @@ object Ols_interface {
         val id = (jj \ "short_form").validate[String].get
         val onto = (jj \ "ontology_name").validate[String].get
         val synonyms = (jj \ "synonym").validate[List[String]].getOrElse(List())
+        val score_num = get_score(rawValue.value,label,synonyms)
 
-//        val score_num = get_score(raw_value, label,synonyms)
-//        if (!rows.exists(_.code.get==id) && !DbHandler.user_fb_exist(raw_value,onto,id))
-//          rows :+= expert_choice_type(default_values.int, default_values.bool, table_name, term_type, null, raw_value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,utilities.Utils.get_timestamp())
+        //PREVENTS DUPLICATES
+        if (!rows.exists(_.code.get==id) && !DbHandler.user_fb_exist(rawValue.value,onto,id))
+          rows :+= expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, null, rawValue.value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,get_timestamp())
       }
     }
-    rows.distinct
+    if (rows.nonEmpty)
+      rows.distinct
+    else
+      List(expert_choice_type(default_values.int,default_values.bool,rawValue.table, rawValue.column, null, rawValue.value, null, null, null, null,null,"ONLINE:NONE",get_timestamp()))
   }
 
   def ols_get_onto_info(onto: String): ontology_type = {
@@ -211,7 +216,7 @@ object Ols_interface {
     result
   }
 
-  def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[Synonym] = List()): Double = {
+  def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): Double = {
     val pref = config_pkg.ApplicationConfig.get_match_score("pref")
     val syn = config_pkg.ApplicationConfig.get_match_score("syn")
     val modifier = ScoreCalculator.get_words_distance(termAnnotated,prefLabel)
@@ -220,7 +225,7 @@ object Ols_interface {
     var score_syn = 0.0
     var max_score_syn = 0.0
     for (elem <- synonym_l) {
-      val syn_modifier = ScoreCalculator.get_words_distance(termAnnotated,elem.label)
+      val syn_modifier = ScoreCalculator.get_words_distance(termAnnotated,elem)
       score_syn = syn
       if(score_syn>max_score_syn)
         max_score_syn= score_syn + syn_modifier

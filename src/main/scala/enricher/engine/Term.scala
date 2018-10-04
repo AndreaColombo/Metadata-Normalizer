@@ -1,8 +1,12 @@
 package enricher.engine
 
+import java.sql.BatchUpdateException
+
 import Ols_interface._
 import enricher.dbcon.DbHandler._
 import enricher.dbcon._
+import org.slf4j.LoggerFactory
+import utilities.Utils.get_timestamp
 
 object RelationType extends Enumeration {
   type ttype = Value
@@ -55,13 +59,13 @@ case class Term(ontology: ontology_type,
   def saveToKB(): Term = {
 
     //TODO ADD CHECK EXISTENCE OF TERM IN KB maybe done
-    val vocabulary = vocabulary_type(-1,this.ontology.source,this.code,this.prefLabel.get,this.description.get,this.iri)
-    if(!onto_exist(this.ontology.source))
+    val vocabulary = vocabulary_type(-1, this.ontology.source, this.code, this.prefLabel.get, this.description.get, this.iri)
+    if (!onto_exist(this.ontology.source))
       insert_ontology(this.ontology)
 
-    val existing_tid = get_tid_option(this.ontology.source,this.code)
+    val existing_tid = get_tid_option(this.ontology.source, this.code)
 
-    if(existing_tid.isDefined){
+    if (existing_tid.isDefined) {
       this.copy(tid = existing_tid)
     }
     else {
@@ -94,15 +98,30 @@ case class Term(ontology: ontology_type,
       synonym_insert(synonyms)
       reference_insert(references)
       raw_insert(List(raw))
-      this.copy(tid=Some(new_tid))
+      this.copy(tid = Some(new_tid))
     }
   }
 
   //FILL OPTIONAL FIELDS OF TERM
-  def fill(): Term = Term.fill(this.ontology.source,this.iri)
+  def fill(): Term = Term.fill(this.ontology.source, this.iri)
+
+  def get_user_feedback(): Unit = {
+    val logger = LoggerFactory.getLogger(this.getClass)
+    val value = this.rawValue.get.value
+    var user_feedback: List[expert_choice_type] = List()
+    user_feedback = ols_get_user_feedback(this.rawValue.get)
+    try {
+      DbHandler.user_feedback_insert(user_feedback)
+      logger.info(s"Value $value, best match not found in online KB, user feedback")
+    }
+    catch {
+      case e: BatchUpdateException => logger.info("User feedback exception", e.getNextException)
+    }
+  }
 }
 
 object Term {
+
 
   //FILL OPTIONAL FIELDS OF TERM
 //  def fill(ontology: String, code: String): Term = fill(Term(ontology,code,Ols_interface.ols_get_iri(ontology,code)))
@@ -113,4 +132,5 @@ object Term {
 
   //LOAD TERM FROM KB
   def loadFromKB(source: String, code: String): Term = ???
+
 }
