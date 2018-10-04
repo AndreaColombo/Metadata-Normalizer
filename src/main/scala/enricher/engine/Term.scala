@@ -57,19 +57,27 @@ case class Term(ontology: ontology_type,
 
   //SAVE TERM TO LOCAL KB AND ASSIGN TID
   def saveToKB(): Term = {
+    val existing = Term.loadFromKB(this)
 
-    //TODO ADD CHECK EXISTENCE OF TERM IN KB maybe done
-    val vocabulary = vocabulary_type(-1, this.ontology.source, this.code, this.prefLabel.get, this.description.get, this.iri)
-    if (!onto_exist(this.ontology.source))
-      insert_ontology(this.ontology)
-
-    val existing_tid = get_tid_option(this.ontology.source, this.code)
-
-    if (existing_tid.isDefined) {
-      this.copy(tid = existing_tid)
+    if (existing.tid.isDefined) {
+      val raw = raw_annotation_type(
+        existing.tid.get,
+        existing.rawValue.get.value,
+        existing.rawValue.get.table,
+        existing.rawValue.get.column,
+        'L'
+      )
+      raw_insert(List(raw))
+      update_tid(existing.rawValue.get,existing.tid)
+      existing
     }
     else {
+      if (!onto_exist(this.ontology.source))
+        insert_ontology(this.ontology)
+      val vocabulary = vocabulary_type(-1, this.ontology.source, this.code, this.prefLabel.get, this.description.get, this.iri)
+
       val new_tid = vocabulary_insert(vocabulary)
+
       val synonyms = this.synonyms.get.map(a =>
         synonym_type(
           new_tid,
@@ -98,6 +106,7 @@ case class Term(ontology: ontology_type,
       synonym_insert(synonyms)
       reference_insert(references)
       raw_insert(List(raw))
+      update_tid(this.rawValue.get,Some(new_tid))
       this.copy(tid = Some(new_tid))
     }
   }
@@ -105,32 +114,36 @@ case class Term(ontology: ontology_type,
   //FILL OPTIONAL FIELDS OF TERM
   def fill(): Term = Term.fill(this.ontology.source, this.iri)
 
-  def get_user_feedback(): Unit = {
+  def get_user_feedback(): List[expert_choice_type] = {
     val logger = LoggerFactory.getLogger(this.getClass)
     val value = this.rawValue.get.value
-    var user_feedback: List[expert_choice_type] = List()
-    user_feedback = ols_get_user_feedback(this.rawValue.get)
-    try {
-      DbHandler.user_feedback_insert(user_feedback)
-      logger.info(s"Value $value, best match not found in online KB, user feedback")
-    }
-    catch {
-      case e: BatchUpdateException => logger.info("User feedback exception", e.getNextException)
-    }
+    logger.info(s"Value $value, best match not found in online KB, user feedback")
+    ols_get_user_feedback(this.rawValue.get)
   }
 }
 
 object Term {
 
-
-  //FILL OPTIONAL FIELDS OF TERM
-//  def fill(ontology: String, code: String): Term = fill(Term(ontology,code,Ols_interface.ols_get_iri(ontology,code)))
-
   def fill(source: String, iri: String): Term = {
     ols_get_info(source,iri)
   }
 
-  //LOAD TERM FROM KB
-  def loadFromKB(source: String, code: String): Term = ???
+  def save_user_feedback(rows: List[expert_choice_type]): Unit = {
+    val logger = LoggerFactory.getLogger(this.getClass)
+    try {
+      DbHandler.user_feedback_insert(rows)
+    }
+    catch {
+      case e: BatchUpdateException => logger.info("User feedback exception", e.getNextException)
+    }
+  }
 
+  //LOAD TERM FROM KB AND ASSIGN TID IF TERM EXISTS, OTHERWISE RETURNS TERM
+  def loadFromKB(term: Term): Term = {
+    val existing_tid = get_tid_option(term.ontology.source, term.code)
+    if (existing_tid.isDefined) {
+      term.copy(tid = existing_tid)
+    }
+    else term
+  }
 }

@@ -4,6 +4,7 @@ import java.sql.{BatchUpdateException, SQLTransientConnectionException}
 
 import config_pkg.ApplicationConfig._
 import enricher.dbcon.Tables._
+import enricher.engine.RawValue
 import org.apache.log4j.Logger
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.meta.MTable
@@ -202,13 +203,8 @@ object DbHandler {
   }
 
   def user_feedback_insert(rows: List[expert_choice_type]): Unit = {
-    var ok: Seq[(String, String, Option[Int], String, Option[String], Option[String], Option[String], Option[String],Option[String],String,String)] = Seq()
-
-    for (l <- rows) {
-      ok :+= (l.table, l.column, l.tid, l.raw_value, l.parsed_value, l.label, l.source, l.code,l.iri,l.provenance,l.timestamp)
-    }
     val db = get_db()
-    val insertAction = expert_choice.map(a => (a.table_name, a.column_name, a.tid, a.raw_value, a.parsed_value, a.label, a.source, a.code,a.iri,a.provenance,a.timestamp)) ++= ok
+    val insertAction = expert_choice ++= rows
 
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
@@ -238,9 +234,8 @@ object DbHandler {
 
   def insert_user_changes(rows: expert_preference_type): Unit = {
     val db = get_db()
-    val insertAction = expert_preference.map(a => (a.table_name, a.column_name, a.raw_value, a.source, a.code)) ++= Seq((rows.table_name,rows.column_name,rows.raw_value,rows.source,rows.code))
+    val insertAction = expert_preference ++= Seq(rows)
     val insert = db.run(insertAction)
-
     Await.result(insert, Duration.Inf)
     db.close()
   }
@@ -276,7 +271,10 @@ object DbHandler {
     result
   }
 
-  def update_tid(value: String, new_tid: Option[Int],table_name: String, column_name: String): Unit = {
+  def update_tid(rawValue: RawValue, new_tid: Option[Int]): Unit = {
+    val table_name = rawValue.table
+    val column_name = rawValue.column
+    val value = rawValue.value
     val tid = column_name + "_tid"
     val q =
       if(new_tid.isDefined) {

@@ -30,7 +30,7 @@ object Engine {
       if (result_raw.tid != default_values.int) {
         //VALUE FOUND RAW
         logger.info(s"""Value "$raw_value" found as RAW in local KB""")
-        DbHandler.update_tid(raw_value, Some(result_syn.tid),table_name,column_name)
+        DbHandler.update_tid(rv, Some(result_syn.tid))
       }
       else if (result_user_changes._1 != "null") {
         //VALUE FOUND IN USER CHANGES
@@ -71,15 +71,29 @@ object Engine {
         //BEST MATCH FOUND
         if(terms_filtered.nonEmpty){
           val best_term = terms_filtered.head
-
           val matchModeRandom = ApplicationConfig.get_search_mode()
-
           if(!matchModeRandom) {
             val best_terms = terms_filtered.filter(_.score == best_term.score)
             //BEST MATCH UNDECIDED
             if (best_terms.nonEmpty) {
               logger.info(s"""Best match undecided for value "$raw_value"""")
-              //insert in user fb best terms
+              best_terms.foreach(a =>
+                Term.save_user_feedback(List(expert_choice_type(
+                  default_values.int,
+                  default_values.bool,
+                  a.term.rawValue.get.table,
+                  a.term.rawValue.get.column,
+                  null,
+                  a.term.rawValue.get.value,
+                  null,
+                  a.term.prefLabel,
+                  Some(a.term.ontology.source),
+                  Some(a.term.code),
+                  Some(a.term.iri),
+                  "ONLINE:UNDECIDED "+a.score.toString,
+                  get_timestamp()))
+                )
+              )
             }
             //BEST MATCH DECIDED
             else {
