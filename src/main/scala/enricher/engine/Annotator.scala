@@ -1,3 +1,5 @@
+/*****************************************************************
+E' TUTTO DA BUTTARE
 package enricher.engine
 
 import java.sql.BatchUpdateException
@@ -36,9 +38,9 @@ object Annotator {
 //    result
 //  }
 
-  /*
-  def get_info(ontology: String, code: String, raw_value: String,table: String, column: String): List[Map[String, String]] = {
-    var result: List[Map[String, String]] = List()
+
+  def get_info(ontology: String, code: String, raw_value: String,table: String, column: String): List[Map[String, String = {
+    var result: List[Map[String, String = List()
 
     //TODO before starting this check RAW table, then check
     val tmp = ols_get_info(ontology,code)
@@ -72,7 +74,6 @@ object Annotator {
     }
     result.distinct
   }
-  */
 
   def get_user_feedback(value: String,table_name: String, term_type: String): Unit = {
     var user_feedback: List[expert_choice_type] = List()
@@ -133,3 +134,5 @@ object Annotator {
 */
 
 }
+
+*******************************************************************/

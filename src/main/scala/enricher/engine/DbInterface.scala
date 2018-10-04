@@ -31,7 +31,7 @@ object DbInterface {
         //adding raw value to syn table as raw and also syn table as raw
         DbHandler.synonym_insert(List(synonym_type(mainTid, raw_value, "raw")))
         DbHandler.raw_insert(List(raw_annotation_type(mainTid, raw_value, table_name, column_name, method)))
-        DbHandler.update_tid(raw_value, Some(mainTid), table_name, column_name)
+        DbHandler.update_tid(RawValue(raw_value,table_name,column_name), Some(mainTid))
       //TODO ARIF correct
       //    insert_hyp(cv_support, res)
       //    unfold_hyp(mainTid)

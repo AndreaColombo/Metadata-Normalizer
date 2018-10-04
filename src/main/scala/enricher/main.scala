@@ -4,7 +4,7 @@ import java.util.Calendar
 
 import config_pkg.ApplicationConfig
 import enricher.dbcon.DbHandler
-import engine.{Ols_interface, Annotator, Engine}
+import engine.Engine
 import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat

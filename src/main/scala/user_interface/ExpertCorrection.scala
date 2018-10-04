@@ -2,6 +2,7 @@ package user_interface
 
 import enricher.dbcon.{DbHandler, default_values, expert_preference_type}
 import Utils._
+import enricher.engine.RawValue
 
 import scala.io.StdIn
 
@@ -9,7 +10,7 @@ object ExpertCorrection {
 
   def correct_value(value_to_correct: String,table: String, column: String): Unit = {
     val source_code = input_source_code()
-    DbHandler.update_tid(value_to_correct,None,table,column)
+    DbHandler.update_tid(RawValue(value_to_correct,table,column),None)
     val tuples = DbHandler.get_value_info(value_to_correct,table,column)
 
     for ((table_name, column_name) <- tuples) {
