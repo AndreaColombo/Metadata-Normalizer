@@ -83,9 +83,9 @@ object Engine {
                   default_values.bool,
                   a.term.rawValue.get.table,
                   a.term.rawValue.get.column,
-                  null,
+                  tid = None,
                   a.term.rawValue.get.value,
-                  null,
+                  parsed_value = None,
                   a.term.prefLabel,
                   Some(a.term.ontology.source),
                   Some(a.term.code),
@@ -106,6 +106,27 @@ object Engine {
             logger.info(s"""Value "$raw_value" best match found in online KB with match mode random""")
             best_term.term.saveToKB()
           }
+        }
+        //BEST MATCH NOT FOUND, USER FEEDBACK
+        else {
+          Term.save_user_feedback(terms_ordered.head.term.get_user_feedback())
+          Term.save_user_feedback(terms_ordered.map(a =>
+            expert_choice_type(
+              -1,
+              resolved = false,
+              a.term.rawValue.get.table,
+              a.term.rawValue.get.column,
+              tid = None,
+              a.term.rawValue.get.value,
+              parsed_value = None,
+              a.term.prefLabel,
+              Some(a.term.ontology.source),
+              Some(a.term.code),
+              Some(a.term.iri),
+              "ONLINE:LOW "+a.score.toString,
+              get_timestamp())
+            )
+          )
         }
       }
     }

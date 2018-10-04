@@ -190,13 +190,13 @@ object Ols_interface {
 
         //PREVENTS DUPLICATES
         if (!rows.exists(_.code.get==id) && !DbHandler.user_fb_exist(rawValue.value,onto,id))
-          rows :+= expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, null, rawValue.value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,get_timestamp())
+          rows :+= expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, None, rawValue.value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,get_timestamp())
       }
     }
     if (rows.nonEmpty)
       rows.distinct
     else
-      List(expert_choice_type(default_values.int,default_values.bool,rawValue.table, rawValue.column, null, rawValue.value, null, null, null, null,null,"ONLINE:NONE",get_timestamp()))
+      List(expert_choice_type(default_values.int,default_values.bool,rawValue.table, rawValue.column, None, rawValue.value, None, None, None, None,None,"ONLINE:NONE",get_timestamp()))
   }
 
   def ols_get_onto_info(onto: String): ontology_type = {
