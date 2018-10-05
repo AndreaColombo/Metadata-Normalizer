@@ -180,12 +180,13 @@ object Ols_interface {
         val score_num = get_score(rawValue.value,label,synonyms)
 
         //PREVENTS DUPLICATES
-        if (!rows.exists(_.code.get==id) && !DbHandler.user_fb_exist(rawValue.value,onto,id))
+        if (!rows.exists(_.code.get==id))
           rows :+= expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, None, rawValue.value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,get_timestamp())
       }
     }
-    if (rows.nonEmpty)
-      rows.distinct
+    if(rows.nonEmpty) {
+      rows.distinct.filterNot(a => DbHandler.user_fb_exist(a.raw_value, a.source.get, a.code.get))
+    }
     else
       List(expert_choice_type(default_values.int,default_values.bool,rawValue.table, rawValue.column, None, rawValue.value, None, None, None, None,None,"ONLINE:NONE",get_timestamp()))
   }
