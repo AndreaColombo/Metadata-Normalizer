@@ -100,7 +100,9 @@ object Ols_interface {
         Xref(a.source,a.source+"_"+a.code,a.url)
       )
 
-      val children_url = (j \ "_links" \ "hierarchicalChildren" \ "href").validate[String].getOrElse("null")
+      val children_url = (j \ "_links" \ "children" \ "href").validate[String].getOrElse("null")
+      val has_part_url = (j \ "_links" \ "has_part" \ "href").validate[String].getOrElse("null")
+
       val parents_url = (j \ "_links" \ "parents" \ "href").validate[String].getOrElse("null")
       val part_of_url = (j \ "_links" \ "part_of" \ "href").validate[String].getOrElse("null")
 
@@ -108,9 +110,7 @@ object Ols_interface {
       val part_of = get_relatives(part_of_url,RelationType.PART_OF)
       val parents = parents_tmp ++ part_of
 
-      val children = get_relatives(children_url, RelationType.PART_OF).map(a =>
-        Relation(a.term,get_rel_type(Term(ontology,"",a.term.right.get),Term(ontology,ontology_id,iri)))
-      )
+      val children = get_relatives(children_url, RelationType.IS_A) ++ get_relatives(has_part_url,PART_OF)
 
       returned = Term(ontology,ontology_id,iri,None,Some(prefLabel),Some(description),Some(synonym++rel_synonym),Some(xref),Some(parents),Some(children))
     }

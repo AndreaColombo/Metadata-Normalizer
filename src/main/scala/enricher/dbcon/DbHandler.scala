@@ -156,7 +156,6 @@ object DbHandler {
     val db = get_db()
     var new_tid = -1
     val insertAction = (vocabulary returning vocabulary.map(_.tid) into ((vocabulary,tid) => vocabulary.copy(tid=tid))) += rows
-//    val insertAction = vocabulary += rows
     try {
       val insert = db.run(insertAction).map(a => new_tid = a.tid)
       Await.result(insert, Duration.Inf)

@@ -4,6 +4,7 @@ import config_pkg.ApplicationConfig
 import recommender.ontologies.Parsers.OlsParser.countWords
 import play.api.libs.json._
 import utilities.Preprocessing.lookup
+import utilities.ScoreCalculator
 
 
 object BioportalParser {
@@ -14,7 +15,6 @@ object BioportalParser {
     val j = (Json.parse(str) \ "collection").get
     val parsed_value = term
     val raw_value = lookup(parsed_value)
-    var score = ""
     val range = j \\ "prefLabel"
     for (i <- range.indices){
       val j2 = j(i)
@@ -24,7 +24,7 @@ object BioportalParser {
       val synonym = synonym_l.mkString(",")
       val url = (j2 \ "links" \ "self").validate[String].get
 
-      val score = RecommenderParser.get_score(parsed_value,matchType,prefLabel,synonym_l)
+      val score = get_score(parsed_value,matchType,prefLabel,synonym_l)
 
       val ontology_raw = get_ontology(url)
       val ontology = ontology_raw.head
@@ -35,6 +35,25 @@ object BioportalParser {
         rows :+= current
     }
     rows.toList.distinct
+  }
+
+  def get_score(term: String, match_type: String, label: String, synonym_l:List[String]): String = {
+    var min_syn_diff = Double.NegativeInfinity
+    var score = ""
+    if(match_type.equals("prefLabel")){
+      val diff = ScoreCalculator.get_words_distance(term,label)
+      score = "PREF "+diff
+    }
+    else {
+      for (syn <- synonym_l){
+        val diff = ScoreCalculator.get_words_distance(term,syn)
+        if(diff>min_syn_diff){
+          score = "SYN "+diff
+          min_syn_diff=diff
+        }
+      }
+    }
+    score
   }
 
   private def get_ontology(s: String): List[String] = {
