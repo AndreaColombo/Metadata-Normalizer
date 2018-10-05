@@ -44,18 +44,38 @@ object DbHandler {
 
   val tables = List(ontology,vocabulary,synonym,reference,raw_annotation,relationship,relationship_unfolded,expert_preference,expert_choice,expert_feedback)
 
+  def drop_fk_gcm(): Unit = {
+    val tables = get_gcm_table_list()
+    var setup: DBIOAction[Unit,NoStream,Effect] = DBIO.seq()
+    for (table<- tables) {
+      val columns = get_termtype_list(table)
+      for (column <- columns) {
+        val column_tid = column + "_tid"
+        val constraint_name = table + "_" + column_tid + "_fk"
+        val q2 =
+          sqlu"""ALTER TABLE #$table
+        DROP CONSTRAINT #$constraint_name;
+        """
+        setup = setup.andThen(DBIO.seq(q2))
+      }
+    }
+    val db = get_db()
+    val f = db.run(setup)
+    Await.result(f,Duration.Inf)
+    db.close()
+  }
+
   def init(): Unit = {
     val db = get_db()
     val existing = db.run(MTable.getTables)
     val f = existing.flatMap(v => {
       val names = v.map(mt => mt.name.name)
       val createIfNotExist = tables.filter(table =>
-        !names.contains(table.baseTableRow.tableName)
+      !names.contains(table.baseTableRow.tableName)
       ).map(_.schema.create)
       db.run(DBIO.sequence(createIfNotExist))
     })
     Await.result(f, Duration.Inf)
-    create_fk_gcm()
     db.close()
   }
 
@@ -65,11 +85,10 @@ object DbHandler {
     val f = existing.flatMap(v => {
       val names = v.map(mt => mt.name.name)
       val dropIfExist = tables.reverse.filter(table =>
-        names.contains(table.baseTableRow.tableName)
+      names.contains(table.baseTableRow.tableName)
       ).map(_.schema.drop)
       db.run(DBIO.sequence(dropIfExist))
     })
-    val drop_gcm_fk = ""
     Await.result(f, Duration.Inf)
     db.close()
   }
@@ -83,9 +102,7 @@ object DbHandler {
         val column_tid = column + "_tid"
         val constraint_name = table+"_"+column_tid+"_fk"
         val q2 =
-          sqlu"""alter table #$table
-                 ADD CONSTRAINT $constraint_name FOREIGN_KEY ($column_tid) REFERENCES vocabulary (tid) on DELETE SET NULL
-            """
+        sqlu"""alter table #$table ADD CONSTRAINT #$constraint_name FOREIGN KEY (#$column_tid) REFERENCES vocabulary (tid) on DELETE SET NULL"""
         setup = setup.andThen(DBIO.seq(q2))
       }
     }
@@ -94,6 +111,7 @@ object DbHandler {
     Await.result(f,Duration.Inf)
     db.close()
   }
+
 
   def null_gcm(): Unit = {
     val tables = get_gcm_table_list()
@@ -104,14 +122,8 @@ object DbHandler {
         val column_tid = column + "_tid"
         val q =
           sqlu"""update #$table
-                set #$column_tid = NULL"""
+          set #$column_tid = NULL"""
         setup = setup.andThen(DBIO.seq(q))
-        val constraint_name = table+"_"+column_tid+"_fk"
-        val q2 =
-          sqlu"""alter table #$table
-                 drop constraint $constraint_name;
-            """
-        setup = setup.andThen(DBIO.seq(q2))
       }
     }
     val db = get_db()

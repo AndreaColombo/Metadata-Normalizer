@@ -8,6 +8,7 @@ import engine.Engine
 import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 import user_interface.ExpertPreference
 
@@ -31,16 +32,19 @@ object main extends App {
   }
 
   override def main(args: Array[String]): Unit = {
+    setup_logger()
+    val logger = LoggerFactory.getLogger(this.getClass)
     try {
       //setup logger
-      setup_logger()
       ApplicationConfig.conf.getObject("db_config")
       DbHandler.init()
       if (args.nonEmpty) {
         if (args(0).equals("reset")) {
           DbHandler.null_gcm()
+          DbHandler.drop_fk_gcm()
           DbHandler.reset_db()
           DbHandler.init()
+          DbHandler.create_fk_gcm()
         }
         else if (args.length == 1) {
           if (args.head == "all") {
@@ -68,10 +72,7 @@ object main extends App {
         }
       }
     }catch{
-      case e:Exception =>
-        val logger = LoggerFactory.getLogger(this.getClass)
-        e.printStackTrace()
-        logger.error("Error", e)
+      case e: Exception => logger.error("Error", e)
     }
 
   }

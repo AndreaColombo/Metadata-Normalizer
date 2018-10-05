@@ -77,7 +77,7 @@ object Engine {
           if(!matchModeRandom) {
             val best_terms = terms_filtered.filter(_.score == best_term.score)
             //BEST MATCH UNDECIDED
-            if (best_terms.nonEmpty) {
+            if (best_terms.length>1) {
               logger.info(s"""Best match undecided for value "$raw_value"""")
               best_terms.foreach(a =>
                 Term.save_user_feedback(List(expert_choice_type(

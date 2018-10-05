@@ -72,8 +72,11 @@ object Ols_interface {
       Thread.sleep(10000)
       attempts += 1
       response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
+      logger.info("Connecting to ols services attempt "+attempts)
     }
     if(attempts<=5) {
+      logger.info("Connection to ols established")
+      logger.info("Retrieving info for "+code)
       val j = Json.parse(response.body)
       val prefLabel = (j \ "label").validate[String].get
       val ontology_id = (j \ "short_form").validate[String].get
@@ -112,7 +115,8 @@ object Ols_interface {
       returned = Term(ontology,ontology_id,iri,None,Some(prefLabel),Some(description),Some(synonym++rel_synonym),Some(xref),Some(parents),Some(children))
     }
     else {
-      logger.warn(s"Ols retrieval failed after $attempts attempts\n"+iri)
+      logger.warn(s"Ols retrieval failed after $attempts attempts")
+      logger.warn(iri)
     }
     returned
   }

@@ -130,7 +130,7 @@ object Tables {
     def raw_value = column[String]("raw_value")
     def tid = column[Option[Int]]("tid")
     def parsed_value = column[Option[String]]("parsed_value")
-    def label = column[Option[String]]("iri")
+    def label = column[Option[String]]("label")
     def source = column[Option[String]]("source")
     def code = column[Option[String]]("code")
     def resolved = column[Boolean]("resolved", O.Default(false))
