@@ -55,6 +55,7 @@ object DbHandler {
       db.run(DBIO.sequence(createIfNotExist))
     })
     Await.result(f, Duration.Inf)
+    create_fk_gcm()
     db.close()
   }
 
@@ -68,7 +69,29 @@ object DbHandler {
       ).map(_.schema.drop)
       db.run(DBIO.sequence(dropIfExist))
     })
+    val drop_gcm_fk = ""
     Await.result(f, Duration.Inf)
+    db.close()
+  }
+
+  def create_fk_gcm(): Unit = {
+    val tables = get_gcm_table_list()
+    var setup: DBIOAction[Unit,NoStream,Effect] = DBIO.seq()
+    for (table<- tables) {
+      val columns = get_termtype_list(table)
+      for (column <- columns) {
+        val column_tid = column + "_tid"
+        val constraint_name = table+"_"+column_tid+"_fk"
+        val q2 =
+          sqlu"""alter table #$table
+                 ADD CONSTRAINT $constraint_name FOREIGN_KEY ($column_tid) REFERENCES vocabulary (tid) on DELETE SET NULL
+            """
+        setup = setup.andThen(DBIO.seq(q2))
+      }
+    }
+    val db = get_db()
+    val f = db.run(setup)
+    Await.result(f,Duration.Inf)
     db.close()
   }
 
@@ -83,11 +106,18 @@ object DbHandler {
           sqlu"""update #$table
                 set #$column_tid = NULL"""
         setup = setup.andThen(DBIO.seq(q))
+        val constraint_name = table+"_"+column_tid+"_fk"
+        val q2 =
+          sqlu"""alter table #$table
+                 drop constraint $constraint_name;
+            """
+        setup = setup.andThen(DBIO.seq(q2))
       }
     }
     val db = get_db()
     val f = db.run(setup)
     Await.result(f,Duration.Inf)
+    db.close()
   }
 
   def vocabulary_insert(rows: List[vocabulary_type]): Unit = {

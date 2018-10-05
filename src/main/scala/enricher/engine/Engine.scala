@@ -62,7 +62,9 @@ object Engine {
       }
       //ONLINE KB LOOKUP
       else {
-        val terms_ordered = ols_search_term(rv).map(_.fill()).map(_.copy(rawValue = Some(rv))).map(a =>
+        val terms_searched = ols_search_term(rv).map(_.fill()).filter(_.prefLabel.isDefined)
+        //IDEA FILTER NOT DEFINED TERM, SAVE THEM IN USER FB AND CONTINUE AS NORMAL
+        val terms_ordered = terms_searched.map(_.copy(rawValue = Some(rv))).map(a =>
           ScoredTerm(a,get_score(a.rawValue.get.value,a.prefLabel.get,a.synonyms.get.map(_.label)))
         ).sortWith(_.score >_.score)
 

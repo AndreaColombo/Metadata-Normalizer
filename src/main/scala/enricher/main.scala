@@ -8,7 +8,7 @@ import engine.Engine
 import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import org.slf4j.{LoggerFactory}
+import org.slf4j.LoggerFactory
 import user_interface.ExpertPreference
 
 

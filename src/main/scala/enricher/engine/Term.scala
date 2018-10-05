@@ -112,7 +112,7 @@ case class Term(ontology: ontology_type,
   }
 
   //FILL OPTIONAL FIELDS OF TERM
-  def fill(): Term = Term.fill(this.ontology.source, this.iri)
+  def fill(): Term = Term.fill(this.ontology.source, this.code, this.iri)
 
   def get_user_feedback(): List[expert_choice_type] = {
     val logger = LoggerFactory.getLogger(this.getClass)
@@ -124,8 +124,8 @@ case class Term(ontology: ontology_type,
 
 object Term {
 
-  def fill(source: String, iri: String): Term = {
-    ols_get_info(source,iri)
+  def fill(source: String, code: String, iri: String): Term = {
+    ols_get_info(source,code,iri)
   }
 
   def save_user_feedback(rows: List[expert_choice_type]): Unit = {

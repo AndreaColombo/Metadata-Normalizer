@@ -43,20 +43,7 @@ object Ols_interface {
       val iri = (j2 \ "iri").validate[String].get
 
       val source = ols_get_onto_info(ontology)
-      result :+= Term(source,ontology_id,iri,Some(rawValue))
-
-      //TODO ARIF add check max score also by using match_mode_random
-//      if (score_num >= get_threshold() && score_num > result.score) {
-//        if(ols_get_status(ontology,iri).contains("200")){
-//          result = search_term_result(List(source_code_iri(ontology,ontology_id,prefLabel)),score_num)
-//        }
-//      }
-//      else if (!get_search_mode() && score_num >= get_threshold() && score_num == result.score) {
-//        if(ols_get_status(ontology,iri).contains("200")) {
-//          val l = result.options :+ source_code_iri(ontology,ontology_id,iri)
-//          result = search_term_result(l,score_num)
-//        }
-//      }
+      result :+= Term(source,ontology_id,iri)
     }
     result
   }
@@ -72,12 +59,12 @@ object Ols_interface {
     iri_tmp.substring(0,iri_tmp.lastIndexOf("/")+1)+code
   }
 
-  def ols_get_info(source:String,iri: String): Term = {
+  def ols_get_info(source:String,code: String,iri: String): Term = {
     var attempts = 0
     val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
 
     val ontology = ols_get_onto_info(source)
-    var returned: Term = Term(ontology,"",iri)
+    var returned: Term = Term(ontology,code,iri)
 
     var response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
 
@@ -125,7 +112,7 @@ object Ols_interface {
       returned = Term(ontology,ontology_id,iri,None,Some(prefLabel),Some(description),Some(synonym++rel_synonym),Some(xref),Some(parents),Some(children))
     }
     else {
-      logger.warn(s"Ols retrieval failed after $attempts attempts")
+      logger.warn(s"Ols retrieval failed after $attempts attempts\n"+iri)
     }
     returned
   }
