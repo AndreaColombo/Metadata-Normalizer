@@ -123,39 +123,51 @@ case class Term(ontology: ontology_type,
   //FILL OPTIONAL FIELDS OF TERM
   def fill(): Term = Term.fill(this.ontology.source, this.code, this.iri)
 
-  def fill_relation: Term = {
+  def fill_relation(): Term = {
     val parents = rec_parents(0)
-    val children = rec_children(0)
-    this.copy(parents = Some(parents), children = Some(children))
+    this.copy(parents = Some(parents))
   }
 
   def rec_parents(depth: Int): List[Relation] = {
-    val parents_rel = this.parents.get.filter(a => a.ttype == RelationType.IS_A).head
-    val part_of_rel = this.parents.get.filter(a => a.ttype == RelationType.PART_OF).head
 
-    val parents_uncomplete = get_relatives(parents_rel)
-    val part_of_uncomplete = get_relatives(part_of_rel)
+    val parents_uncomplete = this.parents.get.flatMap(get_relatives)
 
     val parents_complete = parents_uncomplete.map(a => Relation(Left(a.term.left.get.fill()),a.ttype))
-    val part_of_complete = part_of_uncomplete.map(a => Relation(Left(a.term.left.get.fill()),a.ttype))
 
     val parents_complete_tid = parents_complete.map(a => Relation(Left(a.term.left.get.saveToKB()),a.ttype))
-    val part_of_complete_tid = part_of_complete.map(a => Relation(Left(a.term.left.get.saveToKB()),a.ttype))
 
-    val max_depth = ApplicationConfig.get_anc_limit()
+    val max_depth = 1 //ApplicationConfig.get_anc_limit()
 
-    //TODO CASO RICORSIVO
-    parents_complete_tid ++ part_of_complete_tid
+
+    if (depth <= max_depth){
+      val parents_complete_unfolded = parents_complete_tid.flatMap(_.term.left.get.rec_parents(depth+1))
+      parents_complete_tid.map(a => Relation(Left(a.term.left.get.copy(parents = Some(parents_complete_unfolded))),a.ttype))
+    }
+    else {
+      parents_complete_tid
+    }
+  }
+
+  def save_relation(): Unit = {
+    val tid_current = this.tid.get
+
+    this.parents.get.foreach(a =>
+      if(a.term.isLeft){
+        hyp_insert(List(relationship_type(a.term.left.get.tid.get,tid_current,a.ttype.toString)))
+        a.term.left.get.save_relation()
+      }
+    )
   }
 
   override def toString: String = {
-    "Source: "+this.ontology.source+"\n"+
-    "Code: "+this.code+"\n"+
-    "Iri: "+this.iri+"\n"+
-    "Xref: "+this.xref.get+"\n"+
-    "Syn: "+this.synonyms.get+"\n"+
-    "Parents: "+this.parents.get+"\n"+
-    "Children: "+this.children.get
+//    "Source: "+this.ontology.source+"\n"+
+//    "Code: "+this.code+" "+
+//    "Iri: "+this.iri+"\n"+
+    "Label: "+this.prefLabel.get+" "+
+//    "Xref: "+this.xref.getOrElse("null")+"\n"+
+//    "Syn: "+this.synonyms.getOrElse("null")+"\n"+
+    "Parents: "+this.parents.getOrElse("null")
+//    "Children: "+this.children.getOrElse("null")
   }
 
   def rec_children(depth: Int) = ???

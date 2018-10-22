@@ -7,6 +7,8 @@ object main_test {
   def main(args: Array[String]): Unit = {
     val term = Term(Ols_interface.ols_get_onto_info("doid"),"DOID_707",ols_get_iri("doid","DOID_707"))
 
-    println(term.fill().toString)
+    term.fill().fill_relation().saveToKB().save_relation()
+
+    //.parents.get.foreach(a => println(a.term.left.get))
   }
 }
