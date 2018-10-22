@@ -3,6 +3,7 @@ package enricher.engine
 import java.sql.BatchUpdateException
 
 import Ols_interface._
+import config_pkg.ApplicationConfig
 import enricher.dbcon.DbHandler._
 import enricher.dbcon._
 import org.slf4j.LoggerFactory
@@ -57,18 +58,21 @@ case class Term(ontology: ontology_type,
 
   //SAVE TERM TO LOCAL KB AND ASSIGN TID
   def saveToKB(): Term = {
+
     val existing = Term.loadFromKB(this)
 
-    if (existing.tid.isDefined) {
-      val raw = raw_annotation_type(
-        existing.tid.get,
-        existing.rawValue.get.value,
-        existing.rawValue.get.table,
-        existing.rawValue.get.column,
-        'L'
-      )
-      raw_insert(List(raw))
-      update_tid(existing.rawValue.get,existing.tid)
+    if (existing.tid.isDefined){
+      if (existing.rawValue.isDefined) {
+        val raw = raw_annotation_type(
+          existing.tid.get,
+          existing.rawValue.get.value,
+          existing.rawValue.get.table,
+          existing.rawValue.get.column,
+          'L'
+        )
+        raw_insert(List(raw))
+        update_tid(existing.rawValue.get, existing.tid)
+      }
       existing
     }
     else {
@@ -81,6 +85,7 @@ case class Term(ontology: ontology_type,
 
       val synonyms = this.synonyms.get.map(a =>
         synonym_type(
+          -1,
           new_tid,
           a.label,
           a.ttype.toString
@@ -89,6 +94,7 @@ case class Term(ontology: ontology_type,
 
       val references = this.xref.get.map(a =>
         reference_type(
+          -1,
           new_tid,
           a.source,
           a.code,
@@ -96,24 +102,63 @@ case class Term(ontology: ontology_type,
         )
       )
 
-      val raw = raw_annotation_type(
-        new_tid,
-        this.rawValue.get.value,
-        this.rawValue.get.table,
-        this.rawValue.get.column,
-        'O'
-      )
+      if (this.rawValue.isDefined) {
+        val raw = raw_annotation_type(
+          new_tid,
+          this.rawValue.get.value,
+          this.rawValue.get.table,
+          this.rawValue.get.column,
+          'O'
+        )
+        raw_insert(List(raw))
+        update_tid(this.rawValue.get,Some(new_tid))
+      }
 
       synonym_insert(synonyms)
       reference_insert(references)
-      raw_insert(List(raw))
-      update_tid(this.rawValue.get,Some(new_tid))
       this.copy(tid = Some(new_tid))
     }
   }
 
   //FILL OPTIONAL FIELDS OF TERM
   def fill(): Term = Term.fill(this.ontology.source, this.code, this.iri)
+
+  def fill_relation: Term = {
+    val parents = rec_parents(0)
+    val children = rec_children(0)
+    this.copy(parents = Some(parents), children = Some(children))
+  }
+
+  def rec_parents(depth: Int): List[Relation] = {
+    val parents_rel = this.parents.get.filter(a => a.ttype == RelationType.IS_A).head
+    val part_of_rel = this.parents.get.filter(a => a.ttype == RelationType.PART_OF).head
+
+    val parents_uncomplete = get_relatives(parents_rel)
+    val part_of_uncomplete = get_relatives(part_of_rel)
+
+    val parents_complete = parents_uncomplete.map(a => Relation(Left(a.term.left.get.fill()),a.ttype))
+    val part_of_complete = part_of_uncomplete.map(a => Relation(Left(a.term.left.get.fill()),a.ttype))
+
+    val parents_complete_tid = parents_complete.map(a => Relation(Left(a.term.left.get.saveToKB()),a.ttype))
+    val part_of_complete_tid = part_of_complete.map(a => Relation(Left(a.term.left.get.saveToKB()),a.ttype))
+
+    val max_depth = ApplicationConfig.get_anc_limit()
+
+    //TODO CASO RICORSIVO
+    parents_complete_tid ++ part_of_complete_tid
+  }
+
+  override def toString: String = {
+    "Source: "+this.ontology.source+"\n"+
+    "Code: "+this.code+"\n"+
+    "Iri: "+this.iri+"\n"+
+    "Xref: "+this.xref.get+"\n"+
+    "Syn: "+this.synonyms.get+"\n"+
+    "Parents: "+this.parents.get+"\n"+
+    "Children: "+this.children.get
+  }
+
+  def rec_children(depth: Int) = ???
 }
 
 object Term {

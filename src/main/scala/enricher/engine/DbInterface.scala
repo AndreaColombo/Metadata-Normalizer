@@ -5,7 +5,7 @@ import java.sql.BatchUpdateException
 import enricher.dbcon._
 import org.apache.log4j.Logger
 
-
+/*
 object DbInterface {
   val logger: Logger = Logger.getLogger(this.getClass)
 
@@ -170,6 +170,7 @@ object DbInterface {
 
   def get_rel_type(rel_type1: String, rel_type2: String): String = if (rel_type1.equals(rel_type2)) rel_type1 else "mixed"
 }
+*/
 
 
 

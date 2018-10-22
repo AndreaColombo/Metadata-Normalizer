@@ -11,8 +11,8 @@ object default_values{
 
 case class ontology_type(source: String = default_values.string, title: Option[String] = Some(default_values.string), description: Option[String] = Some(default_values.string), url: Option[String] = Some(default_values.string))
 case class vocabulary_type(tid: Int = default_values.int, source: String = default_values.string, code: String = default_values.string, label: String = default_values.string, description: String = default_values.string, iri: String = default_values.string)
-case class synonym_type(tid: Int = default_values.int, label: String = default_values.string, ttype: String = default_values.string)
-case class reference_type(tid: Int = default_values.int, source: String = default_values.string, code: String = default_values.string, url: Option[String] = None)
+case class synonym_type(id: Int = -1, tid: Int = default_values.int, label: String = default_values.string, ttype: String = default_values.string)
+case class reference_type(id: Int = -1, tid: Int = default_values.int, source: String = default_values.string, code: String = default_values.string, url: Option[String] = None)
 case class raw_annotation_type(tid: Int = default_values.int, label: String = default_values.string, table_name: String = default_values.string, column_name: String = default_values.string, method: Char = default_values.char)
 case class relationship_type(tid_p: Int = default_values.int, tid_c: Int = default_values.int, rel_type:String = default_values.string)
 case class relationship_unfolded_type(tid_a: Int = default_values.int, tid_d: Int = default_values.int, distance: Int = default_values.int, rel_type:String = default_values.string)
@@ -51,29 +51,31 @@ object Tables {
 
   class synonym(tag: Tag) extends Table[synonym_type](tag,Some("public"), "synonym"){
     def tid = column[Int]("tid")
+    def id = column[Int]("id",O.PrimaryKey,O.AutoInc)
     def label = column[String]("label", O.SqlType("VARCHAR(128)"))
     def ttype = column[String]("type", O.SqlType("VARCHAR(16)"))
 
-    def pk = primaryKey("synonym_pkey", (tid,label,ttype))
     def fk = foreignKey("vocabulary_syn_fk",tid, vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
     def idx = index("syn_label_idx", label)
+    def idx_unique = index("synonym_unique_idx", (tid,label,ttype), unique = true)
 
-    def * = (tid, label,ttype) <> (synonym_type.tupled, synonym_type.unapply)
+    def * = (id, tid, label,ttype) <> (synonym_type.tupled, synonym_type.unapply)
   }
   val synonym = TableQuery[synonym]
 
   class reference(tag: Tag) extends Table[reference_type](tag, Some("public"), "reference"){
+    def id = column[Int]("id",O.PrimaryKey,O.AutoInc)
     def tid = column[Int]("tid")
     def source = column[String]("source", O.SqlType("VARCHAR(128)"))
     def code = column[String]("code")
     def url = column[Option[String]]("url")
 
-    def pk = primaryKey("reference_pkey", (tid, source, code))
     def fk = foreignKey("vocabulary_xref_fk",tid, vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
 
     def idx = index("xref_code_idx",code)
+    def idx_unique = index("reference_unique_idx", (tid, source, code), unique = true)
 
-    def * = (tid, source, code, url) <> (reference_type.tupled, reference_type.unapply)
+    def * = (id, tid, source, code, url) <> (reference_type.tupled, reference_type.unapply)
   }
   val reference = TableQuery[reference]
 

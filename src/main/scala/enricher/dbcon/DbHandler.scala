@@ -152,7 +152,6 @@ object DbHandler {
 
   def vocabulary_insert(rows: vocabulary_type): Int = {
 
-    var ok: (String, String, String, String, String) = (rows.source,rows.code,rows.label,rows.description,rows.iri)
     val db = get_db()
     var new_tid = -1
     val insertAction = (vocabulary returning vocabulary.map(_.tid) into ((vocabulary,tid) => vocabulary.copy(tid=tid))) += rows

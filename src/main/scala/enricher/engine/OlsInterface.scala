@@ -106,11 +106,11 @@ object Ols_interface {
       val parents_url = (j \ "_links" \ "parents" \ "href").validate[String].getOrElse("null")
       val part_of_url = (j \ "_links" \ "part_of" \ "href").validate[String].getOrElse("null")
 
-      val parents_tmp = get_relatives(parents_url,RelationType.IS_A)
-      val part_of = get_relatives(part_of_url,RelationType.PART_OF)
-      val parents = parents_tmp ++ part_of
+      val parents_tmp = Relation(Right(parents_url),RelationType.IS_A)
+      val part_of = Relation(Right(part_of_url),RelationType.PART_OF)
+      val parents = List(parents_tmp,part_of)
 
-      val children = get_relatives(children_url, RelationType.IS_A) ++ get_relatives(has_part_url,PART_OF)
+      val children = List(Relation(Right(children_url), RelationType.IS_A),Relation(Right(has_part_url),PART_OF))
 
       returned = Term(ontology,ontology_id,iri,None,Some(prefLabel),Some(description),Some(synonym++rel_synonym),Some(xref),Some(parents),Some(children))
     }
@@ -122,45 +122,29 @@ object Ols_interface {
   }
 
   /**
-    * Get relationship type between two terms
-    * used in children retrieval in which we don't know the relationship type a priori
-    * @param child
-    * @param parent
+    * Retrieve all relatives of a term from a ols URL
+    * @param relation A case class containing the URL and the type of the relation
     * @return
     */
-  def get_rel_type(child: Term, parent: Term): RelationType.ttype = {
-    val url = s"https://www.ebi.ac.uk/ols/api/ontologies/${child.ontology.source}/terms/"+URLEncoder.encode(URLEncoder.encode(child.iri, "UTF-8"), "UTF-8")
-    val response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-
-    val j = Json.parse(response)
-
-    val parents_url = (j \ "_links" \ "parents" \ "href").validate[String].getOrElse("null")
-    val part_of_url = (j \ "_links" \ "part_of" \ "href").validate[String].getOrElse("null")
-
-    val parents = get_relatives(parents_url,RelationType.IS_A)
-    val part_of = get_relatives(part_of_url,RelationType.PART_OF)
-
-    if (parents.exists(a => a.term.right.get == parent.iri)) RelationType.IS_A else RelationType.PART_OF
-  }
-
-  /**
-    * Get a list of relations based on the url param
-    * @param rel_url OLS url of the relatives of the Term
-    * @param ttype type of the relationship, IS_A or PART_OF
-    * @return a list of relations
-    */
-  def get_relatives(rel_url: String, ttype: RelationType.ttype): List[Relation] = {
-    var parents_tmp: List[Relation] = List()
+  def get_relatives(relation: Relation): List[Relation] = {
+    var rel_tmp: List[Relation] = List()
+    val rel_url = relation.term.right.get
+    val ttype = relation.ttype
     if (rel_url != "null"){
-       val p_status = Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.header("Status").get
+      val p_status = Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.header("Status").get
       if(p_status.contains("200")) {
-        val parents_json = (Json.parse(Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded").get("terms").validate[List[JsValue]].getOrElse(List())
-        parents_tmp = parents_json.map(a =>
-          Relation(Right((a \ "iri").validate[String].get), ttype)
-        )
+        val rel_json = (Json.parse(Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded").get("terms").validate[List[JsValue]].getOrElse(List())
+        rel_tmp = rel_json.map(a => {
+          val ontology = (a \ "ontology_name").validate[String].get
+          val ontology_id = (a \ "short_form").validate[String].get
+          val iri = (a \ "iri").validate[String].get
+          val source = ols_get_onto_info(ontology)
+          val term = Term(source,ontology_id,iri)
+          Relation(Left(term), ttype)
+        })
       }
     }
-    parents_tmp
+    rel_tmp
   }
 
   def ols_get_user_feedback(rawValue: RawValue): List[expert_choice_type] = {
@@ -185,7 +169,7 @@ object Ols_interface {
       }
     }
     if(rows.nonEmpty) {
-      rows.distinct.filterNot(a => DbHandler.user_fb_exist(a.raw_value, a.source.get, a.code.get))
+      rows.distinct.filterNot(a => DbHandler.user_fb_exist(a.raw_value, a.source.get, a.code.get))  
     }
     else
       List(expert_choice_type(default_values.int,default_values.bool,rawValue.table, rawValue.column, None, rawValue.value, None, None, None, None,None,"ONLINE:NONE",get_timestamp()))

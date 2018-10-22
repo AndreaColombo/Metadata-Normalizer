@@ -67,7 +67,7 @@ object Engine {
         val terms_scored = terms_searched.map(_.copy(rawValue = Some(rv))).map(a =>
           if (a.prefLabel.isDefined)
             ScoredTerm(a, get_score(a.rawValue.get.value, a.prefLabel.get, a.synonyms.get.map(_.label)))
-          else ScoredTerm(a, -100)
+          else ScoredTerm(a, Double.NegativeInfinity)
         )
 
         terms_scored.foreach(a => logger.info(a.toString))
