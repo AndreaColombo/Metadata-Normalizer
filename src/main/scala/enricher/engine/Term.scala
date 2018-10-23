@@ -28,6 +28,7 @@ case class Xref(source: String, code: String, url: Option[String])
 case class ScoredTerm(term: Term, score: Double)
 
 case class RawValue(value: String, table: String, column: String)
+
 /**
   *
   * @param rawValue
@@ -61,7 +62,7 @@ case class Term(ontology: ontology_type,
 
     val existing = Term.loadFromKB(this)
 
-    if (existing.tid.isDefined){
+    if (existing.tid.isDefined) {
       if (existing.rawValue.isDefined) {
         val raw = raw_annotation_type(
           existing.tid.get,
@@ -111,7 +112,7 @@ case class Term(ontology: ontology_type,
           'O'
         )
         raw_insert(List(raw))
-        update_tid(this.rawValue.get,Some(new_tid))
+        update_tid(this.rawValue.get, Some(new_tid))
       }
 
       synonym_insert(synonyms)
@@ -124,59 +125,85 @@ case class Term(ontology: ontology_type,
   def fill(): Term = Term.fill(this.ontology.source, this.code, this.iri)
 
   def fill_relation(): Term = {
-    val parents = rec_parents(0)
-    this.copy(parents = Some(parents))
+    this.rec_parents(0).rec_children(0)
   }
 
-  def rec_parents(depth: Int): List[Relation] = {
+  def rec_parents(depth: Int): Term = {
 
     val parents_uncomplete = this.parents.get.flatMap(get_relatives)
 
-    val parents_complete = parents_uncomplete.map(a => Relation(Left(a.term.left.get.fill()),a.ttype))
+    val parents_complete = parents_uncomplete.map(a => Relation(Left(a.term.left.get.fill()), a.ttype))
 
-    val parents_complete_tid = parents_complete.map(a => Relation(Left(a.term.left.get.saveToKB()),a.ttype))
+    val parents_complete_tid = parents_complete.map(a => Relation(Left(a.term.left.get.saveToKB()), a.ttype))
 
-    val max_depth = 1 //ApplicationConfig.get_anc_limit()
+    val max_depth = 2 //ApplicationConfig.get_anc_limit()
 
+    val p =
+      if (depth < max_depth) {
+        parents_complete_tid.map{a =>
+          val new_term = a.term.left.get.rec_parents(depth+1)
+          val rel_type = a.ttype
+          Relation(Left(new_term),rel_type)
+        }
+      }
+      else {
+        parents_complete_tid
+      }
+    this.copy(parents = Some(p))
+  }
+  
+  def rec_children(depth: Int): Term = {
 
-    if (depth <= max_depth){
-      val parents_complete_unfolded = parents_complete_tid.flatMap(_.term.left.get.rec_parents(depth+1))
-      parents_complete_tid.map(a => Relation(Left(a.term.left.get.copy(parents = Some(parents_complete_unfolded))),a.ttype))
-    }
-    else {
-      parents_complete_tid
-    }
+    val children_uncomplete = this.children.get.flatMap(get_relatives)
+
+    val children_complete = children_uncomplete.map(a => Relation(Left(a.term.left.get.fill()), a.ttype))
+
+    val children_complete_tid = children_complete.map(a => Relation(Left(a.term.left.get.saveToKB()), a.ttype))
+
+    val max_depth = 2 //ApplicationConfig.get_anc_limit()
+
+    val p =
+      if (depth < max_depth) {
+        children_complete_tid.map{a =>
+          val new_term = a.term.left.get.rec_children(depth+1)
+          val rel_type = a.ttype
+          Relation(Left(new_term),rel_type)
+        }
+      }
+      else {
+        children_complete_tid
+      }
+    this.copy(children = Some(p))
   }
 
   def save_relation(): Unit = {
     val tid_current = this.tid.get
 
     this.parents.get.foreach(a =>
-      if(a.term.isLeft){
-        hyp_insert(List(relationship_type(a.term.left.get.tid.get,tid_current,a.ttype.toString)))
+    if (a.term.isLeft) {
+        hyp_insert(relationship_type(a.term.left.get.tid.get, tid_current, a.ttype.toString))
+        a.term.left.get.save_relation()
+      }
+    )
+    this.children.get.foreach(a =>
+      if (a.term.isLeft) {
+        hyp_insert(relationship_type(tid_current,a.term.left.get.tid.get, a.ttype.toString))
         a.term.left.get.save_relation()
       }
     )
   }
 
   override def toString: String = {
-//    "Source: "+this.ontology.source+"\n"+
-//    "Code: "+this.code+" "+
-//    "Iri: "+this.iri+"\n"+
-    "Label: "+this.prefLabel.get+" "+
-//    "Xref: "+this.xref.getOrElse("null")+"\n"+
-//    "Syn: "+this.synonyms.getOrElse("null")+"\n"+
-    "Parents: "+this.parents.getOrElse("null")
-//    "Children: "+this.children.getOrElse("null")
+    "Source: "+this.ontology.source+"\n"+
+    "Code: "+this.code+"\n"+
+    "Iri: "+this.iri+"\n"
   }
-
-  def rec_children(depth: Int) = ???
 }
 
 object Term {
 
   def fill(source: String, code: String, iri: String): Term = {
-    ols_get_info(source,code,iri)
+    ols_get_info(source, code, iri)
   }
 
   //LOAD TERM FROM KB AND ASSIGN TID IF TERM EXISTS, OTHERWISE RETURNS TERM

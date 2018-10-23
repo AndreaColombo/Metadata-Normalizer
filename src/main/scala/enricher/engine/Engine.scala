@@ -106,13 +106,13 @@ object Engine {
             //BEST MATCH DECIDED
             else {
               logger.info(s"""Value "$raw_value" best match found in online KB with match mode not random""")
-              best_term.term.saveToKB()
+              best_term.term.saveToKB().fill_relation().save_relation()
             }
           }
           //BEST MATCH FOUND WITH MATCH MODE RANDOM
           else {
             logger.info(s"""Value "$raw_value" best match found in online KB with match mode random""")
-            best_term.term.saveToKB()
+            best_term.term.saveToKB().fill_relation().save_relation()
           }
         }
         //BEST MATCH NOT FOUND, USER FEEDBACK

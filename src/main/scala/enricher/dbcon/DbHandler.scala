@@ -192,11 +192,25 @@ object DbHandler {
   }
 
 
-  def hyp_insert(rows: List[relationship_type]): Unit = {
+  def hyp_exist(row: relationship_type): Boolean = {
     val db = get_db()
-    val insertAction = relationship ++= rows
-    val insert = db.run(insertAction)
-    Await.result(insert, Duration.Inf)
+    val q = relationship.filter(a => a.tid_c === row.tid_c && a.tid_p === row.tid_p && a.rel_type === row.rel_type)
+
+    var exist = false
+    val f = db.run(q.exists.result).map(a => exist = a)
+    Await.result(f, Duration.Inf)
+
+    db.close()
+    exist
+  }
+
+  def hyp_insert(rows: relationship_type): Unit = {
+    val db = get_db()
+    if(!hyp_exist(rows)) {
+      val insertAction = relationship += rows
+      val insert = db.run(insertAction)
+      Await.result(insert, Duration.Inf)
+    }
     db.close()
   }
 

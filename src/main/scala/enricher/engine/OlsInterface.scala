@@ -13,12 +13,13 @@ import RelationType._
 import utilities.Utils.get_timestamp
 
 case class source_code_iri(source: String, code: String, iri: String)
+
 case class search_term_result(options: List[source_code_iri], score: Double)
 
 object Ols_interface {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
-  def ols_get_status(source: String, iri: String): String = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get
+  def ols_get_status(source: String, iri: String): String = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/" + URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get
 
   def ols_search_term(rawValue: RawValue): List[Term] = {
     val url = "https://www.ebi.ac.uk/ols/api/search"
@@ -30,7 +31,7 @@ object Ols_interface {
       j = (Json.parse(response) \ "response").get("docs")
     }
     catch {
-      case e: JsonParseException => logger.info("json parse error",e)
+      case e: JsonParseException => logger.info("json parse error", e)
     }
 
     val range = j \\ "iri"
@@ -43,7 +44,7 @@ object Ols_interface {
       val iri = (j2 \ "iri").validate[String].get
 
       val source = ols_get_onto_info(ontology)
-      result :+= Term(source,ontology_id,iri)
+      result :+= Term(source, ontology_id, iri)
     }
     result
   }
@@ -54,29 +55,29 @@ object Ols_interface {
       iri_tmp = (Json.parse(Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms").option(HttpOptions.readTimeout(50000)).asString.body) \\ "iri").head.validate[String].get
     }
     catch {
-      case e: SocketTimeoutException => logger.info("Read timeout",e.getCause)
+      case e: SocketTimeoutException => logger.info("Read timeout", e.getCause)
     }
-    iri_tmp.substring(0,iri_tmp.lastIndexOf("/")+1)+code
+    iri_tmp.substring(0, iri_tmp.lastIndexOf("/") + 1) + code
   }
 
-  def ols_get_info(source:String,code: String,iri: String): Term = {
+  def ols_get_info(source: String, code: String, iri: String): Term = {
     var attempts = 0
-    val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/"+URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
+    val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/" + URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
 
     val ontology = ols_get_onto_info(source)
-    var returned: Term = Term(ontology,code,iri)
+    var returned: Term = Term(ontology, code, iri)
 
     var response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
 
-    while (response.code != 200 && attempts <= 5){
+    while (!response.is2xx && attempts <= 5) {
       Thread.sleep(10000)
       attempts += 1
       response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
-      logger.info("Connecting to ols services attempt "+attempts)
+      logger.info("Connecting to ols services attempt " + attempts)
     }
-    if(attempts<=5) {
+    if (attempts <= 5) {
       logger.info("Connection to ols established")
-      logger.info("Retrieving info for "+code)
+      logger.info("Retrieving info for " + code)
       val j = Json.parse(response.body)
       val prefLabel = (j \ "label").validate[String].get
       val ontology_id = (j \ "short_form").validate[String].get
@@ -87,8 +88,8 @@ object Ols_interface {
 
       val synonym_l_fin = (synonym_l ++ exact_syn).distinct
 
-      val synonym = synonym_l_fin.map(f => Synonym(f,SynonymType.SYN))
-      val rel_synonym = related_syn.map(f => Synonym(f,SynonymType.RELATED))
+      val synonym = synonym_l_fin.map(f => Synonym(f, SynonymType.SYN))
+      val rel_synonym = related_syn.map(f => Synonym(f, SynonymType.RELATED))
 
       val xref = (j \ "obo_xref").validate[List[JsValue]].getOrElse(List()).map(a =>
         Xref(
@@ -96,8 +97,8 @@ object Ols_interface {
           (a \ "id").validate[String].get,
           (a \ "url").validate[String].asOpt
         )
-      ).filterNot(a => a.code == "null" || a.source=="null").map(a =>
-        Xref(a.source,a.source+"_"+a.code,a.url)
+      ).filterNot(a => a.code == "null" || a.source == "null").map(a =>
+        Xref(a.source, a.source + "_" + a.code, a.url)
       )
 
       val children_url = (j \ "_links" \ "children" \ "href").validate[String].getOrElse("null")
@@ -106,13 +107,13 @@ object Ols_interface {
       val parents_url = (j \ "_links" \ "parents" \ "href").validate[String].getOrElse("null")
       val part_of_url = (j \ "_links" \ "part_of" \ "href").validate[String].getOrElse("null")
 
-      val parents_tmp = Relation(Right(parents_url),RelationType.IS_A)
-      val part_of = Relation(Right(part_of_url),RelationType.PART_OF)
-      val parents = List(parents_tmp,part_of)
+      val parents_tmp = Relation(Right(parents_url), RelationType.IS_A)
+      val part_of = Relation(Right(part_of_url), RelationType.PART_OF)
+      val parents = List(parents_tmp, part_of)
 
-      val children = List(Relation(Right(children_url), RelationType.IS_A),Relation(Right(has_part_url),PART_OF))
+      val children = List(Relation(Right(children_url), RelationType.IS_A), Relation(Right(has_part_url), PART_OF))
 
-      returned = Term(ontology,ontology_id,iri,None,Some(prefLabel),Some(description),Some(synonym++rel_synonym),Some(xref),Some(parents),Some(children))
+      returned = Term(ontology, ontology_id, iri, None, Some(prefLabel), Some(description), Some(synonym ++ rel_synonym), Some(xref), Some(parents), Some(children))
     }
     else {
       logger.warn(s"Ols retrieval failed after $attempts attempts")
@@ -123,6 +124,7 @@ object Ols_interface {
 
   /**
     * Retrieve all relatives of a term from a ols URL
+    *
     * @param relation A case class containing the URL and the type of the relation
     * @return
     */
@@ -130,20 +132,34 @@ object Ols_interface {
     var rel_tmp: List[Relation] = List()
     val rel_url = relation.term.right.get
     val ttype = relation.ttype
-    if (rel_url != "null"){
-      val p_status = Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.header("Status").get
-      if(p_status.contains("200")) {
-        val rel_json = (Json.parse(Http(rel_url).option(HttpOptions.readTimeout(50000)).asString.body) \ "_embedded").get("terms").validate[List[JsValue]].getOrElse(List())
+    if (rel_url != "null") {
+      logger.info("Relation url not null")
+      val response = Http(rel_url).option(HttpOptions.readTimeout(50000)).asString
+      if (!response.is2xx) {
+        logger.info("Error "+response.code+" in relation retrieval url: "+rel_url)
+      }
+      else {
+        val tmp_rel_json = Json.parse(response.body) \ "_embedded" \ "terms"
+        val rel_json =
+          if (tmp_rel_json.isDefined)
+            tmp_rel_json.validate[List[JsValue]].getOrElse(List())
+          else List()
+
+        if(rel_json.isEmpty){
+          logger.info("Relation url "+rel_url+" is empty")
+        }
+        else {logger.info("Relation url ok "+rel_url)}
         rel_tmp = rel_json.map(a => {
           val ontology = (a \ "ontology_name").validate[String].get
           val ontology_id = (a \ "short_form").validate[String].get
           val iri = (a \ "iri").validate[String].get
           val source = ols_get_onto_info(ontology)
-          val term = Term(source,ontology_id,iri)
+          val term = Term(source, ontology_id, iri)
           Relation(Left(term), ttype)
         })
       }
     }
+    if(rel_tmp.nonEmpty) logger.info("Retrieved "+rel_tmp.length+" "+ttype)
     rel_tmp
   }
 
@@ -161,33 +177,34 @@ object Ols_interface {
         val id = (jj \ "short_form").validate[String].get
         val onto = (jj \ "ontology_name").validate[String].get
         val synonyms = (jj \ "synonym").validate[List[String]].getOrElse(List())
-        val score_num = get_score(rawValue.value,label,synonyms)
+        val score_num = get_score(rawValue.value, label, synonyms)
 
         //PREVENTS DUPLICATES
-        if (!rows.exists(_.code.get==id))
-          rows :+= expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, None, rawValue.value, Some(value), Some(label), Some(onto), Some(id),Some(ols_get_iri(onto,id)),"ONLINE:LOW  "+score_num.toString,get_timestamp())
+        if (!rows.exists(_.code.get == id)) {
+          rows :+= expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, None, rawValue.value, Some(value), Some(label), Some(onto), Some(id), Some(ols_get_iri(onto, id)), "ONLINE:LOW  " + score_num.toString, get_timestamp())
+        }
       }
     }
-    if(rows.nonEmpty) {
-      rows.distinct.filterNot(a => DbHandler.user_fb_exist(a.raw_value, a.source.get, a.code.get))  
+    if (rows.nonEmpty) {
+      rows.distinct.filterNot(a => DbHandler.user_fb_exist(a.raw_value, a.source.get, a.code.get))
     }
     else
-      List(expert_choice_type(default_values.int,default_values.bool,rawValue.table, rawValue.column, None, rawValue.value, None, None, None, None,None,"ONLINE:NONE",get_timestamp()))
+      List(expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, None, rawValue.value, None, None, None, None, None, "ONLINE:NONE", get_timestamp()))
   }
 
   def ols_get_onto_info(onto: String): ontology_type = {
     var result = ontology_type()
-    val url = "https://www.ebi.ac.uk/ols/api/ontologies/"+onto
+    val url = "https://www.ebi.ac.uk/ols/api/ontologies/" + onto
     val response = Http(url).option(HttpOptions.readTimeout(50000)).asString
-    if(response.header("status").get.contains("200")) {
+    if (response.is2xx) {
       val json = Json.parse(response.body)
       val source = onto
       val title = (json \ "config").get("title").validate[String].getOrElse(null)
       val description = (json \ "config").get("description").validate[String].getOrElse(null)
-      result = ontology_type(source,Some(title),Some(description),Some(url))
+      result = ontology_type(source, Some(title), Some(description), Some(url))
     }
     else {
-      result = ontology_type("other_link",null,null,null)
+      result = ontology_type("other_link", null, null, null)
     }
     result
   }
@@ -195,18 +212,18 @@ object Ols_interface {
   def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): Double = {
     val pref = config_pkg.ApplicationConfig.get_match_score("pref")
     val syn = config_pkg.ApplicationConfig.get_match_score("syn")
-    val modifier = ScoreCalculator.get_words_distance(termAnnotated,prefLabel)
+    val modifier = ScoreCalculator.get_words_distance(termAnnotated, prefLabel)
     val score = pref + modifier
 
     var score_syn = 0.0
     var max_score_syn = 0.0
     for (elem <- synonym_l) {
-      val syn_modifier = ScoreCalculator.get_words_distance(termAnnotated,elem)
+      val syn_modifier = ScoreCalculator.get_words_distance(termAnnotated, elem)
       score_syn = syn
-      if(score_syn>max_score_syn)
-        max_score_syn= score_syn + syn_modifier
+      if (score_syn > max_score_syn)
+        max_score_syn = score_syn + syn_modifier
     }
 
-    math.max(score,max_score_syn)
+    math.max(score, max_score_syn)
   }
 }
