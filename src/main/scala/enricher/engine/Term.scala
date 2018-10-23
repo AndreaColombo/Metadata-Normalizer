@@ -1,40 +1,68 @@
 package enricher.engine
 
-import java.sql.BatchUpdateException
-
-import OlsInterface._
-import config_pkg.ApplicationConfig
 import enricher.dbcon.DbHandler._
 import enricher.dbcon._
-import org.slf4j.LoggerFactory
-import utilities.Utils.get_timestamp
+import enricher.engine.OlsInterface._
 
+/**
+  * Enumeration for the relations type
+  */
 object RelationType extends Enumeration {
   type ttype = Value
   val IS_A, PART_OF = Value
 }
 
+/**
+  * Enumeration for the synonyms type
+  */
 object SynonymType extends Enumeration {
   type ttype = Value
   val SYN, RELATED = Value
 }
 
+/**
+  * Case class for a term synonym
+  * @param label The label of the synonym
+  * @param ttype Type of synonym, either exact or related
+  */
 case class Synonym(label: String, ttype: SynonymType.ttype)
 
+/**
+  * Case class for a term's parents or children
+  * @param term Either a string that is the url containing the info of the term parents/children or a Term
+  * @param ttype Type of the relation, of type RelationType
+  */
 case class Relation(term: Either[Term, String], ttype: RelationType.ttype)
 
+/**
+  * Case class for a term cross reference
+  * @param source Source of the cross reference
+  * @param code Code of the cross reference
+  * @param url Url of the cross reference
+  */
 case class Xref(source: String, code: String, url: Option[String])
 
+/**
+  * Case class containing a term annotated and the score associated to that annotation
+  * @param term
+  * @param score
+  */
 case class ScoredTerm(term: Term, score: Double)
 
+/**
+  * Case class for a raw value
+  * @param value Text value
+  * @param table The table in the database where the value is stored
+  * @param column The column in the database where the value is stored
+  */
 case class RawValue(value: String, table: String, column: String)
 
 /**
-  *
-  * @param rawValue
+  * The main case class of Enricher, define the element Term which
   * @param ontology
   * @param code
   * @param iri
+  * @param rawValue
   * @param prefLabel
   * @param description
   * @param synonyms
@@ -57,7 +85,12 @@ case class Term(ontology: ontology_type,
                 depth: Int = 0,
                 tid: Option[Int] = None) {
 
-  //SAVE TERM TO LOCAL KB AND ASSIGN TID
+  /**
+    * If term is not present in the database save it to local KB and assign tid, then proceed to save in the corresponding table all the term attributes
+    * If term is already present assign tid
+    * In both cases save tid to corresponding GCM table
+    * @return Term with tid assigned
+    */
   def saveToKB(): Term = {
 
     val existing = Term.loadFromKB(this)
@@ -121,13 +154,25 @@ case class Term(ontology: ontology_type,
     }
   }
 
-  //FILL OPTIONAL FIELDS OF TERM
+  /**
+    * Fill all the optional attributes of Term
+    * @return Term completed
+    */
   def fill(): Term = Term.fill(this.ontology.source, this.code, this.iri)
 
+  /**
+    * Retrieve parents and children of a root term
+    * @return Term with relations complete
+    */
   def fill_relation(): Term = {
     this.rec_parents(0).rec_children(0)
   }
 
+  /**
+    * Recursive function to retrieve all parents of a term
+    * @param depth Level of the hierarchical tree
+    * @return Term with parents complete
+    */
   def rec_parents(depth: Int): Term = {
 
     val parents_uncomplete = this.parents.get.flatMap(get_relatives)
@@ -151,7 +196,12 @@ case class Term(ontology: ontology_type,
       }
     this.copy(parents = Some(p))
   }
-  
+
+  /**
+    * Recursive function to retrieve all children of a term
+    * @param depth Level of the hierarchical tree
+    * @return Term with children complete
+    */
   def rec_children(depth: Int): Term = {
 
     val children_uncomplete = this.children.get.flatMap(get_relatives)
@@ -176,6 +226,9 @@ case class Term(ontology: ontology_type,
     this.copy(children = Some(p))
   }
 
+  /**
+    * Save parents and children in the corresponding table: relation table
+    */
   def save_relation(): Unit = {
     val tid_current = this.tid.get
 
@@ -200,13 +253,25 @@ case class Term(ontology: ontology_type,
   }
 }
 
+/**
+  * This object contains the static methods of term
+  */
 object Term {
 
+  /**
+    * Call ols get info to fill in the optional field of Term
+    * @param source Source of the term
+    * @param code Code of the Term
+    * @param iri Iri of the term
+    * @return Term completed
+    */
   def fill(source: String, code: String, iri: String): Term = {
     ols_get_info(source, code, iri)
   }
 
-  //LOAD TERM FROM KB AND ASSIGN TID IF TERM EXISTS, OTHERWISE RETURNS TERM
+  /**
+    * Load term from local kb and assign tid if term exists
+    */
   def loadFromKB(term: Term): Term = {
     val existing_tid = get_tid_option(term.ontology.source, term.code)
     if (existing_tid.isDefined) {

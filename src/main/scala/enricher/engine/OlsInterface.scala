@@ -252,7 +252,8 @@ object OlsInterface {
     }
     else {
       result = ontology_type("other_link", null, null, null)
-      logger.info("Ontology "+onto+" unknown or url "+url+" has given error")
+      logger.info("Ontology "+onto+" unknown or doesn't exist")
+      logger.info("url: "+url)
     }
     result
   }
