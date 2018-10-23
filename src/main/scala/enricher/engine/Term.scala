@@ -110,8 +110,8 @@ case class Term(ontology: ontology_type,
       existing
     }
     else {
-      if (!onto_exist(this.ontology.source))
-        insert_ontology(this.ontology)
+
+      insert_ontology(this.ontology)
 
       val vocabulary = vocabulary_type(-1, this.ontology.source, this.code, this.prefLabel.get, this.description.get, this.iri)
 
@@ -126,15 +126,16 @@ case class Term(ontology: ontology_type,
         )
       )
 
-      val references = this.xref.get.map(a =>
+      val references = this.xref.get.map{a =>
+        insert_ontology(ols_get_onto_info(a.source))
         reference_type(
-          -1,
-          new_tid,
-          a.source,
-          a.code,
-          a.url
+            -1,
+            new_tid,
+            a.source,
+            a.code,
+            a.url
         )
-      )
+      }
 
       if (this.rawValue.isDefined) {
         val raw = raw_annotation_type(

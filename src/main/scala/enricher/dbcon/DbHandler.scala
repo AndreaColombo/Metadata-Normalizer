@@ -472,9 +472,10 @@ object DbHandler {
   def insert_ontology (rows: ontology_type): Unit = {
     val db = get_db()
 
-    val insert = ontology ++= List(rows)
-
-    Await.result(db.run(insert),Duration.Inf)
+    if(!onto_exist(rows.source)) {
+      val insert = ontology ++= List(rows)
+      Await.result(db.run(insert), Duration.Inf)
+    }
     db.close()
   }
 
