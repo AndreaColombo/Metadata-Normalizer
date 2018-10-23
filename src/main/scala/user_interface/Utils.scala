@@ -1,7 +1,7 @@
 package user_interface
 
 import config_pkg.ApplicationConfig
-import enricher.engine.Ols_interface
+import enricher.engine.OlsInterface
 import scalaj.http.{Http, HttpOptions}
 
 import scala.io.StdIn
@@ -77,7 +77,7 @@ object Utils {
 
   //return true if iri is valid
   def validate_code(onto: String, code: String): Boolean = {
-    val iri = Ols_interface.ols_get_iri(onto,code)
-    Ols_interface.ols_get_status(onto,iri).contains("200")
+    val iri = OlsInterface.ols_get_iri(onto,code)
+    OlsInterface.ols_exist(onto,iri)
   }
 }

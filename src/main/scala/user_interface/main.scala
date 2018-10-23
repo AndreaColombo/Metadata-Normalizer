@@ -1,6 +1,6 @@
 package user_interface
 
-import enricher.engine.Ols_interface
+import enricher.engine.OlsInterface
 import org.slf4j.LoggerFactory
 import Utils._
 

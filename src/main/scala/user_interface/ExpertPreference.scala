@@ -2,7 +2,7 @@ package user_interface
 
 import config_pkg.ApplicationConfig.{get_gcm_table_list, get_termtype_list}
 import enricher.dbcon.{DbHandler, default_values, expert_preference_type}
-import enricher.engine.Ols_interface
+import enricher.engine.OlsInterface
 import Utils._
 import scalax.cli.Table
 import shapeless.Sized
@@ -42,7 +42,7 @@ object ExpertPreference {
               val user_sourcecode = input_source_code()
               val source = user_sourcecode._1
               val code = user_sourcecode._2
-//              val prefLabel = Ols_interface.ols_get_info(ontology,code).head(2)
+//              val prefLabel = OlsInterface.ols_get_info(ontology,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
               DbHandler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
               DbHandler.set_resolved(rv,table_name,column_name)
@@ -70,7 +70,7 @@ object ExpertPreference {
               val user_choice = input_source_code()
               val source = user_choice._1
               val code = user_choice._2
-//              val prefLabel = Ols_interface.ols_get_info(ontology,code).head(2)
+//              val prefLabel = OlsInterface.ols_get_info(ontology,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
               DbHandler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
               DbHandler.set_resolved(rv,table_name,column_name)

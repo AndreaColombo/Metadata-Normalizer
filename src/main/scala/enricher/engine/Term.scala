@@ -2,7 +2,7 @@ package enricher.engine
 
 import java.sql.BatchUpdateException
 
-import Ols_interface._
+import OlsInterface._
 import config_pkg.ApplicationConfig
 import enricher.dbcon.DbHandler._
 import enricher.dbcon._

@@ -12,15 +12,33 @@ import scalaj.http.{Http, HttpOptions}
 import RelationType._
 import utilities.Utils.get_timestamp
 
-case class source_code_iri(source: String, code: String, iri: String)
-
-case class search_term_result(options: List[source_code_iri], score: Double)
-
-object Ols_interface {
+/**
+  * This object contains all of the methods the program uses to interface with OLS REST APIs
+  */
+object OlsInterface {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
-  def ols_get_status(source: String, iri: String): String = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/" + URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.header("status").get
+  /**
+    * Return status of a OLS term, usually 200 if term exists, 4xx if term doesn't exist, 500 if currently unavailable
+    * @param source Source of the term
+    * @param iri Iiri of the term
+    * @return
+    */
+  def ols_get_status(source: String, iri: String): String = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/" + URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.statusLine
 
+  /**
+    * Check existence and availability of a term
+    * @param source source of the term
+    * @param iri iri of the term
+    * @return true if term exist
+    */
+  def ols_exist(source: String, iri: String): Boolean = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/" + URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.is2xx
+
+  /**
+    * Retrieve a list of terms, in the form of a tuple (source, code, iri), from the Ols search term endpoint, querying for a specific value, specifying to use only a given set of ontologies
+    * @param rawValue An element of case class RawValue containing the value to search for and the term type of the value
+    * @return A list of terms with source, code and iri
+    */
   def ols_search_term(rawValue: RawValue): List[Term] = {
     val url = "https://www.ebi.ac.uk/ols/api/search"
     val ontos = get_ontologies_by_type(rawValue.column)
@@ -49,6 +67,12 @@ object Ols_interface {
     result
   }
 
+  /**
+    * Builds a ols term iri from source and code of the term
+    * @param source Source of the term
+    * @param code Code of the term
+    * @return Ols term iri
+    */
   def ols_get_iri(source: String, code: String): String = {
     var iri_tmp = ""
     try {
@@ -60,6 +84,13 @@ object Ols_interface {
     iri_tmp.substring(0, iri_tmp.lastIndexOf("/") + 1) + code
   }
 
+  /**
+    * Retrieves all info of a term from source and iri
+    * @param source Source of the term
+    * @param code Code of the term, used only to copy it to the new term returned
+    * @param iri Iri of the term
+    * @return A new term with all of its field completed
+    */
   def ols_get_info(source: String, code: String, iri: String): Term = {
     var attempts = 0
     val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/" + URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
@@ -124,9 +155,8 @@ object Ols_interface {
 
   /**
     * Retrieve all relatives of a term from a ols URL
-    *
-    * @param relation A case class containing the URL and the type of the relation
-    * @return
+    * @param relation An element of case class Relation containing the URL and the type of the relation
+    * @return A list of terms (source, code, iri) and the relation type
     */
   def get_relatives(relation: Relation): List[Relation] = {
     var rel_tmp: List[Relation] = List()
@@ -163,6 +193,13 @@ object Ols_interface {
     rel_tmp
   }
 
+  /**
+    * Retrieve infos for user feedback table from Ols search term endpoint
+    * This time though the value used for the query is parsed with the NLP parsing engine to clean it
+    * By doing so the chance to find a suitable term that matches the value is increased
+    * @param rawValue An element of case class RawValue containing the value to search for and the term type of the value
+    * @return A list of elements of case class expert_choice
+    */
   def ols_get_user_feedback(rawValue: RawValue): List[expert_choice_type] = {
     var rows: List[expert_choice_type] = List()
     val parsed = Preprocessing.parse(List(rawValue.value)).split(",")
@@ -186,12 +223,21 @@ object Ols_interface {
       }
     }
     if (rows.nonEmpty) {
+      logger.info("Retrieved user feedback info for raw value "+rawValue.value)
       rows.distinct.filterNot(a => DbHandler.user_fb_exist(a.raw_value, a.source.get, a.code.get))
     }
-    else
+    else {
+      logger.info("No user feedback info for raw value "+rawValue.value)
       List(expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, None, rawValue.value, None, None, None, None, None, "ONLINE:NONE", get_timestamp()))
+    }
   }
 
+
+  /**
+    * Retrieve all info for a given ontology, specifically: title, description and url
+    * @param onto The id of and ontology
+    * @return An element of case class ontology
+    */
   def ols_get_onto_info(onto: String): ontology_type = {
     var result = ontology_type()
     val url = "https://www.ebi.ac.uk/ols/api/ontologies/" + onto
@@ -202,13 +248,23 @@ object Ols_interface {
       val title = (json \ "config").get("title").validate[String].getOrElse(null)
       val description = (json \ "config").get("description").validate[String].getOrElse(null)
       result = ontology_type(source, Some(title), Some(description), Some(url))
+      logger.info("Retrieved info for "+result.toString)
     }
     else {
       result = ontology_type("other_link", null, null, null)
+      logger.info("Ontology "+onto+" unknown or url "+url+" has given error")
     }
     result
   }
 
+
+  /**
+    * Calculate the score of a given annotation
+    * @param termAnnotated The value annotated
+    * @param prefLabel The preferred label of the annotation
+    * @param synonym_l The list of synonym of the annotation
+    * @return A Double that is the score of the annotation
+    */
   def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): Double = {
     val pref = config_pkg.ApplicationConfig.get_match_score("pref")
     val syn = config_pkg.ApplicationConfig.get_match_score("syn")

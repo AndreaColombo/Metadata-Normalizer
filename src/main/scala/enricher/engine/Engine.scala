@@ -4,7 +4,7 @@ package enricher.engine
 import config_pkg.ApplicationConfig
 import enricher.dbcon.Tables._
 import enricher.dbcon._
-import enricher.engine.Ols_interface.{get_score, ols_search_term, ols_get_status, ols_get_user_feedback}
+import enricher.engine.OlsInterface.{get_score, ols_search_term, ols_get_status, ols_get_user_feedback}
 import utilities.Utils.get_timestamp
 import org.slf4j.LoggerFactory
 import slick.jdbc.PostgresProfile.api._
@@ -37,7 +37,7 @@ object Engine {
         logger.info(s"""Value "$raw_value" found in user changes""")
         val source = result_user_changes._1
         val code = result_user_changes._2
-        val a = Ols_interface.ols_get_onto_info(source)
+        val a = OlsInterface.ols_get_onto_info(source)
         if (!DbHandler.onto_exist(a.source)) {
           DbHandler.insert_ontology(a)
         }

@@ -6,7 +6,7 @@ import java.sql.BatchUpdateException
 
 import config_pkg.ApplicationConfig._
 import enricher.dbcon.{DbHandler, default_values, expert_choice_type}
-import enricher.engine.Ols_interface._
+import enricher.engine.OlsInterface._
 import utilities.Utils.get_timestamp
 import org.apache.log4j._
 
