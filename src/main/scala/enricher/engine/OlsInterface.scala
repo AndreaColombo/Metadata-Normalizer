@@ -52,7 +52,7 @@ object OlsInterface {
     catch {
       case e: JsonParseException => {
         logger.info("json parse error", e)
-        logger.info("Error in parsing JSON response for term search url '"+response.urlBuilder.apply(response))
+        logger.info("Error in parsing JSON response for term search url '" + response.urlBuilder.apply(response))
         logger.info(response.asString.body)
       }
     }

@@ -124,7 +124,7 @@ case class Term(ontology: ontology_type,
           a.label,
           a.ttype.toString
         )
-      )
+      ):+synonym_type(-1,new_tid,this.prefLabel.get,"PREF")
 
       val references = this.xref.get.map{a =>
         insert_ontology(ols_get_onto_info(a.source))
@@ -135,7 +135,7 @@ case class Term(ontology: ontology_type,
             a.code,
             a.url
         )
-      }
+      }:+reference_type(-1,new_tid,this.ontology.source,this.code,Some(this.iri))
 
       if (this.rawValue.isDefined) {
         val raw = raw_annotation_type(
@@ -146,6 +146,7 @@ case class Term(ontology: ontology_type,
           'O'
         )
         raw_insert(List(raw))
+        synonym_insert(List(synonym_type(-1,new_tid,this.rawValue.get.value,"RAW")))
         update_tid(this.rawValue.get, Some(new_tid))
       }
 

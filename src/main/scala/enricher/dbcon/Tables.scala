@@ -52,7 +52,7 @@ object Tables {
   class synonym(tag: Tag) extends Table[synonym_type](tag,Some("public"), "synonym"){
     def tid = column[Int]("tid")
     def id = column[Int]("id",O.PrimaryKey,O.AutoInc)
-    def label = column[String]("label", O.SqlType("VARCHAR(128)"))
+    def label = column[String]("label")
     def ttype = column[String]("type", O.SqlType("VARCHAR(16)"))
 
     def fk = foreignKey("vocabulary_syn_fk",tid, vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
