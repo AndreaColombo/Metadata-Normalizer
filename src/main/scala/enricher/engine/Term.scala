@@ -1,5 +1,6 @@
 package enricher.engine
 
+import config_pkg.ApplicationConfig
 import enricher.dbcon.DbHandler._
 import enricher.dbcon._
 import enricher.engine.OlsInterface._
@@ -44,8 +45,8 @@ case class Xref(source: String, code: String, url: Option[String])
 
 /**
   * Case class containing a term annotated and the score associated to that annotation
-  * @param term
-  * @param score
+  * @param term term
+  * @param score Score of the annotation
   */
 case class ScoredTerm(term: Term, score: Double)
 
@@ -58,19 +59,20 @@ case class ScoredTerm(term: Term, score: Double)
 case class RawValue(value: String, table: String, column: String)
 
 /**
-  * The main case class of Enricher, define the element Term which
-  * @param ontology
-  * @param code
-  * @param iri
-  * @param rawValue
-  * @param prefLabel
-  * @param description
-  * @param synonyms
-  * @param xref
-  * @param parents
-  * @param children
-  * @param depth
-  * @param tid
+  * The main case class of Enricher, define the element Term which is built to resemble the term in ols
+  * Is also built to mirror the local knowledge base structure
+  * @param ontology Element of case class ontology, mirrors the table ontology of the KB
+  * @param code String element which identifies the ontological ID of the term
+  * @param iri Iri of the term
+  * @param rawValue Element of case class RawValue, contains the GCM info of the value
+  * @param prefLabel Preferred label of the term
+  * @param description Description of the term
+  * @param synonyms Synonyms of the term
+  * @param xref Cross references of the term
+  * @param parents Parents of the term
+  * @param children Parents of the term
+  * @param depth Int number signifying the hierachy in the relation tree, for root Terms it's zero
+  * @param tid Tid assigned by the database engine to the term when inserting it into the local knowledge base, thus it exists only after the term is inserted
   */
 case class Term(ontology: ontology_type,
                 code: String,
@@ -167,7 +169,7 @@ case class Term(ontology: ontology_type,
     * @return Term with relations complete
     */
   def fill_relation(): Term = {
-    this.rec_parents(0).rec_children(0)
+    this.rec_parents(this.depth).rec_children(this.depth)
   }
 
   /**
@@ -183,7 +185,7 @@ case class Term(ontology: ontology_type,
 
     val parents_complete_tid = parents_complete.map(a => Relation(Left(a.term.left.get.saveToKB()), a.ttype))
 
-    val max_depth = 2 //ApplicationConfig.get_anc_limit()
+    val max_depth = ApplicationConfig.get_anc_limit()
 
     val p =
       if (depth < max_depth) {
@@ -212,7 +214,7 @@ case class Term(ontology: ontology_type,
 
     val children_complete_tid = children_complete.map(a => Relation(Left(a.term.left.get.saveToKB()), a.ttype))
 
-    val max_depth = 2 //ApplicationConfig.get_anc_limit()
+    val max_depth = ApplicationConfig.get_desc_limit()
 
     val p =
       if (depth < max_depth) {

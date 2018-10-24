@@ -108,6 +108,8 @@ object OlsInterface {
 
     var response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
 
+    logger.info("Retrieving info for " + code)
+
     while (!response.is2xx && attempts <= 5) {
       Thread.sleep(10000)
       attempts += 1
@@ -116,7 +118,6 @@ object OlsInterface {
     }
     if (attempts <= 5) {
       logger.info("Connection to ols established")
-      logger.info("Retrieving info for " + code)
       val j = Json.parse(response.body)
       val prefLabel = (j \ "label").validate[String].get
       val ontology_id = (j \ "short_form").validate[String].get
