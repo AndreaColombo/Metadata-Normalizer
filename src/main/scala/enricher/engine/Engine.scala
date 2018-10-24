@@ -9,12 +9,18 @@ import utilities.Utils.get_timestamp
 import org.slf4j.LoggerFactory
 import slick.jdbc.PostgresProfile.api._
 
-
+/**
+  * Enricher engine, contains only one method which is the controller of the whole metadata enricher system
+  */
 object Engine {
 
-  def controller(column_name: String): Unit = {
+  /**
+    * Controller method of enricher engine, called by main
+    * @param table_name Table of the gcm from where the engine takes the data to annotate
+    * @param column_name Column of the gcm from where the engine takes the data to annotate
+    */
+  def controller(table_name: String,column_name: String): Unit = {
     val logger = LoggerFactory.getLogger(this.getClass)
-    val table_name = ApplicationConfig.get_table_by_column(column_name)
     val threshold = ApplicationConfig.get_threshold()
     DbHandler.clean_user_feedback(table_name,column_name)
     val raw_values = DbHandler.get_raw_values(table_name,column_name)

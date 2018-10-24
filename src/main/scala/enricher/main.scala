@@ -40,9 +40,9 @@ object main extends App {
       DbHandler.init()
       if (args.nonEmpty) {
         if (args(0).equals("reset")) {
-          DbHandler.null_gcm()
-          DbHandler.drop_fk_gcm()
+//          DbHandler.null_gcm()
           DbHandler.reset_db()
+          DbHandler.drop_fk_gcm()
           DbHandler.init()
           DbHandler.create_fk_gcm()
         }
@@ -52,7 +52,7 @@ object main extends App {
             for (t <- table_l) {
               val column_l = ApplicationConfig.get_termtype_list(t)
               for (col <- column_l) {
-                Engine.controller(col)
+                Engine.controller(t,col)
               }
             }
           }
@@ -61,14 +61,14 @@ object main extends App {
             val column_l = ApplicationConfig.get_termtype_list(t)
             for (col <- column_l) {
               println(col)
-              Engine.controller(col)
+              Engine.controller(t,col)
             }
           }
         }
         else {
           val t = args(0)
           val col = args(1)
-          Engine.controller(col)
+          Engine.controller(t,col)
         }
       }
     }catch{
