@@ -40,16 +40,21 @@ object OlsInterface {
     * @return A list of terms with source, code and iri
     */
   def ols_search_term(rawValue: RawValue): List[Term] = {
+    logger.info("Retrieving terms for value '"+rawValue.value+"'"+" of '"+rawValue.table+"."+rawValue.column+"'")
     val url = "https://www.ebi.ac.uk/ols/api/search"
     val ontos = get_ontologies_by_type(rawValue.column)
-    val response = Http(url).param("q", rawValue.value).param("fieldList", "iri,short_form,synonym,ontology_name,iri").param("ontology", ontos.mkString(",")).param("rows", "15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+    val response = Http(url).param("q", rawValue.value).param("fieldList", "iri,short_form,synonym,ontology_name,iri").param("ontology", ontos.mkString(",")).param("rows", "15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000))
 
     var j: JsValue = null
     try {
-      j = (Json.parse(response) \ "response").get("docs")
+      j = (Json.parse(response.asString.body) \ "response").get("docs")
     }
     catch {
-      case e: JsonParseException => logger.info("json parse error", e)
+      case e: JsonParseException => {
+        logger.info("json parse error", e)
+        logger.info("Error in parsing JSON response for term search url '"+response.urlBuilder.apply(response))
+        logger.info(response.asString.body)
+      }
     }
 
     val range = j \\ "iri"
@@ -64,6 +69,9 @@ object OlsInterface {
       val source = ols_get_onto_info(ontology)
       result :+= Term(source, ontology_id, iri)
     }
+    if (result.nonEmpty) logger.info("Retrieved following terms for value '"+rawValue.value+"'"+" of '"+rawValue.table+"."+rawValue.column+"'")
+    else logger.info("No terms retrieved for value '"+rawValue.value+"'"+" of '"+rawValue.table+"."+rawValue.column+"'")
+    result.foreach(a => logger.info(a.toString))
     result
   }
 
@@ -206,11 +214,12 @@ object OlsInterface {
     for (value <- parsed) {
       val ontologies = get_ontologies_by_type(rawValue.column)
       val url = "https://www.ebi.ac.uk/ols/api/search"
-      val response = Http(url).param("q", value).param("fieldList", "iri,short_form,ontology_name").param("ontology", ontologies.mkString(",")).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+      val response = Http(url).param("q", value).param("fieldList", "label,iri,short_form,ontology_name").param("ontology", ontologies.mkString(",")).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       val json = (Json.parse(response) \ "response").get("docs")
       for (k <- (json \\ "iri").indices) {
         val jj = json(k)
-        val label = (jj \ "iri").validate[String].get
+        val iri = (jj \ "iri").validate[String].get
+        val label = (jj \ "label").validate[String].get
         val id = (jj \ "short_form").validate[String].get
         val onto = (jj \ "ontology_name").validate[String].get
         val synonyms = (jj \ "synonym").validate[List[String]].getOrElse(List())
@@ -218,16 +227,16 @@ object OlsInterface {
 
         //PREVENTS DUPLICATES
         if (!rows.exists(_.code.get == id)) {
-          rows :+= expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, None, rawValue.value, Some(value), Some(label), Some(onto), Some(id), Some(ols_get_iri(onto, id)), "ONLINE:LOW  " + score_num.toString, get_timestamp())
+          rows :+= expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, None, rawValue.value, Some(value), Some(label), Some(onto), Some(id), Some(iri), "ONLINE:LOW  " + score_num.toString, get_timestamp())
         }
       }
     }
     if (rows.nonEmpty) {
-      logger.info("Retrieved user feedback info for raw value "+rawValue.value)
+      logger.info("Retrieved user feedback info for raw value '"+rawValue.value+"'")
       rows.distinct.filterNot(a => DbHandler.user_fb_exist(a.raw_value, a.source.get, a.code.get))
     }
     else {
-      logger.info("No user feedback info for raw value "+rawValue.value)
+      logger.info("No user feedback info for raw value '"+rawValue.value+"'")
       List(expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, None, rawValue.value, None, None, None, None, None, "ONLINE:NONE", get_timestamp()))
     }
   }
