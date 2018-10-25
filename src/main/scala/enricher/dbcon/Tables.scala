@@ -22,6 +22,9 @@ case class expert_preference_type(id: Int = default_values.int, table_name: Stri
 case class expert_feedback_type(expert_username: String = default_values.string, raw_value: String = default_values.string, table_name: String = default_values.string, column_name: String = default_values.string, tid: Int = default_values.int,rating: Int = default_values.int)
 case class expert_info_for_feedback(tid: Int = default_values.int, raw: String = default_values.string, pref_label: String = default_values.string, source: String = default_values.string, code: String = default_values.string, iri: String = default_values.string, description: String = default_values.string)
 
+/**
+  * This object contains all the definitions of the tables used in enricher
+  */
 object Tables {
 
   class ontology (tag: Tag) extends Table[ontology_type](tag, Some("public"), "ontology"){

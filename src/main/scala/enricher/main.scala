@@ -74,19 +74,5 @@ object main extends App {
     }catch{
       case e: Exception => logger.error("Error", e)
     }
-
-  }
-
-  def get_elapsed_time(d1: Long, d2: Long): Unit = {
-    val elapsed:Double = (d2-d1).toDouble / 1000
-    val min: Double = (elapsed / 60).intValue()
-    val sec: Double = (((elapsed / 60) - min) * 60).intValue
-    val millis = ((((elapsed / 60) - min) * 60) - sec) * 1000
-    println(min.toInt + ":" + sec.toInt + ":" + millis.toInt)
-  }
-
-  def get_timestamp(): Unit = {
-    val now = Calendar.getInstance()
-    println(now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+":"+now.get(Calendar.SECOND))
   }
 }
