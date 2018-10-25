@@ -139,7 +139,7 @@ object OlsInterface {
         )
       ).filterNot(a => a.code == "null" || a.source == "null").map(a =>
         Xref(a.source, a.source + "_" + a.code, a.url)
-      )
+      ).distinct
 
       val children_url = (j \ "_links" \ "children" \ "href").validate[String].getOrElse("null")
       val has_part_url = (j \ "_links" \ "has_part" \ "href").validate[String].getOrElse("null")
