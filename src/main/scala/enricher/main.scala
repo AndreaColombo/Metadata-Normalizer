@@ -40,7 +40,7 @@ object main extends App {
       DbHandler.init()
       if (args.nonEmpty) {
         if (args(0).equals("reset")) {
-//          DbHandler.null_gcm()
+          DbHandler.null_gcm()
           DbHandler.reset_db()
           DbHandler.drop_fk_gcm()
           DbHandler.init()
