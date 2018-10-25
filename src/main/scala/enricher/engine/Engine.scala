@@ -27,9 +27,9 @@ object Engine {
     logger.info(column_name)
     for (raw_value <- raw_values) {
       val condition = (a: raw_annotation) => a.table_name === table_name && a.column_name === column_name && a.label.toLowerCase === raw_value.toLowerCase
-      val result_raw = DbHandler.get_cv_support_raw(condition)
-      val result_syn = DbHandler.get_cv_support_syn_by_value(raw_value.map(_.toLower))
-      val result_user_changes = DbHandler.get_raw_user_changes(table_name, column_name, raw_value.map(_.toLower))
+      val result_raw = DbHandler.get_raw_annotation(condition)
+      val result_syn = DbHandler.get_synonym_by_value(raw_value.map(_.toLower))
+      val result_user_changes = DbHandler.get_raw_expert_preference(table_name, column_name, raw_value.map(_.toLower))
       val rv = RawValue(raw_value,table_name,column_name)
 
       //LOCAL KB LOOKUP
@@ -53,15 +53,15 @@ object Engine {
         //VALUE FOUND PREF OR SYN
         if (result_syn.ttype == "pref") {
           logger.info(s"""Value "$raw_value" found as PREF in local KB""")
-          val suggestion = DbHandler.get_cv_support_by_tid(result_syn.tid)
-          if (!DbHandler.user_fb_exist(raw_value, suggestion.source, suggestion.code)) {
+          val suggestion = DbHandler.get_vocabulary_by_tid(result_syn.tid)
+          if (!DbHandler.expert_choice_exist(raw_value, suggestion.source, suggestion.code)) {
             DbHandler.user_feedback_insert(List(expert_choice_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:PREF", get_timestamp())))
           }
         }
         else {
           logger.info(s"""Value "$raw_value" found as SYN in local KB""")
-          val suggestion = DbHandler.get_cv_support_by_tid(result_syn.tid)
-          if (!DbHandler.user_fb_exist(raw_value, suggestion.source, suggestion.code)) {
+          val suggestion = DbHandler.get_vocabulary_by_tid(result_syn.tid)
+          if (!DbHandler.expert_choice_exist(raw_value, suggestion.source, suggestion.code)) {
             DbHandler.user_feedback_insert(List(expert_choice_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:SYN", get_timestamp())))
           }
         }

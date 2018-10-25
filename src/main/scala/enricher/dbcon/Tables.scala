@@ -81,7 +81,7 @@ object Tables {
 
   class raw_annotation(tag: Tag) extends Table[raw_annotation_type](tag, Some("public"),"raw_annotation"){
     def tid = column[Int]("tid")
-    def label = column[String]("iri", O.SqlType("VARCHAR(128)"))
+    def label = column[String]("label", O.SqlType("VARCHAR(128)"))
     def table_name = column[String]("table_name", O.SqlType("VARCHAR(32)"))
     def column_name = column[String]("column_name", O.SqlType("VARCHAR(32)"))
     def method = column[Char]("method")

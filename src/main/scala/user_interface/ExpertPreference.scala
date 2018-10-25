@@ -44,7 +44,7 @@ object ExpertPreference {
               val code = user_sourcecode._2
 //              val prefLabel = OlsInterface.ols_get_info(ontology,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
-              DbHandler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
+              DbHandler.insert_expert_preference(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
               DbHandler.set_resolved(rv,table_name,column_name)
             }
             else if (user_choice.equals("2")){
@@ -72,14 +72,14 @@ object ExpertPreference {
               val code = user_choice._2
 //              val prefLabel = OlsInterface.ols_get_info(ontology,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
-              DbHandler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
+              DbHandler.insert_expert_preference(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
               DbHandler.set_resolved(rv,table_name,column_name)
             }
             else if (user_choice.equals("2")){
               println("Please select an ID")
               val user_selection = get_choice(options.length)
               val a = options(user_selection.toInt-1)
-              DbHandler.insert_user_changes(expert_preference_type(default_values.int,a.table,a.column,a.raw_value,a.source.get,a.code.get))
+              DbHandler.insert_expert_preference(expert_preference_type(default_values.int,a.table,a.column,a.raw_value,a.source.get,a.code.get))
               DbHandler.set_resolved(rv,table_name,column_name)
             }
             else if (user_choice.equals("3")){

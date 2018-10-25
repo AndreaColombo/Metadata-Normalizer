@@ -11,11 +11,7 @@ object ExpertCorrection {
   def correct_value(value_to_correct: String,table: String, column: String): Unit = {
     val source_code = input_source_code()
     DbHandler.update_tid(RawValue(value_to_correct,table,column),None)
-    val tuples = DbHandler.get_value_info(value_to_correct,table,column)
-
-    for ((table_name, column_name) <- tuples) {
-      DbHandler.insert_user_changes(expert_preference_type(default_values.int,table_name, column_name, value_to_correct, source_code._1, source_code._2))
-    }
+    DbHandler.insert_expert_preference(expert_preference_type(default_values.int,table, column, value_to_correct, source_code._1, source_code._2))
   }
 
   def correction_routine(): Unit = {
@@ -32,7 +28,7 @@ object ExpertCorrection {
       println("Input value to update")
       var value = StdIn.readLine()
       println
-      while (DbHandler.get_value_info(value,table,column).isEmpty){
+      while (!DbHandler.value_exist(value,table,column)){
         println("Value not valid")
         val options = DbHandler.get_suggestions_raw(value,table,column)
         if (options.nonEmpty) {

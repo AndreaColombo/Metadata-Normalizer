@@ -13,20 +13,40 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.concurrent.duration.Duration
 
+/**
+  * This object contains all the methods the Enricher Engine uses to interface with the database
+  */
 object DbHandler {
   val logger: Logger = Logger.getLogger(this.getClass)
 
-
+  /**
+    * Current database
+    */
   private var _db_name = "gecotest_andrea"
+
+  /**
+    * Getter method for database name
+    * @return
+    */
   def db_name: String = _db_name
+
+  /**
+    * Setter method for database name
+    * @param value new db name
+    */
   def set_db_name(value: String): Unit = _db_name = value
 
+  /**
+    * Method that handles the connection to the database and creates a databse object
+    * @return A database object
+    */
   def get_db(): Database = {
     var db: Database = null
     var attempts = 0
     while(db==null & attempts != 5){
       try {
         db = Database.forConfig(_db_name, conf)
+        Thread.sleep(5000)
       }
       catch {
         case e: TimeoutException => logger.info(e.getCause)
@@ -44,6 +64,9 @@ object DbHandler {
 
   val tables = List(ontology,vocabulary,synonym,reference,raw_annotation,relationship,relationship_unfolded,expert_preference,expert_choice,expert_feedback)
 
+  /**
+    * Drops foreign key references on the GCM tables
+    */
   def drop_fk_gcm(): Unit = {
     val tables = get_gcm_table_list()
     var setup: DBIOAction[Unit,NoStream,Effect] = DBIO.seq()
@@ -65,6 +88,9 @@ object DbHandler {
     db.close()
   }
 
+  /**
+    * Creates the local knowledge base tables
+    */
   def init(): Unit = {
     val db = get_db()
     val existing = db.run(MTable.getTables)
@@ -79,6 +105,9 @@ object DbHandler {
     db.close()
   }
 
+  /**
+    * Drop all local KB tables
+    */
   def reset_db(): Unit = {
     val db = get_db()
     val existing = db.run(MTable.getTables)
@@ -93,6 +122,9 @@ object DbHandler {
     db.close()
   }
 
+  /**
+    * Creates the foreign key reference on the gcm tables
+    */
   def create_fk_gcm(): Unit = {
     val tables = get_gcm_table_list()
     var setup: DBIOAction[Unit,NoStream,Effect] = DBIO.seq()
@@ -112,7 +144,9 @@ object DbHandler {
     db.close()
   }
 
-
+  /**
+    * Set all tids of GCM tables to null
+    */
   def null_gcm(): Unit = {
     val tables = get_gcm_table_list()
     var setup: DBIOAction[Unit,NoStream,Effect] = DBIO.seq()
@@ -132,24 +166,11 @@ object DbHandler {
     db.close()
   }
 
-  def vocabulary_insert(rows: List[vocabulary_type]): Unit = {
-
-    var ok: Seq[(String, String, String, String, String)] = Seq()
-    for (l <- rows) {
-      ok :+= (l.source,l.code,l.label,l.description,l.iri)
-    }
-    val db = get_db()
-    val insertAction = vocabulary.map(a=> (a.source,a.code,a.label,a.description,a.iri)) ++= ok
-    try {
-      val insert = db.run(insertAction)
-      Await.result(insert, Duration.Inf)
-    }
-    catch {
-      case e: BatchUpdateException => e.getNextException.printStackTrace()
-    }
-    db.close()
-  }
-
+  /**
+    * Insert an element of vocabulary in the corresponding table and returns assigned tid
+    * @param rows The element to be inserted
+    * @return Assigned tid
+    */
   def vocabulary_insert(rows: vocabulary_type): Int = {
 
     val db = get_db()
@@ -166,6 +187,10 @@ object DbHandler {
     new_tid
   }
 
+  /**
+    * Insert a number of elements of synonym in the corresponding table
+    * @param rows The elements to be inserted
+    */
   def synonym_insert(rows: List[synonym_type]): Unit = {
     val db = get_db()
     val insertAction = synonym ++= rows
@@ -174,9 +199,11 @@ object DbHandler {
     db.close()
   }
 
+  /**
+    * Insert a number of elements of reference in the corresponding table
+    * @param rows The elements to be inserted
+    */
   def reference_insert(rows: List[reference_type]): Unit = {
-    var ok: Seq[(Int, String, String)] = Seq()
-
     val db = get_db()
     val insertAction = reference ++= rows
     val insert = db.run(insertAction)
@@ -184,14 +211,21 @@ object DbHandler {
     db.close()
   }
 
-
-  def raw_insert(rows: List[raw_annotation_type]): Unit = {
+  /**
+    * Insert an element of raw annotation in the corresponding table
+    * @param rows The element to be inserted
+    */
+  def raw_insert(rows: raw_annotation_type): Unit = {
     val db = get_db()
-    Await.result(db.run(raw_annotation ++= rows),Duration.Inf)
+    Await.result(db.run(raw_annotation += rows),Duration.Inf)
     db.close()
   }
 
-
+  /**
+    * Check existence of a specific relation in the corresponding table, used to prevent duplicates
+    * @param row The element to check the existence
+    * @return True if relation exists, false otherwise
+    */
   def hyp_exist(row: relationship_type): Boolean = {
     val db = get_db()
     val q = relationship.filter(a => a.tid_c === row.tid_c && a.tid_p === row.tid_p && a.rel_type === row.rel_type)
@@ -204,6 +238,10 @@ object DbHandler {
     exist
   }
 
+  /**
+    * Insert an element of relation in the corresponding table
+    * @param rows The element to be inserted
+    */
   def hyp_insert(rows: relationship_type): Unit = {
     val db = get_db()
     if(!hyp_exist(rows)) {
@@ -214,6 +252,12 @@ object DbHandler {
     db.close()
   }
 
+  /**
+    * Retrieve a tid if the element exists in vocabulary
+    * @param source Source of the element
+    * @param code Code of the element
+    * @return Tid of the tuple source, code in vocabulary if exists, none otherwise
+    */
   def get_tid_option(source: String, code: String): Option[Int] = {
     logger.info("ontology: "+source)
     logger.info("code: "+code)
@@ -226,9 +270,12 @@ object DbHandler {
     tid
   }
 
-  def get_tid(source: String, code: String): Int = get_tid_option(source, code).get
-
-
+  /**
+    * Retrieve all raw values of a specific type in the expert choice table
+    * @param table_name Provenance table of the raw values to retrieve
+    * @param column_name Provenance column of the raw values
+    * @return A list of distinct raw values
+    */
   def get_user_feedback_raw_values(table_name: String, column_name: String): List[String] = {
     val db = get_db()
     var result: List[String] = List()
@@ -242,6 +289,11 @@ object DbHandler {
     result
   }
 
+  /**
+    * Retrieve all rows corresponding to a raw value in the expert choice table
+    * @param raw_value the raw value
+    * @return A list of elements of expert choice
+    */
   def get_user_feedback_infos(raw_value: String): List[expert_choice_type] = {
     val db = get_db()
     var result: List[expert_choice_type] = List()
@@ -256,6 +308,10 @@ object DbHandler {
     result
   }
 
+  /**
+    * Insert a list of elements of expert choice in the corresponding table
+    * @param rows The element to be inserted
+    */
   def user_feedback_insert(rows: List[expert_choice_type]): Unit = {
     val db = get_db()
     val insertAction = expert_choice ++= rows
@@ -265,12 +321,17 @@ object DbHandler {
     db.close()
   }
 
+  /**
+    * Retrieve all raw values from a specific table of GCM that aren't annotated yet, that is: their tid is null
+    * @param table The table from where to retrieve the values
+    * @param term_type The column
+    * @return a list of raw values
+    */
   def get_raw_values(table: String, term_type: String): List[String] = {
     val db = get_db()
     var result: Seq[String] = List()
     val t = term_type
 
-    val default = (-1, "")
     val type_tid = t + "_tid"
     val q =
     sql"""select distinct lower (#$t)
@@ -286,7 +347,11 @@ object DbHandler {
     result.toList
   }
 
-  def insert_user_changes(rows: expert_preference_type): Unit = {
+  /**
+    * Insert an element of expert preference in the corresponding table
+    * @param rows The element to be inserted
+    */
+  def insert_expert_preference(rows: expert_preference_type): Unit = {
     val db = get_db()
     val insertAction = expert_preference ++= Seq(rows)
     val insert = db.run(insertAction)
@@ -294,8 +359,12 @@ object DbHandler {
     db.close()
   }
 
-
-  def get_cv_support_syn_by_value(raw_value: String): synonym_type = {
+  /**
+    * Retrieve an element of synonym type corresponding to a raw value, if exists
+    * @param raw_value The value to check
+    * @return An element of synonym type if exists, otherwise an empty element
+    */
+  def get_synonym_by_value(raw_value: String): synonym_type = {
     var result = synonym_type()
     val db = get_db()
     val q = synonym.filter(a => a.label.toLowerCase === raw_value.toLowerCase).result.headOption
@@ -307,7 +376,12 @@ object DbHandler {
     result
   }
 
-  def get_cv_support_raw(where: raw_annotation => Rep[Boolean]): raw_annotation_type = {
+  /**
+    * Get an element of raw annotation table based on a user defined query
+    * @param where User defined condition
+    * @return Element of raw annotation
+    */
+  def get_raw_annotation(where: raw_annotation => Rep[Boolean]): raw_annotation_type = {
     var result = raw_annotation_type()
     val db = get_db()
     val q = for {
@@ -325,6 +399,11 @@ object DbHandler {
     result
   }
 
+  /**
+    * Update tid of a raw value in the gcm, new tid could be either a valid number or NULL
+    * @param rawValue raw value which tid needs to be updated
+    * @param new_tid New value of the tid
+    */
   def update_tid(rawValue: RawValue, new_tid: Option[Int]): Unit = {
     val table_name = rawValue.table
     val column_name = rawValue.column
@@ -351,26 +430,38 @@ object DbHandler {
     db.close()
   }
 
-  def get_value_info(value: String, table_name: String, column_name: String): List[(String,String)] = {
-    var result: List[(String,String)] = List()
+  /**
+    * Check the existence of a value of a specific table and columns in the gcm
+    * @param value Value to be checked
+    * @param table_name Provenance table
+    * @param column_name Provenance column
+    * @return True if value exists, false otherwise
+    */
+  def value_exist(value: String, table_name: String, column_name: String): Boolean = {
+    var result = false
     val q =
       sql"""
              select distinct #$column_name
              from #$table_name
              where #$column_name ilike $value
-        """.as[String]
+        """.as[Boolean]
     val db = get_db()
     val f = db.run(q).map(a =>
-      if(a.nonEmpty){
-        a.foreach(b => result:+= (table_name,column_name))
-      }
+      result = a.nonEmpty
     )
     Await.result(f, Duration.Inf)
     db.close()
     result
   }
 
-  def get_raw_user_changes(table_name: String, column_name: String, raw_value: String): (String, String) = {
+  /**
+    * Retrieve source and code from expert preference for a specific value of a specific table and column
+    * @param table_name Provenance table
+    * @param column_name Provenance column
+    * @param raw_value Value to retrieve information
+    * @return A tuple (source,code) if exists
+    */
+  def get_raw_expert_preference(table_name: String, column_name: String, raw_value: String): (String, String) = {
     val db = get_db()
     var result = ("null","null")
     val q = expert_preference.filter(a=>a.table_name===table_name && a.column_name===column_name && a.raw_value.toLowerCase===raw_value.toLowerCase).map(a=>(a.source,a.code))
@@ -383,21 +474,12 @@ object DbHandler {
     result
   }
 
-//  INPUT SOURCE, CODE
-//  RETURNS TRUE IF SOURCE, CODE EXIST IN vocabulary
-  def cv_support_exists(source: String, code: String): Boolean = {
-    val db = get_db()
-    var result = false
-    val q = vocabulary.filter(a=> a.source===source && a.code===code).map(a=>(a.source,a.code))
-    val f = db.run(q.result).map(a=>
-      result = a.nonEmpty
-    )
-
-    Await.result(f, Duration.Inf)
-    db.close()
-    result
-  }
-
+  /**
+    * Mark a raw value in expert choice table as resolved, that is: the expert has taken care of it
+    * @param raw_value The value to update
+    * @param table_name Provenance table
+    * @param column_name Provenance column
+    */
   def set_resolved(raw_value: String, table_name: String, column_name: String): Unit = {
     val q = expert_choice.filter(a => a.raw_value===raw_value && a.table_name===table_name && a.column_name === column_name).map(_.resolved)
     val update = q.update(true)
@@ -407,8 +489,12 @@ object DbHandler {
     db.close()
   }
 
-
-  def get_cv_support_by_tid(tid: Int): vocabulary_type = {
+  /**
+    * Retrieve an element of vocabulary by tid
+    * @param tid The tid of the element
+    * @return An element of vocabulary
+    */
+  def get_vocabulary_by_tid(tid: Int): vocabulary_type = {
     val db = get_db()
     var result = vocabulary_type()
     val q = vocabulary.filter(_.tid===tid).result.headOption
@@ -421,43 +507,11 @@ object DbHandler {
     result
   }
 
-  def get_tid_parent_distinct(tid_parent: Int): List[Int] = {
-    var result: List[Int] = List()
-
-    val q = relationship.filter(_.tid_p>=tid_parent).map(_.tid_p).distinct.result
-    val db = get_db()
-    Await.result(db.run(q).map(a=> result = a.toList),Duration.Inf)
-    db.close()
-    result
-  }
-
-  def get_onto_hyp(tid_parent: Int): List[relationship_type] = {
-    val db = get_db()
-    var result: List[relationship_type] = List()
-
-    val q = relationship.filter(_.tid_p===tid_parent).result
-
-    val f = db.run(q).map(a =>
-      result = a.toList
-    )
-    Await.result(f, Duration.Inf)
-    db.close()
-    result
-  }
-
-  def insert_unfolded(rows: List[relationship_unfolded_type]): Unit = {
-    val db = get_db()
-
-    val insertAction = relationship_unfolded ++= rows
-    try {
-      Await.result(db.run(insertAction), Duration.Inf)
-    }
-    catch {
-      case e: BatchUpdateException => e.getNextException.printStackTrace()
-    }
-    db.close()
-  }
-
+  /**
+    * Check existence of an ontology in the ontology table
+    * @param onto The onto to be checked
+    * @return True if onto exists, false otherwise
+    */
   def onto_exist(onto: String): Boolean = {
     val q = ontology.filter(_.source === onto).exists
     val db = get_db()
@@ -469,6 +523,10 @@ object DbHandler {
     res
   }
 
+  /**
+    * Insert an element of ontology in the corresponding table
+    * @param rows The element to be inserted
+    */
   def insert_ontology (rows: ontology_type): Unit = {
     val db = get_db()
 
@@ -479,7 +537,14 @@ object DbHandler {
     db.close()
   }
 
-  def user_fb_exist(value: String, source: String, code: String): Boolean = {
+  /**
+    * Check existence of a tuple (source,code,value) in expert choice table
+    * @param value Value to be checked
+    * @param source Source to be checked
+    * @param code Code to be checked
+    * @return True if exists
+    */
+  def expert_choice_exist(value: String, source: String, code: String): Boolean = {
     val q = expert_choice.filter(a => a.source===source && a.code === code && a.raw_value===value).exists
     val db = get_db()
     var res = false
@@ -490,6 +555,11 @@ object DbHandler {
     res
   }
 
+  /**
+    * Deletes all unresolved rows with specific table and column
+    * @param table GCM Provenance table
+    * @param column GCM Provenance column
+    */
   def clean_user_feedback(table: String, column: String): Unit = {
     val q = expert_choice.filter(a => a.table_name === table && a.column_name === column && a.resolved === false).delete
     val db = get_db()
@@ -497,6 +567,13 @@ object DbHandler {
     db.close()
   }
 
+  /**
+    * Retrieve from a specific gcm table and column all raw values similar to a given raw value
+    * @param raw_value The given value
+    * @param table_name Provenance table
+    * @param column_name Provenance column
+    * @return A list of raw values similar to the given one
+    */
   def get_suggestions_raw(raw_value: String, table_name: String, column_name:String): List[String] = {
     var suggestion: List[String] = List()
     val value_clean = "%"+raw_value.replaceAll("[ ,!.\\-/]+","%")+"%"
@@ -516,11 +593,18 @@ object DbHandler {
     suggestion
   }
 
+  /**
+    * Retrieve infos for expert feedback routine
+    * @param table_name GCM Provenance table
+    * @param column_name GCM Provenance column
+    * @param username Username
+    * @return
+    */
   def get_info_for_feedback(table_name: String, column_name: String, username: String): List[expert_info_for_feedback] = {
     var info: List[expert_info_for_feedback] = List()
     val q =
       sql"""
-           select vocabulary.tid, iri as raw_value, pref_label, ontology, code, iri, description
+           select vocabulary.tid, label as raw_value, pref_label, ontology, code, iri, description
            from vocabulary join raw_annotation on vocabulary.tid = raw_annotation.tid
            where table_name ilike $table_name and column_name ilike $column_name and
            iri not in (select raw_value from expert_feedback where expert_username = $username)
@@ -537,6 +621,10 @@ object DbHandler {
     info
   }
 
+  /**
+    * Get the list of username in expert feedback table
+    * @return
+    */
   def get_username_list(): List[String] = {
     var res: List[String] = List()
     val q = expert_feedback.map(_.expert_username).distinct
@@ -549,6 +637,10 @@ object DbHandler {
     res
   }
 
+  /**
+    * Insert a list of elements of expert feedback in the corresponding table
+    * @param rows The row to be inserted
+    */
   def insert_expert_feedback(rows: List[expert_feedback_type]): Unit = {
     val insertAction = expert_feedback ++= rows
     val db = get_db()
@@ -556,5 +648,4 @@ object DbHandler {
     Await.result(f,Duration.Inf)
     db.close()
   }
-
 }

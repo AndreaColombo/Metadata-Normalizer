@@ -234,7 +234,7 @@ object OlsInterface {
     }
     if (rows.nonEmpty) {
       logger.info("Retrieved user feedback info for raw value '"+rawValue.value+"'")
-      rows.distinct.filterNot(a => DbHandler.user_fb_exist(a.raw_value, a.source.get, a.code.get))
+      rows.distinct.filterNot(a => DbHandler.expert_choice_exist(a.raw_value, a.source.get, a.code.get))
     }
     else {
       logger.info("No user feedback info for raw value '"+rawValue.value+"'")
