@@ -250,9 +250,17 @@ object OlsInterface {
     */
   def ols_get_onto_info(onto: String): ontology_type = {
     var result = ontology_type()
+    logger.info("Retrieving info for ontology "+onto)
     val url = "https://www.ebi.ac.uk/ols/api/ontologies/" + onto
-    val response = Http(url).option(HttpOptions.readTimeout(50000)).asString
-    if (response.is2xx) {
+    var response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
+    var attempts = 0
+    while (!response.is2xx && attempts <= 5) {
+      Thread.sleep(5000)
+      attempts += 1
+      response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
+      logger.info("Connecting to ols services attempt " + attempts)
+    }
+    if (attempts <= 5) {
       val json = Json.parse(response.body)
       val source = onto
       val title = (json \ "config").get("title").validate[String].getOrElse(null)
@@ -262,8 +270,8 @@ object OlsInterface {
     }
     else {
       result = ontology_type("other_link", null, null, null)
-      logger.info("Ontology "+onto+" unknown or doesn't exist")
-      logger.info("url: "+url)
+      logger.info("Error in ontology retrieval for ontology "+onto)
+      logger.info("Url: "+url)
     }
     result
   }
