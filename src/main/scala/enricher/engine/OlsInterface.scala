@@ -200,7 +200,6 @@ object OlsInterface {
     if(rel_tmp.nonEmpty) logger.info("Retrieved "+rel_tmp.length+" "+ttype)
     rel_tmp
   }
-  val wewe = ""
 
   /**
     * Retrieve infos for user feedback table from Ols search term endpoint

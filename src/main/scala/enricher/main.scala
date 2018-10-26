@@ -34,10 +34,10 @@ object main extends App {
   override def main(args: Array[String]): Unit = {
     setup_logger()
     val logger = LoggerFactory.getLogger(this.getClass)
+    val start = System.currentTimeMillis
     try {
       //setup logger
       ApplicationConfig.conf.getObject("db_config")
-      DbHandler.init()
       if (args.nonEmpty) {
         if (args(0).equals("reset")) {
           DbHandler.null_gcm()
@@ -74,5 +74,7 @@ object main extends App {
     }catch{
       case e: Exception => logger.error("Error", e)
     }
+    val totalTime = System.currentTimeMillis - start
+    logger.info("Elapsed time: %1d ms".format(totalTime))
   }
 }
