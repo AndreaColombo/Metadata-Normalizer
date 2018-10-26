@@ -50,11 +50,10 @@ object OlsInterface {
       j = (Json.parse(response.asString.body) \ "response").get("docs")
     }
     catch {
-      case e: JsonParseException => {
+      case e: JsonParseException =>
         logger.info("json parse error", e)
         logger.info("Error in parsing JSON response for term search url '" + response.urlBuilder.apply(response))
         logger.info(response.asString.body)
-      }
     }
 
     val range = j \\ "iri"
@@ -211,7 +210,7 @@ object OlsInterface {
     */
   def ols_get_user_feedback(rawValue: RawValue): List[expert_choice_type] = {
     var rows: List[expert_choice_type] = List()
-    val parsed = Preprocessing.parse(List(rawValue.value)).split(",")
+    val parsed = Preprocessing.parse(List(rawValue.value))
     for (value <- parsed) {
       val ontologies = get_ontologies_by_type(rawValue.column)
       val url = "https://www.ebi.ac.uk/ols/api/search"

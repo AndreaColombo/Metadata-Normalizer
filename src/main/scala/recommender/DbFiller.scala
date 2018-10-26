@@ -14,7 +14,7 @@ object DbFiller {
   val ols = Ontology.apply("ols")
 
   def fill_db (table_name: String, column_name: String): Unit = {
-    val s = parse(DbHandler.get_raw_values(table_name,column_name)).split(",").filterNot(_.isEmpty).mkString(",")
+    val s = parse(DbHandler.get_raw_values(table_name,column_name)).filterNot(_.isEmpty).mkString(",")
 //    val c = s.split(",").filterNot(sd => sd.equalsIgnoreCase("p12")).mkString(",")
 //    val b = c.split(",").filterNot(sd => sd.equalsIgnoreCase("h54")).mkString(",")
     println(column_name)

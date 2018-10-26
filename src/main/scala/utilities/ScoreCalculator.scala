@@ -5,14 +5,21 @@ import recommender.dbcon.DbHandler
 import play.api.libs.json.Json
 import scalaj.http.{Http, HttpOptions}
 
+/**
+  * This object contains the heuristics to calculate the various scores the program uses in both recommender and enricher
+  */
 object ScoreCalculator {
 
-  val apikey = ApplicationConfig.get_bp_apikey()
-  val url = "http://data.bioontology.org/recommender"
-
-  def get_recommender_score (term: List[String], onto: String): Double = {
+  /**
+    * Get recommender acceptance score for an ontology
+    * @param term list of terms to send recommender for the query
+    * @param onto Ontology to calculate the score for
+    * @return
+    */
+  def get_ontology_acceptance_score(term: List[String], onto: String): Double = {
     var score = 0.0
-
+    val apikey: String = ApplicationConfig.get_bp_apikey()
+    val url = "http://data.bioontology.org/recommender"
     val params = Seq("apikey" -> apikey, "input" -> term.mkString(","), "input_type" -> "2", "output_type" -> "1", "display_context"->"false","display_links"->"false","ontologies"->onto.map(_.toUpper),
       "wc"->"0","wa"->"1","wd"->"0","ws"->"0")
     val response = Http(url).params(params).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
@@ -23,10 +30,14 @@ object ScoreCalculator {
   }
 
 
+  /**
+    * Split a text into an array
+    * @param in text to split
+    * @return
+    */
   def splitFunc(in:String): Array[String] = {
     in.toLowerCase.replaceAll("[()\\[\\]{}]","").split("[ ,!.\\-/]+")
   }
-
 
   val DUMMY = "DUMMY"
 
@@ -36,6 +47,12 @@ object ScoreCalculator {
   val penaltySwap = -ApplicationConfig.get_modifier("swap")
   val penaltyMatch = -ApplicationConfig.get_modifier("match")
 
+  /**
+    * Calculate similarity between two words
+    * @param first First word
+    * @param second Second word
+    * @return
+    */
   def similarity(first: String, second: String): Double = {
     if (first == second)
       penaltyMatch
@@ -44,14 +61,27 @@ object ScoreCalculator {
   }
 
 
+  /**
+    * Calculate swap penalty between two words
+    * @param first First word
+    * @param second Second word
+    * @param firstPrec alò
+    * @param secondPrec ie
+    * @return
+    */
   def swap(first: String, second: String, firstPrec: String, secondPrec: String): Double = {
     if (first == secondPrec && firstPrec == second)
       penaltySwap
     else
       Double.NegativeInfinity
-
   }
 
+  /**
+    * Calculate words distance between two texts, used to calculate the match score
+    * @param term Term annotated
+    * @param label Label of the annotation
+    * @return Words distance in double
+    */
   def get_words_distance(term: String, label: String): Double = {
     val rawList = DUMMY ::  splitFunc(term).toList
     val labelList = DUMMY ::  splitFunc(label).toList
@@ -87,6 +117,12 @@ object ScoreCalculator {
     res
   }
 
+  /**
+    * Convert text score in numeric score
+    * @param matchType Text score
+    * @param service Service used for the annotation, required because zooma has a different score metrics than the other services
+    * @return
+    */
   def convert_score_num(matchType: String, service: String): Double = {
     var score = 0.0
 
@@ -112,23 +148,27 @@ object ScoreCalculator {
     score
   }
 
+  /**
+    * Calculate acceptance score for every ontology in apiresults
+    */
   def calculate_ontology_score(): Unit = {
     var insert: Seq[(String,Double)] = List()
     var score: Seq[Double] = List()
     val onto_recsys = DbHandler.get_ontologies()
-    println("inizio")
     for (onto <- onto_recsys) {
       val terms = DbHandler.get_parsed_by_ontology(onto)
       var recsys_score = 0.0
 
-      recsys_score = get_recommender_score(terms.take(3),onto)
+      recsys_score = get_ontology_acceptance_score(terms.take(3),onto)
 
       insert :+= (onto,recsys_score)
     }
-    println("ok")
     DbHandler.ontology_score_insert(insert)
   }
 
+  /**
+    * Calculate score for each annotation (row) in apiresults
+    */
   def calculate_score(): Unit = {
     val range = DbHandler.get_db_lenght()
     calculate_ontology_score()
@@ -158,9 +198,13 @@ object ScoreCalculator {
     }
   }
 
+  /**
+    * Calculate suitability score for each ontology used for the term type t
+    * @param t Term type
+    * @return
+    */
   def calculate_suitability_score(t: String): Double = {
     val ontos = DbHandler.get_ontology_by_type(t)
-
     var suitability = 0.0
     for (o <- ontos) {
       val tmp_coverage = DbHandler.get_onto_coverage(o, t)
@@ -175,7 +219,6 @@ object ScoreCalculator {
       suitability = (matchscore / no_annotations) * coverage
       DbHandler.update_suitability(suitability, o, t)
     }
-
     suitability
   }
 }

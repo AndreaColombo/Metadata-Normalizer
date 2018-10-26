@@ -1,15 +1,28 @@
 package utilities
 
+/**
+  * This object contains all methods used for the preprocessing of a raw value
+  */
 object Preprocessing {
   var lookup_map: Map[String, Seq[String]] = Map()
 
+  /**
+    * Transform the parsed value into the raw value from which it originated, done via a lookup map
+    * @param term parsed value to map
+    * @return original raw value
+    */
   def lookup (term: String): String = {
     var originalValue = ""
     val default = (-1,"")
     lookup_map.find(_._2.contains(term)).getOrElse(default)._1.toString
   }
 
-  def parse(input: List[String]): String = {
+  /**
+    * Transform a list of raw values into a list of parsed values
+    * @param input List of raw values to parse
+    * @return List of parsed values
+    */
+  def parse(input: List[String]): List[String] = {
     var result = ""
 
     for (s <- input){
@@ -26,11 +39,15 @@ object Preprocessing {
       val parsedValue = tmp.replaceAll("\\s*,\\s*", ",").replaceAll("  "," ").dropRight(1)
       lookup_map += (raw_value -> parsedValue.split(","))
       result += parsedValue+","
-//      println()
     }
-    result.dropRight(1).replaceAll(",,",",")
+    result.dropRight(1).replaceAll(",,",",").split(",").toList
   }
 
+  /**
+    * First parsing of raw value, filters texts that aren't meaningful for the purpose of our application
+    * @param s Text to parse
+    * @return
+    */
   def line_parse(s: String): String = {
     //if s non ci piace prepend DROP
     var str = ""
@@ -54,7 +71,13 @@ object Preprocessing {
     str
   }
 
+  /**
+    * Final parsing of raw value, parses text according to various rules
+    * @param s Text to parse
+    * @return
+    */
   def inner_parse(s: String): String = {
+
     //TXT (TXT2) => TXT, TXT2, TXT TXT2
     var str = s
     val r = "\\((.*?)\\)".r
@@ -65,7 +88,7 @@ object Preprocessing {
     if (str.startsWith(",")) str = str.drop(1)
 
     //STOPWORDS
-    // txt STOPWORD txt 2 = txt, txt2, txt txt2
+    // txt STOPWORD txt2 = txt, txt2, txt txt2
 
     val stopwords = List(" from ", " for "," and ")
     if(stopwords.exists(stopword => str.contains(stopword))) {
@@ -86,8 +109,18 @@ object Preprocessing {
     ltrim(rtrim(str))
   }
 
+  /**
+    * Prepend drop to a string so that the program knows to ignore it
+    * @param str String to drop
+    * @return
+    */
   def drop(str: String): String = "DROP " + str
 
+  /**
+    * Balance parentheses in a string
+    * @param chars String to balance parentheses
+    * @return
+    */
   def balance(chars: String): String = {
     var str = ""
     if (chars.contains("(")) //c'è ( metto ) in coda
@@ -98,6 +131,11 @@ object Preprocessing {
     str
   }
 
+  /**
+    * Returns true if string is parentheses balanced, false otherwise
+    * @param chars String to check
+    * @return
+    */
   def is_balanced(chars: List[Char]): Boolean = {
     def f(chars: List[Char], numOpens: Int): Boolean = {
       if (chars.isEmpty) {
@@ -116,7 +154,18 @@ object Preprocessing {
     f(chars, 0)
   }
 
+  /**
+    * Eliminate blank spaces at the beginning of the string
+    * @param s String to clean
+    * @return
+    */
   private def ltrim(s: String) = s.replaceAll("^\\s+", "")
+
+  /**
+    * Eliminate blank spaces at the end of the string
+    * @param s String to clean
+    * @return
+    */
   private def rtrim(s: String) = s.replaceAll("\\s+$", "")
 
 }
