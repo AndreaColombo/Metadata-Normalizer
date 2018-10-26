@@ -1,17 +1,15 @@
 package enricher
 
-import java.util.Calendar
-
 import config_pkg.ApplicationConfig
 import enricher.dbcon.DbHandler
-import engine.Engine
+import enricher.engine.Engine
 import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
-import user_interface.ExpertPreference
+import java.text.{DateFormat, SimpleDateFormat}
 
+import scala.concurrent.duration.Duration
 
 object main extends App {
   val path = "C:/Users/Andrea Colombo/IdeaProjects/Tesi/"
@@ -20,7 +18,7 @@ object main extends App {
 
   def setup_logger(): Unit = {
     val PATTERN = "%d [%p] - %l %m%n"
-    val logName = "log/lkb_normalizer_"+DateTime.now.toString(DateTimeFormat.forPattern("yyyy_MM_dd_HH_mm_ss_SSS")) + ".log"
+    val logName = "log/lkb_enricher_"+DateTime.now.toString(DateTimeFormat.forPattern("yyyy_MM_dd_HH_mm_ss_SSS")) + ".log"
     val fa2: FileAppender = new FileAppender()
     fa2.setName("FileLogger")
     fa2.setFile(logName)
@@ -36,13 +34,12 @@ object main extends App {
     val logger = LoggerFactory.getLogger(this.getClass)
     val start = System.currentTimeMillis
     try {
-      //setup logger
       ApplicationConfig.conf.getObject("db_config")
       if (args.nonEmpty) {
         if (args(0).equals("reset")) {
           DbHandler.null_gcm()
+          DbHandler.drop_fk_gcm( )
           DbHandler.reset_db()
-          DbHandler.drop_fk_gcm()
           DbHandler.init()
           DbHandler.create_fk_gcm()
         }
@@ -75,6 +72,8 @@ object main extends App {
       case e: Exception => logger.error("Error", e)
     }
     val totalTime = System.currentTimeMillis - start
-    logger.info("Elapsed time: %1d ms".format(totalTime))
+    val elapsed = new SimpleDateFormat("mm:ss:SSS").format(totalTime)
+    logger.info("Elapsed time for arg "+args.mkString(" ")+": "+elapsed)
   }
+
 }
