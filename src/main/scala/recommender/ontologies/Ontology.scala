@@ -9,13 +9,17 @@ trait Ontology {
   def input (terms: String): List[List[String]]
 }
 
+/**
+  * This object contains the definition of ontology class used for recommender part: the single ontology class represent the service used
+  * Each class contains the public method input used to retrieve the annotations by sending a single or multiple terms to the REST api.
+  * The private method get_results calls the api and then calls its parser class to parse the JSON response. JSON parsers are built in order to uniform the output of the various services.
+  */
 object Ontology {
 
   private class Recommender extends Ontology {
-    val apikey = ApplicationConfig.get_bp_apikey()
-    val url = "http://data.bioontology.org/recommender"
-
     private def get_results(keywords: String): List[List[String]] = {
+      val apikey = ApplicationConfig.get_bp_apikey()
+      val url = "http://data.bioontology.org/recommender"
       val response = Http(url).params(Seq("apikey" -> apikey, "input" -> keywords, "input_type" -> "2", "output_type" -> "2", "display_context"->"false")).header("accept", "text/json").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
       RecommenderParser.parse(response)
     }

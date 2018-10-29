@@ -1,15 +1,23 @@
 package recommender.ontologies.Parsers
 
 import config_pkg.ApplicationConfig
-import recommender.ontologies.Parsers.OlsParser.countWords
 import play.api.libs.json._
 import utilities.Preprocessing.lookup
 import utilities.ScoreCalculator
 
-
+/**
+  * Parser object for bioportal service
+  */
 object BioportalParser {
-  val apikey = ApplicationConfig.get_bp_apikey()
+
+  /**
+    * JSON Parser
+    * @param str json string
+    * @param term Term sent as input to bioportal
+    * @return A list of rows to be insertend in the database
+    */
   def parse (str: String, term: String): List[List[String]] ={
+    val apikey = ApplicationConfig.get_bp_apikey()
     var rows:Seq[List[String]] = List()
     val service = "Bioportal"
     val j = (Json.parse(str) \ "collection").get
@@ -37,6 +45,14 @@ object BioportalParser {
     rows.toList.distinct
   }
 
+  /**
+    * Method used to compute the match score
+    * @param term term annotated
+    * @param match_type match type of the annotation
+    * @param label preferred label of the annotation
+    * @param synonym_l List of synonyms
+    * @return A match score
+    */
   def get_score(term: String, match_type: String, label: String, synonym_l:List[String]): String = {
     var min_syn_diff = Double.NegativeInfinity
     var score = ""
@@ -56,7 +72,12 @@ object BioportalParser {
     score
   }
 
-  private def get_ontology(s: String): List[String] = {
+  /**
+    * Retrieves source and code from url
+    * @param s url
+    * @return source and code
+    */
+  def get_ontology(s: String): List[String] = {
     val r = "ontologies/([A-Z-a-z-0-9]+)".r
     val ontology = r.findAllIn(s).mkString.substring(r.findAllIn(s).mkString.lastIndexOf("/")+1)
     val id = s.substring(s.lastIndexOf("%2")+3)

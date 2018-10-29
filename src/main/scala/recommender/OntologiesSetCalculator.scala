@@ -5,10 +5,17 @@ import recommender.dbcon.DbHandler
 
 import scala.util.control.Breaks._
 
+/**
+  * Object for calculating ontologies sets
+  */
 object OntologiesSetCalculator {
 
-  def calculate_ontology_set(t: String, threshold: Double = ApplicationConfig.get_best_onto_coverage_threshold_for_set()): Unit = {
-
+  /**
+    * Calculates ontology sets for term type t and insert the result into best_ontologies table
+    * @param t Term type
+    */
+  def calculate_ontology_set(t: String): Unit = {
+    val threshold = ApplicationConfig.get_best_onto_coverage_threshold_for_set()
     var result: Seq[(String, String, Double, Double, Double)] = List()
     var score1 = 0.0
     var suitability = 0.0
@@ -120,23 +127,6 @@ object OntologiesSetCalculator {
       else result_true :+= l
     }
     DbHandler.insert_best_ontos(result)
-  }
-
-  def get_set_coverage(ontos: List[String], t: String): Unit = {
-    var terms_full: Set[String] = Set()
-    val terms1 = DbHandler.get_term_by_ontology(ontos.head,t).toSet
-    val terms2 = DbHandler.get_term_by_ontology(ontos(1),t).toSet
-    terms_full = terms1 ++ terms2
-    val coverage = terms_full.size.toDouble / DbHandler.get_nrv(t).toDouble
-    val terms = DbHandler.get_term_by_type(t).toSet
-
-    val missing = terms.filterNot(terms_full)
-
-    println()
-    println(ontos.head+"\t"+ontos(1)+"\t"+coverage+"\n")
-    println(missing.size)
-    missing.foreach(println(_))
-    println()
   }
 }
 

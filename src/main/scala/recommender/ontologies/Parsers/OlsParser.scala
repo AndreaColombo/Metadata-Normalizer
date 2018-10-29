@@ -6,7 +6,16 @@ import play.api.libs.json._
 import utilities.Preprocessing.lookup
 import utilities.ScoreCalculator
 
+/**
+  * Parser object for ols service
+  */
 object OlsParser {
+  /**
+    * JSON Parser
+    * @param response json string
+    * @param termAnnotated Term sent as input to OLS
+    * @return A list of rows to be insertend in the database
+    */
   def parse(response: String, termAnnotated: String):List[List[String]] = {
     var rows: Seq[List[String]] = List()
     val j = (Json.parse(response) \ "response").get("docs")
@@ -34,6 +43,13 @@ object OlsParser {
     rows.toList.distinct
   }
 
+  /**
+    * Computes match score of the annotation
+    * @param termAnnotated Term annotated
+    * @param prefLabel Preferred label
+    * @param synonym_l List of synonyms
+    * @return
+    */
   def get_score(termAnnotated: String, prefLabel: String, synonym_l: List[String] = List()): String = {
     val pref = ApplicationConfig.get_match_score("pref")
     val syn = ApplicationConfig.get_match_score("syn")
@@ -58,14 +74,5 @@ object OlsParser {
       score = "SYN "+syn_mod.toString
 
     score
-  }
-
-  def countWords(text: String): Int = {
-    var counts = 0
-    for (rawWord <- text.split("[ ,!.\\-/]+")) {
-      println(rawWord)
-      counts += 1
-    }
-    counts
   }
 }

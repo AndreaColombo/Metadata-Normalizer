@@ -34,19 +34,6 @@ object DbHandler {
     println("ok apiresults_insert")
   }
 
-  def update_raw_value(rawValue: String, parsed: String): Unit = {
-    val db = Database.forConfig("gecotest2", conf)
-    val q =
-      sqlu"""update public.apiresults
-             set raw_value = $rawValue
-             where parsed_value = $parsed
-          """
-
-    val result_future = db.run(q)
-    Await.result(result_future, Duration.Inf)
-    db.close()
-  }
-
   def insert_best_ontos(rows: Iterable[(String, String, Double, Double, Double)]): Unit = {
     val db = Database.forConfig("gecotest2", conf)
     val insertAction = best_onto_set ++= rows
@@ -99,35 +86,6 @@ object DbHandler {
     val result_future = db.run(q)
     Await.result(result_future, Duration.Inf)
     db.close()
-  }
-
-  def update_term_type(parsedValue: String, term_type: String): Unit = {
-    val q =
-      sqlu"""update public.apiresults
-            set term_type = $term_type
-         where parsed_value ilike $parsedValue
-          """
-    val db = Database.forConfig("gecotest2", conf)
-    Await.result(db.run(q), Duration.Inf)
-    db.close()
-  }
-
-  def get_match_type(id: Int, service: String): String = {
-    val db = Database.forConfig("gecotest2", conf)
-    val q =
-      sql"""
-           select score
-           from public.apiresults
-           where id = $id
-           and service ilike $service
-         """.as[String]
-
-    var match_type = ""
-    val future_match = db.run(q).map(a => match_type = a.head)
-
-    Await.result(future_match, Duration.Inf)
-    db.close()
-    match_type
   }
 
   def ontology_score_insert(rows: Seq[(String, Double)]): Unit = {
@@ -191,25 +149,6 @@ object DbHandler {
     Await.result(result_future, Duration.Inf)
     db.close()
     result.toList
-  }
-
-  def get_term_type(term: String): String = {
-    var result = ""
-    val db = Database.forConfig("gecotest2", conf)
-    val q =
-      sql"""
-           select term_type
-           from public.apiresults
-           where raw_value ilike $term
-         """.as[String]
-
-    val result_future = db.run(q).map(
-      a => result = a.head
-    )
-
-    Await.result(result_future, Duration.Inf)
-    db.close()
-    result
   }
 
   def get_term_by_type(term_type: String): List[String] = {
@@ -299,37 +238,6 @@ object DbHandler {
     result
   }
 
-  def get_onto_ontoid(id: Int): (String, String) = {
-    var result = ("", "")
-    val db = Database.forConfig("gecotest2", conf)
-    val q =
-      sql"""
-           select ontology, ontology_id
-           from public.apiresults
-           where id = $id
-         """.as[(String, String)]
-
-    val result_future = db.run(q).map(a =>
-      result = a.head
-    )
-    Await.result(result_future, Duration.Inf)
-    db.close()
-    result
-  }
-
-  def delete_row(id: Int): Unit = {
-    val db = Database.forConfig("gecotest2", conf)
-    val q =
-      sqlu"""
-            update public.apiresults
-            set deleted = "true"
-            where id = $id
-          """
-    val resultFuture = db.run(q)
-    Await.result(resultFuture, Duration.Inf)
-    db.close()
-  }
-
   def get_onto_coverage(onto: String, term_type: String): (String, String) = {
     var result = ("", "")
     val db = Database.forConfig("gecotest2", conf)
@@ -339,24 +247,6 @@ object DbHandler {
            from public.apiresults
            where ontology ilike $onto and term_type ilike $term_type
          """.as[(String, String)]
-
-    val result_future = db.run(q).map(a =>
-      result = a.head
-    )
-    Await.result(result_future, Duration.Inf)
-    db.close()
-    result
-  }
-
-  def get_onto_matchscore(onto: String, term_type: String): String = {
-    var result = ""
-    val db = Database.forConfig("gecotest2", conf)
-    val q =
-      sql"""
-           select sum(match_score)
-           from public.apiresults
-           where ontology ilike $onto and term_type ilike $term_type
-         """.as[String]
 
     val result_future = db.run(q).map(a =>
       result = a.head
@@ -408,7 +298,6 @@ object DbHandler {
     db.close()
     result
   }
-
 
   def get_nrv(term_type: String): Int = {
     var result = 0
@@ -467,22 +356,6 @@ object DbHandler {
     result
   }
 
-  def get_onto_sets(t: String): List[String] = {
-    val db = Database.forConfig("gecotest2", conf)
-    val q =
-      sql"""
-            select ontologies_set
-           	from public.best_onto_sets
-           	where term_type ilike $t
-         """.as[String]
-    var result = List("")
-
-    val result_future = db.run(q).map(a => result = a.toList)
-
-    Await.result(result_future, Duration.Inf)
-    db.close()
-    result
-  }
   def get_raw_values(table: String, term_type: String): List[String] = {
     val db = Database.forConfig("gecotest2", conf)
     var result: Seq[String] = List()
@@ -531,7 +404,7 @@ object DbHandler {
     db.close()
   }
 
-  def get_recsys(service: String): List[List[String]] = {
+  def get_rows_by_service(service: String): List[List[String]] = {
     val q = apiresults.filter(a => a.service === service).map(a => (a.service,a.term_type,a.raw_value,a.parsed_value,a.ontology,a.ontology_id,a.pref_label,a.synonym,a.score))
     var result: List[List[String]] = List()
     val db = Database.forConfig("gecotest2",conf)
