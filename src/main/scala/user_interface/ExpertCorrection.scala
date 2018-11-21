@@ -10,8 +10,34 @@ object ExpertCorrection {
 
   def correct_value(value_to_correct: String,table: String, column: String): Unit = {
     val source_code = input_source_code()
-    DbHandler.update_tid(RawValue(value_to_correct,table,column),None)
+    DbHandler.update_gcm_tid(RawValue(value_to_correct,table,column),None)
     DbHandler.insert_expert_preference(expert_preference_type(default_values.int,table, column, value_to_correct, source_code._1, source_code._2))
+  }
+
+  def delete_ontology(): Unit = {
+    var flag = false
+    while (flag){
+      println("Insert ontology to delete")
+      var onto = StdIn.readLine()
+      println
+      while (!DbHandler.onto_exist(onto)){
+        println("Ontology not found")
+        println("Please input a valid ontology")
+        onto = StdIn.readLine()
+        println
+        DbHandler.delete_ontology(onto)
+        println("Do you wish to delete another ontology?")
+        println("1 - Yes")
+        println("2 - No")
+        val choice = get_choice(2)
+
+        if(choice.equalsIgnoreCase("1")){
+          flag = true
+        }
+        else if(choice.equalsIgnoreCase("2"))
+          flag = false
+      }
+    }
   }
 
   def correction_routine(): Unit = {

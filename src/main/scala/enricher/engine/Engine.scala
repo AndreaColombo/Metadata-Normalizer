@@ -36,18 +36,21 @@ object Engine {
       if (result_raw.tid != default_values.int) {
         //VALUE FOUND RAW
         logger.info(s"""Value "$raw_value" found as RAW in local KB""")
-        DbHandler.update_tid(rv, Some(result_syn.tid))
+        DbHandler.update_gcm_tid(rv, Some(result_syn.tid))
       }
       else if (result_user_changes._1 != "null") {
         //VALUE FOUND IN USER CHANGES
         logger.info(s"""Value "$raw_value" found in user changes""")
         val source = result_user_changes._1
+        val onto = OlsInterface.ols_get_onto_info(source)
         val code = result_user_changes._2
+        val iri = OlsInterface.ols_get_iri(source,code)
         val a = OlsInterface.ols_get_onto_info(source)
         if (!DbHandler.onto_exist(a.source)) {
           DbHandler.insert_ontology(a)
         }
-        //SAVE TERM TO KB
+        val term = Term(onto,code,iri)
+        term.fill().saveToKB().fill_relation().save_relation()
       }
       else if(result_syn.tid != default_values.int) {
         //VALUE FOUND PREF OR SYN

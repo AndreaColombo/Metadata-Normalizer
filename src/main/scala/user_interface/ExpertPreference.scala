@@ -23,7 +23,7 @@ object ExpertPreference {
           println()
           var i = 0
           val options = DbHandler.get_user_feedback_infos(rv)
-          val table = Table(Sized("id","parsed value","iri","ontology","code","iri"))
+          val table = Table(Sized("id","parsed value","label","ontology","code","iri"))
           for (o <- options){
             table.rows += Sized((i+1).toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),o.iri.getOrElse("null"))
             i+=1
@@ -42,7 +42,6 @@ object ExpertPreference {
               val user_sourcecode = input_source_code()
               val source = user_sourcecode._1
               val code = user_sourcecode._2
-//              val prefLabel = OlsInterface.ols_get_info(ontology,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
               DbHandler.insert_expert_preference(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
               DbHandler.set_resolved(rv,table_name,column_name)
@@ -70,7 +69,6 @@ object ExpertPreference {
               val user_choice = input_source_code()
               val source = user_choice._1
               val code = user_choice._2
-//              val prefLabel = OlsInterface.ols_get_info(ontology,code).head(2)
               //INSERT IN USER REQUESTED CHOICE
               DbHandler.insert_expert_preference(expert_preference_type(default_values.int,table_name, column_name, rv, source, code))
               DbHandler.set_resolved(rv,table_name,column_name)
@@ -89,8 +87,8 @@ object ExpertPreference {
             }
             else if (user_choice.equals("4")){
               println("Returning to home page")
-              println()
-              println()
+              println
+              println
               return
             }
           }

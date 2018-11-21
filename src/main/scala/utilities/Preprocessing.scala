@@ -24,15 +24,19 @@ object Preprocessing {
     */
   def parse(input: List[String]): List[String] = {
     var result = ""
-
     for (s <- input){
       val raw_value = s
       var tmp = ""
-      val raw_input = raw_value.replace(""""""", "").replace("""\""", "").replace(";", ",").split(",")
+      val raw_input = raw_value
+        .replace(""""""", "")
+        .replace("""\""", "")
+        .replace(";", ",")
+        .split(",")
+
       for (a <- raw_input){
         val medium_value = line_parse(line_parse(a))
         if (!medium_value.startsWith("drop")) {
-          val parsed_value = rtrim(ltrim(inner_parse(medium_value)))
+          val parsed_value = trim(inner_parse(medium_value))
           tmp += parsed_value + ","
         }
       }
@@ -77,7 +81,6 @@ object Preprocessing {
     * @return
     */
   def inner_parse(s: String): String = {
-
     //TXT (TXT2) => TXT, TXT2, TXT TXT2
     var str = s
     val r = "\\((.*?)\\)".r
@@ -106,7 +109,7 @@ object Preprocessing {
     if(str.contains("/")){
       str += "," + str.replace("/"," ")
     }
-    ltrim(rtrim(str))
+    trim(s)
   }
 
   /**
@@ -154,6 +157,7 @@ object Preprocessing {
     f(chars, 0)
   }
 
+  def trim (s: String) = ltrim(rtrim(s))
   /**
     * Eliminate blank spaces at the beginning of the string
     * @param s String to clean

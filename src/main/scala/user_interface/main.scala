@@ -11,7 +11,7 @@ object main {
     var exit = false
     while (!exit) {
       display_prompt()
-      val selection = get_choice(4)
+      val selection = get_choice(5)
       if (selection.equals("1")) {
         ExpertPreference.get_user_feedback()
       }
@@ -21,6 +21,9 @@ object main {
       else if (selection.equals("3")) {
         ExpertFeedback.get_user_rating()
       }
+      else if (selection.equals("4")){
+        ExpertCorrection.delete_ontology()
+      }
       else exit = true
     }
   }
@@ -29,7 +32,8 @@ object main {
     println("1 - Expert Preference")
     println("2 - Expert Correction")
     println("3 - Expert Feedback")
-    println("4 - Exit")
+    println("4 - Delete Ontology")
+    println("5 - Exit")
     println()
     println()
   }

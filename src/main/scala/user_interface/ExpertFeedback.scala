@@ -38,16 +38,17 @@ object ExpertFeedback {
     println
 
     for (o <- info_for_rating){
-      val table = Table(Sized("Raw value","Preferred iri","Source","Code","Iri","Description"))
+      val table = Table(Sized("Raw value","Preferred label","Source","Code","Iri","Description"))
       table.rows += Sized(o.raw,o.pref_label,o.source,o.code,o.iri,o.description)
       table.print()
       println
       println("Rate this annotation")
       println("1 - EXACT")
-      println("2 - ALMOST EXACT")
+      println("2 - GOOD")
       println("3 - ACCEPTABLE")
-      println("4 - BAD")
-      val rating = get_choice(4).toInt
+      println("4 - WRONG")
+      println("5 - DON'T KNOW")
+      val rating = get_choice(5).toInt
       val row = expert_feedback_type(username,o.raw,table_name,column,o.tid,rating)
       DbHandler.insert_expert_feedback(List(row))
       if (rating == 4){

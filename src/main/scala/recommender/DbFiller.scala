@@ -7,7 +7,7 @@ import recommender.dbcon.DbHandler
 import utilities.Preprocessing.parse
 
 /**
-  * This object contains the method used to fill apiresults tabl3
+  * This object contains the method used to fill apiresults table
   */
 object DbFiller {
 
@@ -24,18 +24,14 @@ object DbFiller {
     */
   def fill_db (table_name: String, column_name: String): Unit = {
     val s = parse(DbHandler.get_raw_values(table_name,column_name)).filterNot(_.isEmpty).mkString(",")
-//    val c = s.split(",").filterNot(sd => sd.equalsIgnoreCase("p12")).mkString(",")
-//    val b = c.split(",").filterNot(sd => sd.equalsIgnoreCase("h54")).mkString(",")
     println(column_name)
     utilities.Utils.get_timestamp()
-    //    println(s)
-    var split = false
     var recsys1 = ""
     var recsys2 = ""
     var recsys3 = ""
     var recsys4 = ""
-    if (s.split(",").length>150) {
-      split = true
+    val is_split = s.split(",").length > 150
+    if (is_split) {
       val tmp = s.split(",")
       val tmp1 = tmp.splitAt(tmp.length / 2)._1.toList
       val tmp2 = tmp.splitAt(tmp.length / 2)._2.toList
@@ -50,7 +46,7 @@ object DbFiller {
     println("bioportal fine")
     utilities.Utils.get_timestamp()
 
-    if(split) {
+    if(is_split) {
       println("recsys 1 inizio")
       DbHandler.apiresults_insert(recommender.input(recsys1), column_name)
       println("recsys 1 fine")

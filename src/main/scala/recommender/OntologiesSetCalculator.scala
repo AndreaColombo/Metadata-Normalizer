@@ -23,7 +23,7 @@ object OntologiesSetCalculator {
     val a = DbHandler.get_nrv(t)
     println(t + "\n")
 
-    for (i <- 0 until ontos.length){
+    for (i <- ontos.indices){
       val onto1 = ontos(i)._2
       val terms1 = DbHandler.get_term_by_ontology(onto1, t).toSet
       breakable {

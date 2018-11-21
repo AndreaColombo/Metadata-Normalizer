@@ -404,7 +404,7 @@ object DbHandler {
     * @param rawValue raw value which tid needs to be updated
     * @param new_tid New value of the tid
     */
-  def update_tid(rawValue: RawValue, new_tid: Option[Int]): Unit = {
+  def update_gcm_tid(rawValue: RawValue, new_tid: Option[Int]): Unit = {
     val table_name = rawValue.table
     val column_name = rawValue.column
     val value = rawValue.value
@@ -604,7 +604,7 @@ object DbHandler {
     var info: List[expert_info_for_feedback] = List()
     val q =
       sql"""
-           select vocabulary.tid, label as raw_value, pref_label, ontology, code, iri, description
+           select vocabulary.tid, label as raw_value, pref_label, source, code, iri, description
            from vocabulary join raw_annotation on vocabulary.tid = raw_annotation.tid
            where table_name ilike $table_name and column_name ilike $column_name and
            iri not in (select raw_value from expert_feedback where expert_username = $username)
@@ -645,6 +645,14 @@ object DbHandler {
     val insertAction = expert_feedback ++= rows
     val db = get_db()
     val f = db.run(insertAction)
+    Await.result(f,Duration.Inf)
+    db.close()
+  }
+
+  def delete_ontology(onto: String): Unit = {
+    val db = get_db()
+    val q = ontology.filter(_.source===onto).delete
+    val f = db.run(q)
     Await.result(f,Duration.Inf)
     db.close()
   }

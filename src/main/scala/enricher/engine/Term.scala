@@ -107,7 +107,7 @@ case class Term(ontology: ontology_type,
           'L'
         )
         raw_insert(raw)
-        update_tid(existing.rawValue.get, existing.tid)
+        update_gcm_tid(existing.rawValue.get, existing.tid)
       }
       existing
     }
@@ -149,7 +149,7 @@ case class Term(ontology: ontology_type,
         )
         raw_insert(raw)
         synonym_insert(List(synonym_type(-1,new_tid,this.rawValue.get.value,"RAW")))
-        update_tid(this.rawValue.get, Some(new_tid))
+        update_gcm_tid(this.rawValue.get, Some(new_tid))
       }
 
       synonym_insert(synonyms)
