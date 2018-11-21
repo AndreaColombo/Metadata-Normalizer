@@ -25,7 +25,8 @@ object ExpertPreference {
           val options = DbHandler.get_user_feedback_infos(rv)
           val table = Table(Sized("id","parsed value","label","ontology","code","iri"))
           for (o <- options){
-            table.rows += Sized((i+1).toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),o.iri.getOrElse("null"))
+//            table.rows += Sized((i+1).toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),o.iri.getOrElse("null"))
+            table.rows += Sized((i+1).toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),"...")
             i+=1
           }
           table.alignments
