@@ -197,6 +197,7 @@ object DbHandler {
     val f = db.run(q.result).map(a => term_type = a.head)
 
     Await.result(f, Duration.Inf)
+    db.close()
     term_type
   }
 
@@ -207,6 +208,7 @@ object DbHandler {
     val f = db.run(q.result).map(a => suitability = a.head)
 
     Await.result(f, Duration.Inf)
+    db.close()
     suitability
   }
 
