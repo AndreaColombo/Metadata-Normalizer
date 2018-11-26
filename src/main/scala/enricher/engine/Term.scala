@@ -148,7 +148,6 @@ case class Term(ontology: ontology_type,
           'O'
         )
         raw_insert(raw)
-        synonym_insert(List(synonym_type(-1,new_tid,this.rawValue.get.value,"RAW")))
         update_gcm_tid(this.rawValue.get, Some(new_tid))
       }
 

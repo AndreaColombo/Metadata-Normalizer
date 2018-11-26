@@ -45,9 +45,8 @@ object Engine {
         val onto = OlsInterface.ols_get_onto_info(source)
         val code = result_user_changes._2
         val iri = OlsInterface.ols_get_iri(source,code)
-        val a = OlsInterface.ols_get_onto_info(source)
-        if (!DbHandler.onto_exist(a.source)) {
-          DbHandler.insert_ontology(a)
+        if (!DbHandler.onto_exist(onto.source)) {
+          DbHandler.insert_ontology(onto)
         }
         val term = Term(onto,code,iri)
         term.fill().saveToKB().fill_relation().save_relation()
