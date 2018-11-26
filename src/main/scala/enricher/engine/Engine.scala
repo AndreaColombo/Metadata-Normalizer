@@ -61,7 +61,7 @@ object Engine {
             DbHandler.user_feedback_insert(List(expert_choice_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:PREF", get_timestamp())))
           }
         }
-        else {
+        else if (ApplicationConfig.is_local_syn_enabled){
           logger.info(s"""Value "$raw_value" found as SYN in local KB""")
           val suggestion = DbHandler.get_vocabulary_by_tid(result_syn.tid)
           if (!DbHandler.expert_choice_exist(raw_value, suggestion.source, suggestion.code)) {

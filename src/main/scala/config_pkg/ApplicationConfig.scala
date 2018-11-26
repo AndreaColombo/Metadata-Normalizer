@@ -107,5 +107,7 @@ object ApplicationConfig  {
     * @return
     */
   def get_best_onto_coverage_threshold_for_set(): Double = conf.getDouble("get_best_onto_coverage_threshold_for_set")
+
+  def is_local_syn_enabled: Boolean = conf.getBoolean("local_syn_enabled")
 }
 
