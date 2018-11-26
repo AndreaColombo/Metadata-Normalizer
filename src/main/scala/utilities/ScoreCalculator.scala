@@ -171,30 +171,21 @@ object ScoreCalculator {
     */
   def calculate_score(): Unit = {
     val range = DbHandler.get_db_lenght()
-    calculate_ontology_score()
+//    calculate_ontology_score()
     for (i <- range){
       val tmp = DbHandler.get_onto_service_matchtype(i)
       val onto = tmp._1
       val service = tmp._2
       val match_type = tmp._3
+      val term_type = DbHandler.get_term_type(i)
       val onto_score = DbHandler.get_onto_score(onto)
-      println("\r"+i)
       val match_score = convert_score_num(match_type,service)
 
-      val k1 = 2
-      val k2 = 2
+      val suitability = DbHandler.get_suitability(i)
 
-      var score1 = match_score.toDouble * (k1 + onto_score.toDouble)
+      val overall_score = match_score.toDouble/5 * (4*suitability/10 + onto_score.toDouble)
 
-      var score2 = match_score.toDouble + (k2 * onto_score.toDouble)
-
-      if (score1<0)
-        score1=0
-
-      if (score2<0)
-        score2=0
-
-      DbHandler.update_score(score1,score2,onto_score.toDouble,match_score,i)
+      DbHandler.update_score(overall_score,onto_score.toDouble,match_score,i)
     }
   }
 

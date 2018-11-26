@@ -17,19 +17,19 @@ object ExpertPreference {
       for (column_name <- get_termtype_list(table_name)){
         val raw_values = DbHandler.get_user_feedback_raw_values(table_name,column_name)
         for (rv <- raw_values){
-          println("Table: "+table_name)
-          println("Column: "+column_name)
-          println("Raw value: "+rv)
-          println()
           var i = 0
           val options = DbHandler.get_user_feedback_infos(rv)
           val table = Table(Sized("id","parsed value","label","ontology","code","iri"))
           for (o <- options){
-//            table.rows += Sized((i+1).toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),o.iri.getOrElse("null"))
+            //            table.rows += Sized((i+1).toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),o.iri.getOrElse("null"))
             table.rows += Sized((i+1).toString,o.parsed_value.getOrElse("null"),o.label.getOrElse("null"),o.source.getOrElse("null"),o.code.getOrElse("null"),"...")
             i+=1
           }
           table.alignments
+          println("Table: "+table_name)
+          println("Column: "+column_name)
+          println("Raw value: "+rv)
+          println()
           //CASE RAW VALUE NOT FOUND IN OLS LOOKUP
           if(!options.head.code.isDefined){
             table.print()

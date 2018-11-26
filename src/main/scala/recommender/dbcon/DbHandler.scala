@@ -26,7 +26,7 @@ object DbHandler {
     for (l <- rows) {
       ok :+= (l.head, l(1), l(2), l(3), l(4), l(5), l(6), l(7), term_type)
     }
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val insertAction = apiresults.map(a=> (a.service,a.raw_value,a.parsed_value,a.ontology,a.ontology_id,a.pref_label,a.synonym,a.score,a.term_type)) ++= ok
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
@@ -35,20 +35,19 @@ object DbHandler {
   }
 
   def insert_best_ontos(rows: Iterable[(String, String, Double, Double, Double)]): Unit = {
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val insertAction = best_onto_set ++= rows
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
     db.close()
   }
 
-  def update_score(score1: Double, score2: Double, ontoScore: Double, matchScore: Double, id: Int): Unit = {
-    val db = Database.forConfig("gecotest2", conf)
+  def update_score(score1: Double, ontoScore: Double, matchScore: Double, id: Int): Unit = {
+    val db = Database.forConfig("gecotest_andrea", conf)
     val q =
       sqlu"""
              update public.apiresults
              set score_num1 = $score1,
-             score_num2 = $score2,
              onto_score = $ontoScore,
              match_score = $matchScore,
              ok = true
@@ -61,7 +60,7 @@ object DbHandler {
   }
 
   def update_suitability(suitability: Double, ontology: String, term_type: String): Unit = {
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val q =
       sqlu"""
              update public.apiresults
@@ -75,7 +74,7 @@ object DbHandler {
   }
 
   def update_suitability_sets(suitability: Double, ontology: String, term_type: String): Unit = {
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val q =
       sqlu"""
              update public.best_onto_sets
@@ -89,7 +88,7 @@ object DbHandler {
   }
 
   def ontology_score_insert(rows: Seq[(String, Double)]): Unit = {
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val insertaction = ontologyScore ++= rows
     val result_future = db.run(insertaction)
     Await.result(result_future, Duration.Inf)
@@ -98,7 +97,7 @@ object DbHandler {
 
   def get_ontology_by_type(term_type: String): List[String] = {
     var result: Seq[String] = List()
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
 
     val q =
       sql"""
@@ -116,7 +115,7 @@ object DbHandler {
 
   def get_ontologies(): List[String] = {
     var result: Seq[String] = List()
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
 
     val q =
       sql"""
@@ -133,7 +132,7 @@ object DbHandler {
 
   def get_term_by_ontology(ontology: String, term_type: String): List[String] = {
     var result: Seq[String] = List()
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
 
     val q =
       sql"""
@@ -153,7 +152,7 @@ object DbHandler {
 
   def get_term_by_type(term_type: String): List[String] = {
     var result: Seq[String] = List()
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
 
     val q =
       sql"""
@@ -173,7 +172,7 @@ object DbHandler {
 
   def get_parsed_by_ontology(ontology: String): List[String] = {
     var result: Seq[String] = List()
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
 
     val q =
       sql"""
@@ -191,8 +190,29 @@ object DbHandler {
     result.toList
   }
 
+  def get_term_type(id: Int): String = {
+    val q = apiresults.filter(_.id===id).map(_.term_type)
+    val db = Database.forConfig("gecotest_andrea", conf)
+    var term_type = ""
+    val f = db.run(q.result).map(a => term_type = a.head)
+
+    Await.result(f, Duration.Inf)
+    term_type
+  }
+
+  def get_suitability(id: Int): Double = {
+    val q = apiresults.filter(_.id === id).map(_.suitability)
+    val db = Database.forConfig("gecotest_andrea", conf)
+    var suitability = 0.0
+    val f = db.run(q.result).map(a => suitability = a.head)
+
+    Await.result(f, Duration.Inf)
+    suitability
+  }
+
+
   def get_onto_score(onto: String): String = {
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     var score = "0"
     val q =
       sql"""
@@ -210,7 +230,7 @@ object DbHandler {
   }
 
   def get_db_lenght(): List[Int] = {
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     var lenght: List[Int] = List()
     val q = apiresults.filter(_.ok === false).map(_.id).result
 
@@ -222,7 +242,7 @@ object DbHandler {
 
   def get_onto_service_matchtype(id: Int): (String, String, String) = {
     var result = ("", "", "")
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val q =
       sql"""
            select ontology, service, score
@@ -240,7 +260,7 @@ object DbHandler {
 
   def get_onto_coverage(onto: String, term_type: String): (String, String) = {
     var result = ("", "")
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val q =
       sql"""
            select count(distinct(raw_value)) / (select count(distinct(raw_value)) from public.apiresults where term_type ilike $term_type)::Float, count(distinct(raw_value))
@@ -260,7 +280,7 @@ object DbHandler {
     val limit_set = get_best_onto_limit_for_set()
 
     var result = Seq(("", "", "", "", ""))
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val q =
       sql"""
             select *
@@ -281,7 +301,7 @@ object DbHandler {
 
   def get_best_ontos_per_term(term_type: String): Seq[(String, String, String, String,String)] = {
     var result = Seq(("", "", "", "",""))
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val q =
       sql"""
            select ontologies_set, set_score1, set_coverage, set_suitability, (char_length(ontologies_set)-char_length(replace(ontologies_set,',',''))+1) as num_ontos
@@ -301,7 +321,7 @@ object DbHandler {
 
   def get_nrv(term_type: String): Int = {
     var result = 0
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val q =
       sql"""
            select nrv_count
@@ -320,7 +340,7 @@ object DbHandler {
 
   def get_score_suitability(onto: String, term_type: String): (Double, Double) = {
     var result: (Double, Double) = (0.0,0.0)
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val q =
       sql"""
            select avg_score1, suitability
@@ -338,7 +358,7 @@ object DbHandler {
   }
 
   def get_max_score(rv: String, onto:String): String = {
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     val q =
       sql"""
             select match_score
@@ -357,7 +377,7 @@ object DbHandler {
   }
 
   def get_raw_values(table: String, term_type: String): List[String] = {
-    val db = Database.forConfig("gecotest2", conf)
+    val db = Database.forConfig("gecotest_andrea", conf)
     var result: Seq[String] = List()
     val t = term_type
     val q =
@@ -399,7 +419,7 @@ object DbHandler {
                     GROUP BY term_type,ontology, suitability
                     order by coverage desc, avg_score1 desc, suitability desc, term_type"""
     val createAction = DBIO.seq(q1,q2,q3)
-    val db = Database.forConfig("gecotest2",conf)
+    val db = Database.forConfig("gecotest_andrea",conf)
     Await.result(db.run(createAction),Duration.Inf)
     db.close()
   }
@@ -407,7 +427,7 @@ object DbHandler {
   def get_rows_by_service(service: String): List[List[String]] = {
     val q = apiresults.filter(a => a.service === service).map(a => (a.service,a.term_type,a.raw_value,a.parsed_value,a.ontology,a.ontology_id,a.pref_label,a.synonym,a.score))
     var result: List[List[String]] = List()
-    val db = Database.forConfig("gecotest2",conf)
+    val db = Database.forConfig("gecotest_andrea",conf)
     val f = db.run(q.result).map(_.foreach(
       a => result:+= List(a._1,a._2,a._3,a._4,a._5.map(_.toLower),a._6,a._7,a._8,a._9)
     ))

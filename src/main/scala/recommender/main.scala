@@ -15,14 +15,14 @@ object main {
       else if (args.head.equals("view"))
         DbHandler.create_view()
       else if (args.head.equals("score")) {
+//        val table_l = ApplicationConfig.get_gcm_table_list()
+//        for (t <- table_l) {
+//          val column_l = ApplicationConfig.get_termtype_list(t)
+//          for (col <- column_l) {
+//            calculate_suitability_score(col)
+//          }
+//        }
         calculate_score()
-        val table_l = ApplicationConfig.get_gcm_table_list()
-        for (t <- table_l) {
-          val column_l = ApplicationConfig.get_termtype_list(t)
-          for (col <- column_l) {
-            calculate_suitability_score(col)
-          }
-        }
       }
       else if (args.head.equals("sets")){
         if (args.length == 2){
