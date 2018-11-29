@@ -162,7 +162,7 @@ case class Term(ontology: ontology_type,
     * Fill all the optional attributes of Term
     * @return Term completed
     */
-  def fill(): Term = Term.fill(this.ontology.source, this.code, this.iri)
+  def fill(): Term = ols_get_info(this.ontology.source, this.code, this.iri)
 
   /**
     * Retrieve parents and children of a root term
@@ -183,20 +183,18 @@ case class Term(ontology: ontology_type,
 
     val parents_complete = parents_uncomplete.map(a => Relation(Left(a.term.left.get.fill()), a.ttype))
 
-    val parents_complete_tid = parents_complete.map(a => Relation(Left(a.term.left.get.saveToKB()), a.ttype))
-
     val max_depth = ApplicationConfig.get_anc_limit()
 
     val p =
       if (depth < max_depth) {
-        parents_complete_tid.map{a =>
+        parents_complete.map{a =>
           val new_term = a.term.left.get.rec_parents(depth+1)
           val rel_type = a.ttype
           Relation(Left(new_term),rel_type)
         }
       }
       else {
-        parents_complete_tid
+        parents_complete
       }
     this.copy(parents = Some(p))
   }
@@ -237,14 +235,17 @@ case class Term(ontology: ontology_type,
     val tid_current = this.tid.get
 
     this.parents.get.foreach(a =>
-    if (a.term.isLeft) {
-        hyp_insert(relationship_type(a.term.left.get.tid.get, tid_current, a.ttype.toString))
+      if (a.term.isLeft) {
+        val tid_parent = a.term.left.get.saveToKB().tid.get
+        hyp_insert(relationship_type(tid_parent, tid_current, a.ttype.toString))
         a.term.left.get.save_relation()
       }
     )
+
     this.children.get.foreach(a =>
       if (a.term.isLeft) {
-        hyp_insert(relationship_type(tid_current,a.term.left.get.tid.get, a.ttype.toString))
+        val tid_child = a.term.left.get.saveToKB().tid.get
+        hyp_insert(relationship_type(tid_current,tid_child, a.ttype.toString))
         a.term.left.get.save_relation()
       }
     )
@@ -261,17 +262,6 @@ case class Term(ontology: ontology_type,
   * This object contains the static methods of term
   */
 object Term {
-
-  /**
-    * Call ols get info to fill in the optional field of Term
-    * @param source Source of the term
-    * @param code Code of the Term
-    * @param iri Iri of the term
-    * @return Term completed
-    */
-  def fill(source: String, code: String, iri: String): Term = {
-    ols_get_info(source, code, iri)
-  }
 
   /**
     * Load term from local kb and assign tid if term exists

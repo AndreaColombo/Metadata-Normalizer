@@ -400,6 +400,28 @@ object DbHandler {
   }
 
   /**
+    * Get an element of ontology based on a user defined query
+    * @param where User defined condition
+    * @return
+    */
+  def get_ontology(where: ontology => Rep[Boolean]): Option[ontology_type] = {
+    var result = Option(ontology_type())
+    val db = get_db()
+    val q = for {
+      a: ontology <- ontology
+      if where(a)
+    } yield a
+
+
+    val f = db.run(q.result.headOption).map(a =>
+        result = a
+    )
+    Await.result(f, Duration.Inf)
+    db.close()
+    result
+  }
+
+  /**
     * Update tid of a raw value in the gcm, new tid could be either a valid number or NULL
     * @param rawValue raw value which tid needs to be updated
     * @param new_tid New value of the tid
@@ -529,11 +551,19 @@ object DbHandler {
     */
   def insert_ontology (rows: ontology_type): Unit = {
     val db = get_db()
+    val condition = (a: ontology) => a.source === rows.source
 
-    if(!onto_exist(rows.source)) {
-      val insert = ontology ++= List(rows)
-      Await.result(db.run(insert), Duration.Inf)
-    }
+    val insert = ontology.filter(condition).result.headOption.flatMap {
+      case Some(ontology) =>
+        logger.info("Ontology "+rows.source+" already present")
+        DBIO.successful(ontology)
+      case None =>
+        logger.info("Inserting ontology "+rows.source)
+        ontology += rows
+    }.transactionally
+
+    Await.result(db.run(insert), Duration.Inf)
+
     db.close()
   }
 

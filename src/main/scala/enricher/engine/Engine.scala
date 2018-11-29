@@ -44,12 +44,17 @@ object Engine {
         val source = result_user_changes._1
         val onto = OlsInterface.ols_get_onto_info(source)
         val code = result_user_changes._2
-        val iri = OlsInterface.ols_get_iri(source,code)
+        val iri = OlsInterface.ols_get_iri(source, code)
         if (!DbHandler.onto_exist(onto.source)) {
           DbHandler.insert_ontology(onto)
         }
-        val term = Term(onto,code,iri)
-        term.fill().saveToKB().fill_relation().save_relation()
+        val term = Term(onto, code, iri)
+        try {
+          term.fill().fill_relation().saveToKB().save_relation()
+        }
+        catch {
+          case e: Exception => logger.info("Error in term retrieval "+term.code)
+        }
       }
       else if(result_syn.tid != default_values.int) {
         //VALUE FOUND PREF OR SYN
@@ -114,13 +119,23 @@ object Engine {
             //BEST MATCH DECIDED
             else {
               logger.info(s"""Value "$raw_value" best match found in online KB with match mode not random""")
-              best_term.term.saveToKB().fill_relation().save_relation()
+              try {
+                best_term.term.fill_relation().saveToKB().save_relation()
+              }
+              catch {
+                case e: Exception => logger.info("Error in term retrieval " + best_term.term.code)
+              }
             }
           }
           //BEST MATCH FOUND WITH MATCH MODE RANDOM
           else {
             logger.info(s"""Value "$raw_value" best match found in online KB with match mode random""")
-            best_term.term.saveToKB().fill_relation().save_relation()
+            try {
+              best_term.term.fill_relation().saveToKB().save_relation()
+            }
+            catch {
+              case e: Exception => logger.info("Error in term retrieval "+best_term.term.code)
+            }
           }
         }
         //BEST MATCH NOT FOUND, USER FEEDBACK

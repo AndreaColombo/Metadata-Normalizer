@@ -1,6 +1,6 @@
 package enricher.engine
 
-import java.net.{SocketTimeoutException, URLEncoder}
+import java.net.{SocketTimeoutException, URLEncoder, UnknownHostException}
 
 import config_pkg.ApplicationConfig.get_ontologies_by_type
 import enricher.dbcon.{DbHandler, default_values, expert_choice_type, ontology_type}
@@ -8,9 +8,13 @@ import utilities.{Preprocessing, ScoreCalculator}
 import com.fasterxml.jackson.core.JsonParseException
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsValue, Json}
-import scalaj.http.{Http, HttpOptions}
+import scalaj.http.{Http, HttpOptions, HttpResponse}
 import RelationType._
+import enricher.dbcon.Tables.ontology
 import utilities.Utils.get_timestamp
+import enricher.dbcon.Tables._
+import enricher.dbcon._
+import slick.jdbc.PostgresProfile.api._
 
 /**
   * This object contains all of the methods the program uses to interface with OLS REST APIs
@@ -105,15 +109,19 @@ object OlsInterface {
     val ontology = ols_get_onto_info(source)
     var returned: Term = Term(ontology, code, iri)
 
-    var response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
-
     logger.info("Retrieving info for " + code)
 
-    while (!response.is2xx && attempts <= 5) {
+    var response: HttpResponse[String] = null
+    while(response == null && attempts <=5) {
+      try {
+        response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
+      }
+      catch {
+        case e2: Exception => logger.info("Error in get_info" +e2.toString)
+      }
+      attempts+=1
+      println("Connecting to ols services attempt "+attempts)
       Thread.sleep(10000)
-      attempts += 1
-      response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
-      logger.info("Connecting to ols services attempt " + attempts)
     }
     if (attempts <= 5) {
       logger.info("Connection to ols established")
@@ -172,8 +180,22 @@ object OlsInterface {
     val ttype = relation.ttype
     if (rel_url != "null") {
       logger.info("Relation url not null")
-      val response = Http(rel_url).option(HttpOptions.readTimeout(50000)).asString
-      if (!response.is2xx) {
+
+      var attempts = 0
+      var response: HttpResponse[String] = null
+
+      while(response == null && attempts <=5) {
+        try {
+          response = Http(rel_url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
+        }
+        catch {
+          case e2: Exception => logger.info(e2.toString)
+        }
+        attempts+=1
+        println("Connecting to ols services attempt "+attempts)
+        Thread.sleep(10000)
+      }
+      if (attempts>5) {
         logger.info("Error "+response.code+" in relation retrieval url: "+rel_url)
       }
       else {
@@ -250,27 +272,42 @@ object OlsInterface {
   def ols_get_onto_info(onto: String): ontology_type = {
     var result = ontology_type()
     logger.info("Retrieving info for ontology "+onto)
-    val url = "https://www.ebi.ac.uk/ols/api/ontologies/" + onto
-    var response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
-    var attempts = 0
-    while (!response.is2xx && attempts <= 5) {
-      Thread.sleep(5000)
-      attempts += 1
-      response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
-      logger.info("Connecting to ols services attempt " + attempts)
-    }
-    if (attempts <= 5) {
-      val json = Json.parse(response.body)
-      val source = onto
-      val title = (json \ "config").get("title").validate[String].getOrElse(null)
-      val description = (json \ "config").get("description").validate[String].getOrElse(null)
-      result = ontology_type(source, Some(title), Some(description), Some(url))
-      logger.info("Retrieved info for "+result.toString)
+    val condition = (a: ontology) => a.source===onto
+    val ontology = DbHandler.get_ontology(condition)
+    if(ontology.isDefined) {
+      logger.info("Ontology "+onto+" already present in LKB")
+      result = ontology.get
     }
     else {
-      result = ontology_type("other_link", null, null, null)
-      logger.info("Error in ontology retrieval for ontology "+onto)
-      logger.info("Url: "+url)
+      val url = "https://www.ebi.ac.uk/ols/api/ontologies/" + onto
+      var attempts = 0
+      var response: HttpResponse[String] = null
+      while(response == null && attempts <=5) {
+        try {
+          response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
+        }
+        catch {
+          case e: SocketTimeoutException => logger.info(e.toString)
+          case e1: UnknownHostException => logger.info(e1.toString)
+          case e2: Exception => logger.info(e2.toString)
+        }
+        attempts+=1
+        println("Connecting to ols services attempt "+attempts)
+        Thread.sleep(10000)
+      }
+      if (attempts <= 5) {
+        val json = Json.parse(response.body)
+        val source = onto
+        val title = (json \ "config").get("title").validate[String].getOrElse(null)
+        val description = (json \ "config").get("description").validate[String].getOrElse(null)
+        result = ontology_type(source, Some(title), Some(description), Some(url))
+        logger.info("Retrieved info for " + result.toString)
+      }
+      else {
+        result = ontology_type("other_link", null, null, null)
+        logger.info("Error in ontology retrieval for ontology " + onto)
+        logger.info("Url: " + url)
+      }
     }
     result
   }
