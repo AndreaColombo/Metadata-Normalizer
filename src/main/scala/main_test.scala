@@ -15,7 +15,9 @@ object main_test {
 
   def main(args: Array[String]): Unit = {
 
-    val term = Term(ols_get_onto_info("doid"),"DOID_707",ols_get_iri("doid","DOID_707"))
+    val iri = ols_get_iri("obi","OBI_0000759")
+    println(iri)
+    val term = Term(ols_get_onto_info("obi"),"OBI_0000759",iri)
     try {
       term.fill().fill_relation()
     }

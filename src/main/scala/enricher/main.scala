@@ -68,7 +68,8 @@ object main extends App {
           Engine.controller(t,col)
         }
       }
-    }catch{
+    }
+    catch{
       case e: Exception => logger.error("Error", e)
     }
     val totalTime = System.currentTimeMillis - start

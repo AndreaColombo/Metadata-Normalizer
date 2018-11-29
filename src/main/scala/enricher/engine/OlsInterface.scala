@@ -112,7 +112,7 @@ object OlsInterface {
     logger.info("Retrieving info for " + code)
 
     var response: HttpResponse[String] = null
-    while(response == null && attempts <=5) {
+    while((response == null || !response.is2xx) && attempts <=5) {
       try {
         response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
       }
@@ -184,7 +184,7 @@ object OlsInterface {
       var attempts = 0
       var response: HttpResponse[String] = null
 
-      while(response == null && attempts <=5) {
+      while((response == null || !response.is2xx) && attempts <=5) {
         try {
           response = Http(rel_url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
         }
@@ -282,7 +282,7 @@ object OlsInterface {
       val url = "https://www.ebi.ac.uk/ols/api/ontologies/" + onto
       var attempts = 0
       var response: HttpResponse[String] = null
-      while(response == null && attempts <=5) {
+      while((response == null || !response.is2xx) && attempts <=5) {
         try {
           response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
         }
