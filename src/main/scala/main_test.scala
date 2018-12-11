@@ -15,16 +15,9 @@ object main_test {
 
   def main(args: Array[String]): Unit = {
 
-    val iri = ols_get_iri("obi","OBI_0000759")
-    println(iri)
-    val term = Term(ols_get_onto_info("obi"),"OBI_0000759",iri)
-    try {
-      term.fill().fill_relation()
-    }
-    catch {
-      case e: Exception => logger.info(e.toString)
-    }
+    val a = RawValue("liver","biosample","tissue")
 
+    ols_get_onto_info("ncit")
 //    DbHandler.insert_ontology(ols_get_onto_info("doid"))
     //    val table_l = ApplicationConfig.get_gcm_table_list()
 //    for (t <- table_l) {

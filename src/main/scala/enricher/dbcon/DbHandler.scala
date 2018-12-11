@@ -414,8 +414,18 @@ object DbHandler {
 
 
     val f = db.run(q.result.headOption).map(a =>
-        result = a
+      result = a
     )
+    Await.result(f, Duration.Inf)
+    db.close()
+    result
+  }
+
+  def get_ontologies(): List[ontology_type] = {
+    val db = get_db()
+
+    var result: List[ontology_type] = List()
+    val f = db.run(ontology.result).map(a => result = a.toList)
     Await.result(f, Duration.Inf)
     db.close()
     result

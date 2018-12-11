@@ -65,9 +65,8 @@ object OlsInterface {
 
     var result: List[Term] = List()
     if(attempts<5) {
-      val j = Json.parse(response.body)
+      val j = (Json.parse(response.body) \ "response").get("docs")
       val range = j \\ "iri"
-
       for (i <- range.indices) {
         val j2 = j(i)
         val ontology = (j2 \ "ontology_name").validate[String].get
@@ -295,6 +294,10 @@ object OlsInterface {
     }
   }
 
+  /**
+    * list of ontologies present in the lkb
+    */
+  var ontologies: List[ontology_type] = DbHandler.get_ontologies()
 
   /**
     * Retrieve all info for a given ontology, specifically: title, description and url
@@ -304,8 +307,7 @@ object OlsInterface {
   def ols_get_onto_info(onto: String): ontology_type = {
     var result = ontology_type()
     logger.info("Retrieving info for ontology "+onto)
-    val condition = (a: ontology) => a.source===onto
-    val ontology = DbHandler.get_ontology(condition)
+    val ontology = ontologies.find(a => a.source == onto)
     if(ontology.isDefined) {
       logger.info("Ontology "+onto+" already present in LKB")
       result = ontology.get
@@ -334,6 +336,7 @@ object OlsInterface {
         val description = (json \ "config").get("description").validate[String].getOrElse(null)
         result = ontology_type(source, Some(title), Some(description), Some(url))
         logger.info("Retrieved info for " + result.toString)
+        ontologies :+= result
       }
       else {
         result = ontology_type("other_link", null, null, null)
