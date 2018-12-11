@@ -47,30 +47,36 @@ object OlsInterface {
     logger.info("Retrieving terms for value '"+rawValue.value+"'"+" of '"+rawValue.table+"."+rawValue.column+"'")
     val url = "https://www.ebi.ac.uk/ols/api/search"
     val ontos = get_ontologies_by_type(rawValue.column)
-    val response = Http(url).param("q", rawValue.value).param("fieldList", "iri,short_form,synonym,ontology_name,iri").param("ontology", ontos.mkString(",")).param("rows", "15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000))
 
-    var j: JsValue = null
-    try {
-      j = (Json.parse(response.asString.body) \ "response").get("docs")
-    }
-    catch {
-      case e: JsonParseException =>
-        logger.info("json parse error", e)
-        logger.info("Error in parsing JSON response for term search url '" + response.urlBuilder.apply(response))
-        logger.info(response.asString.body)
+    var attempts = 0
+    var response: HttpResponse[String] = null
+
+    while((response == null || !response.is2xx) && attempts <=5) {
+      try {
+        response = Http(url).param("q", rawValue.value).param("fieldList", "iri,short_form,synonym,ontology_name,iri").param("ontology", ontos.mkString(",")).param("rows", "15").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
+      }
+      catch {
+        case e2: Exception => logger.info("Error in get_info " +e2.toString)
+      }
+      attempts+=1
+      println("Connecting to ols services attempt "+attempts)
+      Thread.sleep(10000)
     }
 
-    val range = j \\ "iri"
     var result: List[Term] = List()
+    if(attempts<5) {
+      val j = Json.parse(response.body)
+      val range = j \\ "iri"
 
-    for (i <- range.indices) {
-      val j2 = j(i)
-      val ontology = (j2 \ "ontology_name").validate[String].get
-      val ontology_id = (j2 \ "short_form").validate[String].get
-      val iri = (j2 \ "iri").validate[String].get
+      for (i <- range.indices) {
+        val j2 = j(i)
+        val ontology = (j2 \ "ontology_name").validate[String].get
+        val ontology_id = (j2 \ "short_form").validate[String].get
+        val iri = (j2 \ "iri").validate[String].get
 
-      val source = ols_get_onto_info(ontology)
-      result :+= Term(source, ontology_id, iri)
+        val source = ols_get_onto_info(ontology)
+        result :+= Term(source, ontology_id, iri)
+      }
     }
     if (result.nonEmpty) logger.info("Retrieved following terms for value '"+rawValue.value+"'"+" of '"+rawValue.table+"."+rawValue.column+"'")
     else logger.info("No terms retrieved for value '"+rawValue.value+"'"+" of '"+rawValue.table+"."+rawValue.column+"'")
@@ -86,11 +92,22 @@ object OlsInterface {
     */
   def ols_get_iri(source: String, code: String): String = {
     var iri_tmp = ""
-    try {
-      iri_tmp = (Json.parse(Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms").option(HttpOptions.readTimeout(50000)).asString.body) \\ "iri").head.validate[String].get
+    var attempts = 0
+    var response: HttpResponse[String] = null
+
+    while((response == null || !response.is2xx) && attempts <=5) {
+      try {
+        response = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms").option(HttpOptions.readTimeout(50000)).asString
+      }
+      catch {
+        case e2: Exception => logger.info("Error in get_iri " + e2.toString)
+      }
+      attempts+=1
+      println("Connecting to ols services attempt "+attempts)
+      Thread.sleep(10000)
     }
-    catch {
-      case e: SocketTimeoutException => logger.info("Read timeout", e.getCause)
+    if (attempts<5) {
+      iri_tmp = (Json.parse(response.body) \\ "iri").head.validate[String].get
     }
     iri_tmp.substring(0, iri_tmp.lastIndexOf("/") + 1) + code
   }
@@ -103,21 +120,21 @@ object OlsInterface {
     * @return A new term with all of its field completed
     */
   def ols_get_info(source: String, code: String, iri: String): Term = {
-    var attempts = 0
     val url = s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/" + URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")
-
     val ontology = ols_get_onto_info(source)
+
     var returned: Term = Term(ontology, code, iri)
 
     logger.info("Retrieving info for " + code)
 
+    var attempts = 0
     var response: HttpResponse[String] = null
     while((response == null || !response.is2xx) && attempts <=5) {
       try {
         response = Http(url).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
       }
       catch {
-        case e2: Exception => logger.info("Error in get_info" +e2.toString)
+        case e2: Exception => logger.info("Error in get_info " +e2.toString)
       }
       attempts+=1
       println("Connecting to ols services attempt "+attempts)
@@ -236,20 +253,35 @@ object OlsInterface {
     for (value <- parsed) {
       val ontologies = get_ontologies_by_type(rawValue.column)
       val url = "https://www.ebi.ac.uk/ols/api/search"
-      val response = Http(url).param("q", value).param("fieldList", "label,iri,short_form,ontology_name").param("ontology", ontologies.mkString(",")).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
-      val json = (Json.parse(response) \ "response").get("docs")
-      for (k <- (json \\ "iri").indices) {
-        val jj = json(k)
-        val iri = (jj \ "iri").validate[String].get
-        val label = (jj \ "label").validate[String].get
-        val id = (jj \ "short_form").validate[String].get
-        val onto = (jj \ "ontology_name").validate[String].get
-        val synonyms = (jj \ "synonym").validate[List[String]].getOrElse(List())
-        val score_num = get_score(rawValue.value, label, synonyms)
+      //val response = Http(url).param("q", value).param("fieldList", "label,iri,short_form,ontology_name").param("ontology", ontologies.mkString(",")).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.body
+      var attempts = 0
+      var response: HttpResponse[String] = null
+      while((response == null || !response.is2xx) && attempts <=5) {
+        try {
+          response = Http(url).param("q", value).param("fieldList", "label,iri,short_form,ontology_name").param("ontology", ontologies.mkString(",")).param("rows", "5").option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
+        }
+        catch {
+          case e2: Exception => logger.info(e2.toString)
+        }
+        attempts+=1
+        println("Connecting to ols services attempt "+attempts)
+        Thread.sleep(10000)
+      }
+      if(attempts<5){
+        val json = (Json.parse(response.body) \ "response").get("docs")
+        for (k <- (json \\ "iri").indices) {
+          val jj = json(k)
+          val iri = (jj \ "iri").validate[String].get
+          val label = (jj \ "label").validate[String].get
+          val id = (jj \ "short_form").validate[String].get
+          val onto = (jj \ "ontology_name").validate[String].get
+          val synonyms = (jj \ "synonym").validate[List[String]].getOrElse(List())
+          val score_num = get_score(rawValue.value, label, synonyms)
 
-        //PREVENTS DUPLICATES
-        if (!rows.exists(_.code.get == id)) {
-          rows :+= expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, None, rawValue.value, Some(value), Some(label), Some(onto), Some(id), Some(iri), "ONLINE:LOW  " + score_num.toString, get_timestamp())
+          //PREVENTS DUPLICATES
+          if (!rows.exists(_.code.get == id)) {
+            rows :+= expert_choice_type(default_values.int, default_values.bool, rawValue.table, rawValue.column, None, rawValue.value, Some(value), Some(label), Some(onto), Some(id), Some(iri), "ONLINE:LOW  " + score_num.toString, get_timestamp())
+          }
         }
       }
     }
