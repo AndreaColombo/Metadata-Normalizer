@@ -73,7 +73,7 @@ object main extends App {
       case e: Exception => logger.error("Error", e)
     }
     val totalTime = System.currentTimeMillis - start
-    val elapsed = new SimpleDateFormat("mm:ss:SSS").format(totalTime)
+    val elapsed = new SimpleDateFormat("hh:mm:ss:SSS").format(totalTime)
     logger.info("Elapsed time for arg "+args.mkString(" ")+": "+elapsed)
   }
 
