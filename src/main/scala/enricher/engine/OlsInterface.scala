@@ -28,7 +28,27 @@ object OlsInterface {
     * @param iri Iiri of the term
     * @return
     */
-  def ols_get_status(source: String, iri: String): String = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/" + URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString.statusLine
+  def ols_get_status(source: String, iri: String): String = {
+
+    var attempts = 0
+    var response: HttpResponse[String] = null
+    var error = ""
+    while((response == null || !response.is2xx) && attempts <=5) {
+      try {
+        response = Http(s"https://www.ebi.ac.uk/ols/api/ontologies/$source/terms/" + URLEncoder.encode(URLEncoder.encode(iri, "UTF-8"), "UTF-8")).option(HttpOptions.connTimeout(10000)).option(HttpOptions.readTimeout(50000)).asString
+      }
+      catch {
+        case e2: Exception => logger.info("Error in get_info " +e2.toString)
+          error = e2.toString
+      }
+      attempts+=1
+      println("Connecting to ols services attempt "+attempts)
+      Thread.sleep(10000)
+    }
+    if(attempts<5) return response.statusLine
+
+    error
+  }
 
   /**
     * Check existence and availability of a term

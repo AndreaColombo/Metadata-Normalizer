@@ -252,9 +252,12 @@ case class Term(ontology: ontology_type,
   }
 
   override def toString: String = {
+    "\n"+
     "Source: "+this.ontology.source+"\n"+
     "Code: "+this.code+"\n"+
-    "Iri: "+this.iri+"\n"
+    "Iri: "+this.iri+"\n"+
+    "Label: "+this.prefLabel+"\n"+
+    "Raw value: "+this.rawValue+"\n"
   }
 }
 
