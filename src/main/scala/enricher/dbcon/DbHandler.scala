@@ -60,6 +60,7 @@ object DbHandler {
       logger.info("Connection to db failed, Exiting")
       sys.exit(-1)
     }
+    logger.info("DB ok")
     db
   }
 
