@@ -54,6 +54,7 @@ object DbHandler {
         case e2: Exception => logger.info(e2.getCause)
       }
       attempts += 1
+      logger.info("Connecting to db attempt "+attempts)
     }
     if(db==null){
       logger.info("Connection to db failed, Exiting")
@@ -68,6 +69,7 @@ object DbHandler {
     * Drops foreign key references on the GCM tables
     */
   def drop_fk_gcm(): Unit = {
+    logger.info("Dropping gcm fk")
     val tables = get_gcm_table_list()
     var setup: DBIOAction[Unit,NoStream,Effect] = DBIO.seq()
     for (table<- tables) {
@@ -92,6 +94,7 @@ object DbHandler {
     * Creates the local knowledge base tables
     */
   def init(): Unit = {
+    logger.info("Init")
     val db = get_db()
     val existing = db.run(MTable.getTables)
     val f = existing.flatMap(v => {
@@ -109,6 +112,7 @@ object DbHandler {
     * Drop all local KB tables
     */
   def reset_db(): Unit = {
+    logger.info("Resetting db")
     val db = get_db()
     val existing = db.run(MTable.getTables)
     val f = existing.flatMap(v => {
@@ -126,6 +130,7 @@ object DbHandler {
     * Creates the foreign key reference on the gcm tables
     */
   def create_fk_gcm(): Unit = {
+    logger.info("Creating gcm fk")
     val tables = get_gcm_table_list()
     var setup: DBIOAction[Unit,NoStream,Effect] = DBIO.seq()
     for (table<- tables) {
@@ -148,6 +153,7 @@ object DbHandler {
     * Set all tids of GCM tables to null
     */
   def null_gcm(): Unit = {
+    logger.info("resetting gcm")
     val tables = get_gcm_table_list()
     var setup: DBIOAction[Unit,NoStream,Effect] = DBIO.seq()
     for (table<- tables) {
