@@ -236,17 +236,19 @@ case class Term(ontology: ontology_type,
 
     this.parents.get.foreach(a =>
       if (a.term.isLeft) {
-        val tid_parent = a.term.left.get.saveToKB().tid.get
+        val term_tid = a.term.left.get.saveToKB()
+        val tid_parent = term_tid.tid.get
         hyp_insert(relationship_type(tid_parent, tid_current, a.ttype.toString))
-        a.term.left.get.save_relation()
+        term_tid.save_relation()
       }
     )
 
     this.children.get.foreach(a =>
       if (a.term.isLeft) {
-        val tid_child = a.term.left.get.saveToKB().tid.get
+        val term_tid = a.term.left.get.saveToKB()
+        val tid_child = term_tid.tid.get
         hyp_insert(relationship_type(tid_current,tid_child, a.ttype.toString))
-        a.term.left.get.save_relation()
+        term_tid.save_relation()
       }
     )
   }
