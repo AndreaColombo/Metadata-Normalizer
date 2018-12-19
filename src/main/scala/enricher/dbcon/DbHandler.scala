@@ -22,7 +22,7 @@ object DbHandler {
   /**
     * Current database
     */
-  private var _db_name = "gecotest_andrea"
+  private var _db_name = "gecotest_new"
 
   /**
     * Getter method for database name
