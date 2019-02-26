@@ -25,6 +25,7 @@ object Engine {
     DbHandler.clean_user_feedback(table_name,column_name)
     val raw_values = DbHandler.get_raw_values(table_name,column_name)
     logger.info(column_name)
+    logger.info(raw_values.toString())
     for (raw_value <- raw_values) {
       val condition = (a: raw_annotation) => a.table_name === table_name && a.column_name === column_name && a.label.toLowerCase === raw_value.toLowerCase
       val result_raw = DbHandler.get_raw_annotation(condition)
