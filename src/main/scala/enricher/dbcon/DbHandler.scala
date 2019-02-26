@@ -42,6 +42,8 @@ object DbHandler {
     */
   var db: Database = Database.forConfig(_db_name, conf)
 
+  def close_db() = db.close()
+
   def get_db(): Database = {
 //    do select 1 if error then db = null
     

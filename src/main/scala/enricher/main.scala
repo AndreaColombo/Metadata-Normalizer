@@ -76,8 +76,15 @@ object main extends App {
     catch{
       case e: Exception => logger.error("Error", e)
     }
+    DbHandler.close_db()
     val totalTime = System.currentTimeMillis - start
-    val elapsed = new SimpleDateFormat("HH:mm:ss:SSS").format(totalTime)
+
+    val seconds = totalTime / 1000
+    val minutes = seconds / 60
+    val hours = minutes / 60
+    val days = hours / 24
+    val elapsed  = days + ":" + hours % 24 + ":" + minutes % 60 + ":" + seconds % 60
+
     logger.info("Elapsed time for arg "+args.mkString(" ")+": "+elapsed)
   }
 
