@@ -40,8 +40,25 @@ object DbHandler {
     * Method that handles the connection to the database and creates a databse object
     * @return A database object
     */
+  var db: Database = Database.forConfig(_db_name, conf)
+
   def get_db(): Database = {
-    var db: Database = null
+//    do select 1 if error then db = null
+    
+    val q =
+      sql"""
+           select disease
+           from biosample
+           limit 1
+         """.as[String]
+    
+    try {
+      db.run(q)
+    }
+    catch {
+      case e: Exception => db = null
+    }
+    
     var attempts = 0
     while(db==null & attempts != 5){
       try {
@@ -88,7 +105,7 @@ object DbHandler {
     val db = get_db()
     val f = db.run(setup)
     Await.result(f,Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -106,7 +123,7 @@ object DbHandler {
       db.run(DBIO.sequence(createIfNotExist))
     })
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -124,7 +141,7 @@ object DbHandler {
       db.run(DBIO.sequence(dropIfExist))
     })
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -147,7 +164,7 @@ object DbHandler {
     val db = get_db()
     val f = db.run(setup)
     Await.result(f,Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -170,7 +187,7 @@ object DbHandler {
     val db = get_db()
     val f = db.run(setup)
     Await.result(f,Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -190,7 +207,7 @@ object DbHandler {
     catch {
       case e: BatchUpdateException => logger.info(e.getNextException)
     }
-    db.close()
+    // db.close()
     new_tid
   }
 
@@ -203,7 +220,7 @@ object DbHandler {
     val insertAction = synonym ++= rows
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -215,7 +232,7 @@ object DbHandler {
     val insertAction = reference ++= rows
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -225,7 +242,7 @@ object DbHandler {
   def raw_insert(rows: raw_annotation_type): Unit = {
     val db = get_db()
     Await.result(db.run(raw_annotation += rows),Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -241,7 +258,7 @@ object DbHandler {
     val f = db.run(q.exists.result).map(a => exist = a)
     Await.result(f, Duration.Inf)
 
-    db.close()
+    // db.close()
     exist
   }
 
@@ -256,7 +273,7 @@ object DbHandler {
       val insert = db.run(insertAction)
       Await.result(insert, Duration.Inf)
     }
-    db.close()
+    // db.close()
   }
 
   /**
@@ -273,7 +290,7 @@ object DbHandler {
     val q = vocabulary.filter(a => a.source === source && a.code === code).map(_.tid)
     val resultfuture = db.run(q.result).map(a => tid = a.headOption)
     Await.result(resultfuture, Duration.Inf)
-    db.close()
+    // db.close()
     tid
   }
 
@@ -291,7 +308,7 @@ object DbHandler {
 
     val result_future = db.run(q).map(a => result = a.toList.distinct)
     Await.result(result_future, Duration.Inf)
-    db.close()
+    // db.close()
 
     result
   }
@@ -310,7 +327,7 @@ object DbHandler {
 
     val result_future = db.run(q).map(a => result = a.toList)
     Await.result(result_future, Duration.Inf)
-    db.close()
+    // db.close()
 
     result
   }
@@ -325,7 +342,7 @@ object DbHandler {
 
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -350,7 +367,7 @@ object DbHandler {
       result :+= a))
       Await.result(result_future, Duration.Inf)
     }
-    finally db.close()
+//    finally  db.close()
     result.toList
   }
 
@@ -363,7 +380,7 @@ object DbHandler {
     val insertAction = expert_preference ++= Seq(rows)
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -379,7 +396,7 @@ object DbHandler {
       if(a.isDefined)
         result = a.get)
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
     result
   }
 
@@ -402,7 +419,7 @@ object DbHandler {
         result = a.get
     )
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
     result
   }
 
@@ -424,7 +441,7 @@ object DbHandler {
       result = a
     )
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
     result
   }
 
@@ -434,7 +451,7 @@ object DbHandler {
     var result: List[ontology_type] = List()
     val f = db.run(ontology.result).map(a => result = a.toList)
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
     result
   }
 
@@ -466,7 +483,7 @@ object DbHandler {
     val db = get_db()
     val f = db.run(q)
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -489,7 +506,7 @@ object DbHandler {
       result = a.nonEmpty
     )
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
     result
   }
 
@@ -509,7 +526,7 @@ object DbHandler {
         result=a.head
     )
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
     result
   }
 
@@ -525,7 +542,7 @@ object DbHandler {
     val db = get_db()
     val f = db.run(update)
     Await.result(f,Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -542,7 +559,7 @@ object DbHandler {
         result = a.get
     )
     Await.result(f,Duration.Inf)
-    db.close()
+    // db.close()
     result
   }
 
@@ -558,7 +575,7 @@ object DbHandler {
     val f = db.run(q.result).map(a => res = a)
 
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
     res
   }
 
@@ -581,7 +598,7 @@ object DbHandler {
 
     Await.result(db.run(insert), Duration.Inf)
 
-    db.close()
+    // db.close()
   }
 
   /**
@@ -598,7 +615,7 @@ object DbHandler {
     val f = db.run(q.result).map(a => res = a)
 
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
     res
   }
 
@@ -611,7 +628,7 @@ object DbHandler {
     val q = expert_choice.filter(a => a.table_name === table && a.column_name === column && a.resolved === false).delete
     val db = get_db()
     Await.result(db.run(q),Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   /**
@@ -636,7 +653,7 @@ object DbHandler {
     suggestion :+= a
     ))
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
     suggestion
   }
 
@@ -663,7 +680,7 @@ object DbHandler {
       info :+= expert_info_for_feedback(a._1,a._2,a._3,a._4,a._5,a._6,a._7)
     ))
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
 
     info
   }
@@ -680,7 +697,7 @@ object DbHandler {
     val f = db.run(q.result).map(a => res = a.toList)
 
     Await.result(f, Duration.Inf)
-    db.close()
+    // db.close()
     res
   }
 
@@ -693,7 +710,7 @@ object DbHandler {
     val db = get_db()
     val f = db.run(insertAction)
     Await.result(f,Duration.Inf)
-    db.close()
+    // db.close()
   }
 
   def delete_ontology(onto: String): Unit = {
@@ -701,6 +718,6 @@ object DbHandler {
     val q = ontology.filter(_.source===onto).delete
     val f = db.run(q)
     Await.result(f,Duration.Inf)
-    db.close()
+    // db.close()
   }
 }
