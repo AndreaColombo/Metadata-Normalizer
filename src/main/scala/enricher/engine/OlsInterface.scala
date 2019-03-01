@@ -43,7 +43,8 @@ object OlsInterface {
       }
       attempts+=1
       println("Connecting to ols services attempt "+attempts)
-      Thread.sleep(10000)
+      if ((response == null || !response.is2xx) && attempts <=5)
+        Thread.sleep(10000)
     }
     if(attempts<5) return response.statusLine
 
@@ -80,7 +81,8 @@ object OlsInterface {
       }
       attempts+=1
       println("Connecting to ols services attempt "+attempts)
-      Thread.sleep(10000)
+      if ((response == null || !response.is2xx) && attempts <=5)
+        Thread.sleep(10000)
     }
 
     var result: List[Term] = List()
@@ -123,7 +125,8 @@ object OlsInterface {
       }
       attempts+=1
       println("Connecting to ols services attempt "+attempts)
-      Thread.sleep(10000)
+      if ((response == null || !response.is2xx) && attempts <=5)
+        Thread.sleep(10000)
     }
     if (attempts<5) {
       iri_tmp = (Json.parse(response.body) \\ "iri").head.validate[String].get
@@ -157,7 +160,8 @@ object OlsInterface {
       }
       attempts+=1
       println("Connecting to ols services attempt "+attempts)
-      Thread.sleep(10000)
+      if ((response == null || !response.is2xx) && attempts <=5)
+        Thread.sleep(10000)
     }
     if (attempts <= 5) {
       logger.info("Connection to ols established")
@@ -229,7 +233,8 @@ object OlsInterface {
         }
         attempts+=1
         println("Connecting to ols services attempt "+attempts)
-        Thread.sleep(10000)
+        if ((response == null || !response.is2xx) && attempts <=5)
+          Thread.sleep(10000)
       }
       if (attempts>5) {
         logger.info("Error "+response.code+" in relation retrieval url: "+rel_url)
@@ -284,7 +289,8 @@ object OlsInterface {
         }
         attempts+=1
         println("Connecting to ols services attempt "+attempts)
-        Thread.sleep(10000)
+        if ((response == null || !response.is2xx) && attempts <=5)
+          Thread.sleep(10000)
       }
       if(attempts<5){
         val json = (Json.parse(response.body) \ "response").get("docs")
@@ -347,7 +353,8 @@ object OlsInterface {
         }
         attempts+=1
         println("Connecting to ols services attempt "+attempts)
-        Thread.sleep(10000)
+        if ((response == null || !response.is2xx) && attempts <=5)
+          Thread.sleep(10000)
       }
       if (attempts <= 5) {
         val json = Json.parse(response.body)
