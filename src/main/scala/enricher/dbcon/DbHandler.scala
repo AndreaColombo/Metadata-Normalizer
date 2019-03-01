@@ -49,18 +49,13 @@ object DbHandler {
     
     val q =
       sql"""
-           select disease
-           from biosample
-           limit 1
-         """.as[String]
-    
+           select 1""".as[String]
     try {
       db.run(q)
     }
     catch {
       case e: Exception => db = null
     }
-    
     var attempts = 0
     while(db==null & attempts != 5){
       try {
