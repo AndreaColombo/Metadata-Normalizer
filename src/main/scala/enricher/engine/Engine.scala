@@ -36,8 +36,9 @@ object Engine {
       //LOCAL KB LOOKUP
       if (result_raw.tid != default_values.int) {
         //VALUE FOUND RAW
-        logger.info(s"""Value "$raw_value" found as RAW in local KB""")
-        DbHandler.update_gcm_tid(rv, Some(result_syn.tid))
+        val raw_tid = result_raw.tid
+        logger.info(s"""Value "$raw_value" found as RAW in local KB with tid $raw_tid""")
+        DbHandler.update_gcm_tid(rv, Some(result_raw.tid))
       }
       else if (result_user_changes._1 != "null") {
         //VALUE FOUND IN USER CHANGES

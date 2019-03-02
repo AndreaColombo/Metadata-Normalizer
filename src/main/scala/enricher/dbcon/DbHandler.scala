@@ -425,7 +425,6 @@ object DbHandler {
       if where(a)
     } yield a
 
-
     val f = db.run(q.result.headOption).map(a =>
       if (a.isDefined)
         result = a.get
