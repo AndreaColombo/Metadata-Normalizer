@@ -357,10 +357,11 @@ object OlsInterface {
         }
         attempts+=1
         println("Connecting to ols services attempt "+attempts)
-        if ((response == null || !response.is2xx) && attempts <=5)
+        if ((response == null || !response.is2xx) && attempts <=5) {
           Thread.sleep(10000)
+        }
       }
-      else if (attempts <= 5) {
+      if (attempts <= 5) {
         val json = Json.parse(response.body)
         val source = onto
         val title = (json \ "config").get("title").validate[String].getOrElse(null)
