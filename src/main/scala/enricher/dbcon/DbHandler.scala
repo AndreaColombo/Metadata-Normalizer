@@ -514,7 +514,7 @@ object DbHandler {
              select distinct #$column_name
              from #$table_name
              where #$column_name ilike $value
-        """.as[Boolean]
+        """.as[String]
     val db = get_db()
     val f = db.run(q).map(a =>
       result = a.nonEmpty
