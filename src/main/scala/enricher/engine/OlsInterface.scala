@@ -360,9 +360,6 @@ object OlsInterface {
         if ((response == null || !response.is2xx) && attempts <=5)
           Thread.sleep(10000)
       }
-      if (attempts >5) {
-        bad_ontos :+= onto
-      }
       else if (attempts <= 5) {
         val json = Json.parse(response.body)
         val source = onto
@@ -376,6 +373,7 @@ object OlsInterface {
         result = ontology_type("other_link", null, null, null)
         logger.info("Error in ontology retrieval for ontology " + onto)
         logger.info("Url: " + url)
+        bad_ontos :+= onto
       }
     }
     result
