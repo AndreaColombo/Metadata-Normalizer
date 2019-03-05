@@ -324,6 +324,7 @@ object OlsInterface {
     * list of ontologies present in the lkb
     */
   var ontologies: List[ontology_type] = DbHandler.get_ontologies()
+  var bad_ontos: List[String] = List()
 
   /**
     * Retrieve all info for a given ontology, specifically: title, description and url
@@ -337,6 +338,9 @@ object OlsInterface {
     if(ontology.isDefined) {
       logger.info("Ontology "+onto+" already present in LKB")
       result = ontology.get
+    }
+    else if (bad_ontos.exists(a => a.equalsIgnoreCase(onto))){
+      logger.info(s"Ontology $onto has already given error")
     }
     else {
       val url = "https://www.ebi.ac.uk/ols/api/ontologies/" + onto
@@ -356,7 +360,10 @@ object OlsInterface {
         if ((response == null || !response.is2xx) && attempts <=5)
           Thread.sleep(10000)
       }
-      if (attempts <= 5) {
+      if (attempts >5) {
+        bad_ontos :+= onto
+      }
+      else if (attempts <= 5) {
         val json = Json.parse(response.body)
         val source = onto
         val title = (json \ "config").get("title").validate[String].getOrElse(null)
