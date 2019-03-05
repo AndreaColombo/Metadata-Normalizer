@@ -13,6 +13,7 @@ object ExpertPreference {
   val POSSIBLE_CHOICES_RANGE = 4
 
   def get_user_feedback(): Unit = {
+    print(get_gcm_table_list())
     for (table_name <- get_gcm_table_list()){
       for (column_name <- get_termtype_list(table_name)){
         val raw_values = DbHandler.get_user_feedback_raw_values(table_name,column_name)
