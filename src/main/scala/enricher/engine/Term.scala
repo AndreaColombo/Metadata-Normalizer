@@ -253,6 +253,16 @@ case class Term(ontology: ontology_type,
     )
   }
 
+//  def unfold_relationships(current_tid: Int, distance: Int): Unit = {
+//
+//    this.parents.get.foreach{a =>
+//      if(a.term.isLeft){
+//        val term_tid = a.term.left.get.tid.get
+//
+//      }
+//    }
+//  }
+
   override def toString: String = {
     "\n"+
     "Source: "+this.ontology.source+"\n"+
