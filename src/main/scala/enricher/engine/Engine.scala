@@ -33,7 +33,7 @@ object Engine {
       val result_syn = DbHandler.get_synonym_by_value(raw_value.map(_.toLower))
       val result_user_changes = DbHandler.get_raw_expert_preference(table_name, column_name, raw_value.map(_.toLower))
       val rv = RawValue(raw_value, table_name, column_name)
-      logger.info("Evaluating value" + raw_value
+      logger.info("Evaluating value" + raw_value)
       //LOCAL KB LOOKUP
       if (result_raw.tid != default_values.int) {
         //VALUE FOUND RAW
@@ -66,6 +66,7 @@ object Engine {
         if (!DbHandler.expert_choice_exist(raw_value, suggestion.source, suggestion.code)) {
           DbHandler.user_feedback_insert(List(expert_choice_type(default_values.int, default_values.bool, table_name, column_name, Some(result_syn.tid), raw_value, null, Some(suggestion.label), Some(suggestion.source), Some(suggestion.code), Some(suggestion.iri), "LOCAL:PREF", get_timestamp())))
         }
+      }
         else if (result_syn.tid != default_values.int && result_syn.ttype == "syn" && ApplicationConfig.is_local_syn_enabled) {
           logger.info(s"""Value "$raw_value" found as SYN in local KB""")
           val suggestion = DbHandler.get_vocabulary_by_tid(result_syn.tid)
