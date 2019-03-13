@@ -9,9 +9,19 @@ import scala.io.StdIn
 object ExpertCorrection {
 
   def correct_value(value_to_correct: String,table: String, column: String): Unit = {
-    val source_code = input_source_code()
-    DbHandler.update_gcm_tid(RawValue(value_to_correct,table,column),None)
-    DbHandler.insert_expert_preference(expert_preference_type(default_values.int,table, column, value_to_correct, source_code._1, source_code._2))
+    println("Correct or invalidate?")
+    println("1 - Correct")
+    println("2 - Invalidate")
+    val choice = get_choice(2)
+
+    if (choice ==  "1") {
+      val source_code = input_source_code()
+      DbHandler.update_gcm_tid(RawValue(value_to_correct, table, column), None)
+      DbHandler.insert_expert_preference(expert_preference_type(default_values.int, table, column, value_to_correct, source_code._1, source_code._2))
+    }
+    else {
+      DbHandler.update_gcm_tid(RawValue(value_to_correct, table, column), None)
+    }
   }
 
   def delete_ontology(): Unit = {
