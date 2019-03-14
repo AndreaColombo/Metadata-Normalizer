@@ -41,8 +41,8 @@ object main extends App {
           DbHandler.create_fk_gcm()
         }
         else if (args(0).equals("reset")) {
-//            DbHandler.null_gcm()
-  //          DbHandler.drop_fk_gcm()
+            DbHandler.null_gcm()
+            DbHandler.drop_fk_gcm()
             DbHandler.reset_db()
             DbHandler.init()
             DbHandler.create_fk_gcm()
