@@ -47,6 +47,9 @@ object main extends App {
             DbHandler.init()
             DbHandler.create_fk_gcm()
         }
+        else if (args(0).equals("unfold")) {
+          DbHandler.unfold()
+        }
         else if (args.length == 1) {
           if (args.head == "all") {
             val table_l = ApplicationConfig.get_gcm_table_list()

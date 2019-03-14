@@ -745,4 +745,33 @@ object DbHandler {
     Await.result(f, Duration.Inf)
     // db.close()
   }
+
+  def unfold(): Unit = {
+    val setup = relationship_unfolded.schema.create
+    val db = get_db()
+    val f = db.run(setup)
+    Await.result(f, Duration.Inf)
+    val query =
+      sqlu"""insert into relationship_unfolded (with recursive rel_unfolded(tid_anc, tid_desc, depth, path, rel_type) as (
+  select r.tid_parent, r.tid_child, 1, array [row (r.tid_parent, r.tid_child, r.rel_type)], r.rel_type
+  from relationship r
+  union all
+  select ru.tid_anc,
+         ru.tid_desc,
+         ru.depth + 1,
+         path || row (r.tid_parent, r.tid_child,r.rel_type),
+         case ru.rel_type
+           when r.rel_type then ru.rel_type
+           else 'MIXED'
+           end::varchar(8)
+  from relationship r,
+       rel_unfolded ru
+  where ru.tid_desc = r.tid_parent)
+select tid_anc, tid_desc, path, min(depth) as distance, rel_type
+from rel_unfolded
+where rel_type ilike 'mixed'
+group by tid_anc, tid_desc, path, rel_type)"""
+    val f2 = db.run(query)
+    Await.result(f2, Duration.Inf)
+  }
 }
