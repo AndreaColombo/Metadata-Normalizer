@@ -767,10 +767,9 @@ object DbHandler {
   from relationship r,
        rel_unfolded ru
   where ru.tid_desc = r.tid_parent)
-select tid_anc, tid_desc, path, min(depth) as distance, rel_type
+select tid_anc, tid_desc, min(depth) as distance, rel_type
 from rel_unfolded
-where rel_type ilike 'mixed'
-group by tid_anc, tid_desc, path, rel_type)"""
+group by tid_anc, tid_desc, rel_type)"""
     val f2 = db.run(query)
     Await.result(f2, Duration.Inf)
   }
