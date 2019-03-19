@@ -779,8 +779,8 @@ object DbHandler {
          from vocabulary
       )
         drop view unfold_view"""
-    val f1 = db.run(query)
-    Await.result(f1, Duration.Inf)
+//    val f1 = db.run(query)
+//    Await.result(f1, Duration.Inf)
     logger.info("Recursive query executed")
     val f2 = db.run(insert_query)
     Await.result(f2, Duration.Inf)
