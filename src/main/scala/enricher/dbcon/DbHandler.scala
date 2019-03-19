@@ -768,7 +768,7 @@ object DbHandler {
                     from relationship r,
                   rel_unfolded ru
              where ru.tid_desc = r.tid_parent)
-             select *
+             select tid_anc, tid_desc, depth, rel_type
              from rel_unfolded)"""
 
     val insert_query =
