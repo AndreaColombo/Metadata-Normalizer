@@ -16,6 +16,7 @@ import scala.concurrent.duration.Duration
 /**
   * This object contains all the methods the Enricher Engine uses to interface with the database
   */
+//noinspection SqlNoDataSourceInspection
 object DbHandler {
   val logger: Logger = Logger.getLogger(this.getClass)
 
@@ -387,7 +388,7 @@ object DbHandler {
     */
   def insert_expert_preference(rows: expert_preference_type): Unit = {
     val db = get_db()
-    val insertAction = expert_preference ++= Seq(rows)
+    val insertAction = expert_preference.insertOrUpdate(rows)
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
     // db.close()
@@ -752,27 +753,34 @@ object DbHandler {
     val f = db.run(setup)
     Await.result(f, Duration.Inf)
     val query =
-      sqlu"""insert into relationship_unfolded (with recursive rel_unfolded(tid_anc, tid_desc, depth, path, rel_type) as (
-  select r.tid_parent, r.tid_child, 1, array [row (r.tid_parent, r.tid_child, r.rel_type)], r.rel_type
-  from relationship r
-  union all
-  select ru.tid_anc,
-         ru.tid_desc,
-         ru.depth + 1,
-         path || row (r.tid_parent, r.tid_child,r.rel_type),
-         case ru.rel_type
-           when r.rel_type then ru.rel_type
-           else 'MIXED'
-           end::varchar(8)
-  from relationship r,
-       rel_unfolded ru
-  where ru.tid_desc = r.tid_parent)
-select tid_anc, tid_desc, min(depth) as distance, rel_type
-from rel_unfolded
-group by tid_anc, tid_desc, rel_type)
-union
-select tid, tid, 0, 'self'
-from vocabulary"""
+      sqlu"""create view unfold_view as (with recursive rel_unfolded(tid_anc, tid_desc, depth, path, rel_type) as (
+             select r.tid_parent, r.tid_child, 1, array [row (r.tid_parent, r.tid_child, r.rel_type)], r.rel_type
+             from relationship r
+             union all
+             select ru.tid_anc,
+                    ru.tid_desc,
+                    ru.depth + 1,
+                    path || row (r.tid_parent, r.tid_child,r.rel_type),
+                    case ru.rel_type
+                      when r.rel_type then ru.rel_type
+                      else 'MIXED'
+                      end::varchar(8)
+                    from relationship r,
+                  rel_unfolded ru
+             where ru.tid_desc = r.tid_parent)
+             select *
+             from rel_unfolded)"""
+
+    val insert_query =
+      """
+         insert into relationship_unfolded values (
+         select tid_anc, tid_desc, min(depth) as distance, rel_type
+         from unfold_view
+         group by tid_anc, tid_desc, rel_type
+         union
+         select tid, tid, 0, 'self'
+         from vocabulary
+      )"""
     val f2 = db.run(query)
     Await.result(f2, Duration.Inf)
   }

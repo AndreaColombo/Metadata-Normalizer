@@ -18,7 +18,7 @@ case class relationship_type(tid_p: Int = default_values.int, tid_c: Int = defau
 case class relationship_unfolded_type(tid_a: Int = default_values.int, tid_d: Int = default_values.int, distance: Int = default_values.int, rel_type:String = default_values.string)
 
 case class expert_choice_type(id: Int = default_values.int, resolved: Boolean = default_values.bool, table: String = default_values.string, column: String = default_values.string, tid: Option[Int] = Some(default_values.int), raw_value: String = default_values.string, parsed_value: Option[String] = Some(default_values.string), label: Option[String] = Some(default_values.string), source: Option[String] = Some(default_values.string), code: Option[String] = Some(default_values.string), iri: Option[String]= Some(default_values.string), provenance: String = default_values.string, timestamp: String = default_values.string)
-case class expert_preference_type(id: Int = default_values.int, table_name: String = default_values.string, column_name: String = default_values.string, raw_value: String = default_values.string, source: String = default_values.string, code: String = default_values.string)
+case class expert_preference_type(table_name: String = default_values.string, column_name: String = default_values.string, raw_value: String = default_values.string, source: String = default_values.string, code: String = default_values.string)
 case class expert_feedback_type(expert_username: String = default_values.string, raw_value: String = default_values.string, table_name: String = default_values.string, column_name: String = default_values.string, tid: Int = default_values.int,rating: Int = default_values.int)
 case class expert_info_for_feedback(tid: Int = default_values.int, raw: String = default_values.string, pref_label: String = default_values.string, source: String = default_values.string, code: String = default_values.string, iri: String = default_values.string, description: String = default_values.string)
 
@@ -150,13 +150,15 @@ object Tables {
   val expert_choice = TableQuery[expert_choice]
 
   class expert_preference(tag: Tag) extends Table[expert_preference_type](tag, "expert_preference"){
-    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+//    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def table_name = column[String]("table_name")
     def column_name = column[String]("column_name")
     def raw_value = column[String]("raw_value")
     def source = column[String]("source")
     def code = column[String]("code")
-    def * = (id, table_name, column_name, raw_value, source, code) <> (expert_preference_type.tupled,expert_preference_type.unapply)
+
+    def pk = primaryKey("preference_pk",(table_name,column_name,raw_value))
+    def * = ( table_name, column_name, raw_value, source, code) <> (expert_preference_type.tupled,expert_preference_type.unapply)
   }
   val expert_preference = TableQuery[expert_preference]
 
