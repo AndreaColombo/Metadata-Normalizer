@@ -777,7 +777,7 @@ object DbHandler {
          union
          select tid, tid, 0, 'self'
          from vocabulary
-      )
+      );
         drop view unfold_view"""
 //    val f1 = db.run(query)
 //    Await.result(f1, Duration.Inf)
