@@ -781,8 +781,11 @@ object DbHandler {
          select tid, tid, 0, 'self'
          from vocabulary
       )"""
-    val actions = DBIO.seq(query, insert_query)
-    val f2 = db.run(actions)
+    val f1 = db.run(query)
+    Await.result(f1, Duration.Inf)
+    logger.info("Recursive query executed")
+    val f2 = db.run(insert_query)
     Await.result(f2, Duration.Inf)
+    logger.info("Insert executed")
   }
 }
