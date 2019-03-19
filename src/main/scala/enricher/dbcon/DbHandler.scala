@@ -82,7 +82,7 @@ object DbHandler {
     db
   }
 
-  val tables = List(ontology, vocabulary, synonym, reference, raw_annotation, relationship, expert_preference, expert_choice, expert_feedback)
+  val tables = List(ontology, vocabulary, synonym, reference, raw_annotation, relationship, expert_preference, expert_choice, expert_feedback, relationship_unfolded)
 
   /**
     * Drops foreign key references on the GCM tables
@@ -748,10 +748,7 @@ object DbHandler {
   }
 
   def unfold(): Unit = {
-    val setup = relationship_unfolded.schema.create
     val db = get_db()
-    val f = db.run(setup)
-    Await.result(f, Duration.Inf)
     val query =
       sqlu"""create view unfold_view as (with recursive rel_unfolded(tid_anc, tid_desc, depth, path, rel_type) as (
              select r.tid_parent, r.tid_child, 1, array [row (r.tid_parent, r.tid_child, r.rel_type)], r.rel_type
