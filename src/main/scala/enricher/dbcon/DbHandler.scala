@@ -772,8 +772,8 @@ object DbHandler {
              from rel_unfolded)"""
 
     val insert_query =
-      """
-         insert into relationship_unfolded values (
+      sqlu"""
+         insert into relationship_unfolded (
          select tid_anc, tid_desc, min(depth) as distance, rel_type
          from unfold_view
          group by tid_anc, tid_desc, rel_type
@@ -781,7 +781,8 @@ object DbHandler {
          select tid, tid, 0, 'self'
          from vocabulary
       )"""
-    val f2 = db.run(query)
+    val actions = DBIO.seq(query, insert_query)
+    val f2 = db.run(actions)
     Await.result(f2, Duration.Inf)
   }
 }
