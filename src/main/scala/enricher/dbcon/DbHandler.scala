@@ -769,7 +769,10 @@ object DbHandler {
   where ru.tid_desc = r.tid_parent)
 select tid_anc, tid_desc, min(depth) as distance, rel_type
 from rel_unfolded
-group by tid_anc, tid_desc, rel_type)"""
+group by tid_anc, tid_desc, rel_type)
+union
+select tid, tid, 0, 'self'
+from vocabulary"""
     val f2 = db.run(query)
     Await.result(f2, Duration.Inf)
   }
