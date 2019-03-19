@@ -8,7 +8,7 @@ libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "2.3.0"
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.6.7"
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.3",
-  "com.typesafe.slick" %% "slick" % "3.2.1",
+  "com.typesafe.slick" %% "slick" % "3.3.0",
   "com.typesafe.slick" %% "slick-hikaricp" % "3.2.1"
 )
 libraryDependencies += "com.typesafe.slick" %% "slick-codegen" % "3.2.1"
