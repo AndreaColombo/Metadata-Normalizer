@@ -786,7 +786,7 @@ object DbHandler {
              truncate relationship_unfolded;
          insert into relationship_unfolded (
          select tid_anc, tid_desc, min(depth) as distance, rel_type
-         from unfold_view
+         from unfold_tmp
          group by tid_anc, tid_desc, rel_type
          union
          select tid, tid, 0, 'SELF'
