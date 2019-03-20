@@ -759,32 +759,37 @@ object DbHandler {
     Await.result(db.run(query_tmp), Duration.Inf)
     logger.info("Temporary table created")
 
-    val rec_query = sqlu""" insert into unfold_tmp (with recursive rel_unfolded(tid_anc, tid_desc, depth, path, rel_type) as (
-             select r.tid_parent, r.tid_child, 1, array [row (r.tid_parent, r.tid_child, r.rel_type)], r.rel_type
-             from relationship r
-             union all
-             select ru.tid_anc,
-                    ru.tid_desc,
-                    ru.depth + 1,
-                    path || row (r.tid_parent, r.tid_child,r.rel_type),
-                    case ru.rel_type
-                      when r.rel_type then ru.rel_type
-                      else 'MIXED'
-                      end::varchar(8)
-                    from relationship r,
-                  rel_unfolded ru
-             where ru.tid_desc = r.tid_parent)
-             select tid_anc, tid_desc, depth, rel_type
-             from rel_unfolded)"""
+    val rec_query =
+      sqlu"""insert into unfold_tmp (
+                         with recursive rel_unfolded(tid_anc, tid_desc, depth, rel_type)
+                         as (
+                            select r.tid_parent, r.tid_child, 1
+                                   ,r.rel_type
+                            from relationship r
+                            union all
+                            select ru.tid_anc,
+                                   r.tid_child,
+                                   ru.depth + 1,
+                                   case ru.rel_type
+                                     when r.rel_type then ru.rel_type
+                                     else 'MIXED'
+                                     end::varchar(8)
+                                   from rel_unfolded ru
+                                   join relationship r ON  ru.tid_desc = r.tid_parent
+                         )
+
+            select tid_anc, tid_desc, depth, rel_type
+                          from rel_unfolded);"""
 
     val insert_query =
       sqlu"""
+             truncate relationship_unfolded;
          insert into relationship_unfolded (
          select tid_anc, tid_desc, min(depth) as distance, rel_type
          from unfold_view
          group by tid_anc, tid_desc, rel_type
          union
-         select tid, tid, 0, 'self'
+         select tid, tid, 0, 'SELF'
          from vocabulary
       );
         drop table unfold_tmp"""

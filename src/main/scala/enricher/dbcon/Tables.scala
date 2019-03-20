@@ -122,7 +122,7 @@ object Tables {
     def fk_a = foreignKey("vocabulary_rel_a_unfolded",tid_a,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
     def fk_d = foreignKey("vocabulary_rel_d_unfolded",tid_d,vocabulary)(_.tid, onDelete = ForeignKeyAction.Cascade)
 
-    def idx = index("rel_unfolded_idx", tid_d)
+    def idx = index("rel_unfolded_idx", (tid_a,tid_d,rel_type))
 
     def * = (tid_a,tid_d,distance,rel_type) <> (relationship_unfolded_type.tupled, relationship_unfolded_type.unapply)
   }
