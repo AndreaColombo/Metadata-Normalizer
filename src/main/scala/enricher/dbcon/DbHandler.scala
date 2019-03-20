@@ -749,8 +749,17 @@ object DbHandler {
 
   def unfold(): Unit = {
     val db = get_db()
-    val query =
-      sqlu"""create table unfold_tmp as (with recursive rel_unfolded(tid_anc, tid_desc, depth, path, rel_type) as (
+    val query_tmp =
+      sqlu"""create table unfold_tmp (
+            tid_anc int,
+            tid_desc int,
+            depth int,
+            rel_type varchar(8)
+            )"""
+    Await.result(db.run(query_tmp), Duration.Inf)
+    logger.info("Temporary table created")
+
+    val rec_query = sqlu""" insert into unfold_tmp (with recursive rel_unfolded(tid_anc, tid_desc, depth, path, rel_type) as (
              select r.tid_parent, r.tid_child, 1, array [row (r.tid_parent, r.tid_child, r.rel_type)], r.rel_type
              from relationship r
              union all
@@ -778,12 +787,14 @@ object DbHandler {
          select tid, tid, 0, 'self'
          from vocabulary
       );
-        drop view unfold_view"""
-    val f1 = db.run(query)
+        drop table unfold_tmp"""
+
+    val f1 = db.run(rec_query)
     Await.result(f1, Duration.Inf)
-    logger.info("Recursive query executed")
+    logger.info("Recursive query executed, temp table filled")
     val f2 = db.run(insert_query)
     Await.result(f2, Duration.Inf)
-    logger.info("Insert executed")
+    logger.info("Relationship unfolded filled")
+    logger.info("Unfolding complete")
   }
 }
