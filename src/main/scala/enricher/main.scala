@@ -2,6 +2,7 @@ package enricher
 
 import config_pkg.ApplicationConfig
 import enricher.dbcon.DbHandler
+import enricher.dbcon.DbHandler.unfold
 import enricher.engine.Engine
 import org.apache.log4j.{FileAppender, Level, Logger, PatternLayout}
 import org.joda.time.DateTime
@@ -48,7 +49,7 @@ object main extends App {
             DbHandler.create_fk_gcm()
         }
         else if (args(0).equals("unfold")) {
-          DbHandler.unfold()
+          unfold()
         }
         else if (args.length == 1) {
           if (args.head == "all") {
@@ -75,6 +76,7 @@ object main extends App {
           Engine.controller(t,col)
         }
       }
+      unfold()
     }
     catch{
       case e: Exception => logger.error("Error", e)
