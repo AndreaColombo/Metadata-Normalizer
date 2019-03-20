@@ -750,7 +750,7 @@ object DbHandler {
   def unfold(): Unit = {
     val db = get_db()
     val query =
-      sqlu"""create view unfold_view as (with recursive rel_unfolded(tid_anc, tid_desc, depth, path, rel_type) as (
+      sqlu"""create table unfold_tmp as (with recursive rel_unfolded(tid_anc, tid_desc, depth, path, rel_type) as (
              select r.tid_parent, r.tid_child, 1, array [row (r.tid_parent, r.tid_child, r.rel_type)], r.rel_type
              from relationship r
              union all
@@ -779,8 +779,8 @@ object DbHandler {
          from vocabulary
       );
         drop view unfold_view"""
-//    val f1 = db.run(query)
-//    Await.result(f1, Duration.Inf)
+    val f1 = db.run(query)
+    Await.result(f1, Duration.Inf)
     logger.info("Recursive query executed")
     val f2 = db.run(insert_query)
     Await.result(f2, Duration.Inf)

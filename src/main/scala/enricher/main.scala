@@ -38,7 +38,7 @@ object main extends App {
       if (args.nonEmpty) {
         if (args(0).equals("init")) {
           DbHandler.init()
-          DbHandler.create_fk_gcm()
+//          DbHandler.create_fk_gcm()
         }
         else if (args(0).equals("reset")) {
             DbHandler.null_gcm()
