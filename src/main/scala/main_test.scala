@@ -2,18 +2,14 @@ import java.net.HttpCookie
 
 import config_pkg.ApplicationConfig
 import enricher.engine.Term
-import enricher.engine.OlsInterface.ols_get_onto_info
+import enricher.engine.OlsInterface._
 
 object main_test {
 
   def main(args: Array[String]): Unit = {
 
 
-    val a = Term(ols_get_onto_info("ncit"),"NCIT_C8863","http://purl.obolibrary.org/obo/NCIT_C8863")
-//
-    a.fill().fill_relation().saveToKB().save_relation()
-    val dummy = ""
-    ApplicationConfig.get_termtype_list("experiment_type").foreach(println)
+   print(ols_exist("NCBITaxon",ols_get_iri("NCBITaxon","NCBITaxon_9606")))
 
   }
 }

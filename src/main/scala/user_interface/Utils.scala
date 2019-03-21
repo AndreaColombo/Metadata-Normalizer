@@ -59,12 +59,12 @@ object Utils {
 
     println("Please input code in the form ONTO_XXXXXXXX")
     input = StdIn.readLine()
-    while(!validate_code(source, input.map(_.toUpper))) {
+    while(!validate_code(source, input)) {
       println("Error, code not valid")
       println("Please input a valid code")
       input = StdIn.readLine()
     }
-    val code = input.map(_.toUpper)
+    val code = input
 
     println()
     (source,code)
