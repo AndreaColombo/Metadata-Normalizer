@@ -36,21 +36,21 @@ object ExpertPreference {
             println()
             display_prompt(false)
             val user_choice = get_choice(MANUAL_INSERT_RANGE)
-            //1 MANUAL INSERT
-            //2 SKIP
+            //1 SKIP
+            //2 MANUAL INSERT
             //3 BACK
             if (user_choice.equals("1")){
+              breakable {
+                break()
+              }
+            }
+            else if (user_choice.equals("2")){
               val user_sourcecode = input_source_code()
               val source = user_sourcecode._1
               val code = user_sourcecode._2
               //INSERT IN USER REQUESTED CHOICE
               DbHandler.insert_expert_preference(expert_preference_type(table_name, column_name, rv, source, code))
               DbHandler.set_resolved(rv,table_name,column_name)
-            }
-            else if (user_choice.equals("2")){
-              breakable {
-                break()
-              }
             }
             else if (user_choice.equals("3")){
               println("Returning to home page")
@@ -66,6 +66,11 @@ object ExpertPreference {
             display_prompt(true)
             val user_choice = get_choice(POSSIBLE_CHOICES_RANGE)
             if(user_choice.equals("1")){
+              breakable {
+                break()
+              }
+            }
+            else if (user_choice.equals("2")){
               println("Please input manually ontology and code")
               val user_choice = input_source_code()
               val source = user_choice._1
@@ -74,17 +79,12 @@ object ExpertPreference {
               DbHandler.insert_expert_preference(expert_preference_type(table_name, column_name, rv, source, code))
               DbHandler.set_resolved(rv,table_name,column_name)
             }
-            else if (user_choice.equals("2")){
+            else if (user_choice.equals("3")){
               println("Please select an ID")
               val user_selection = get_choice(options.length)
               val a = options(user_selection.toInt-1)
               DbHandler.insert_expert_preference(expert_preference_type(a.table,a.column,a.raw_value,a.source.get,a.code.get))
               DbHandler.set_resolved(rv,table_name,column_name)
-            }
-            else if (user_choice.equals("3")){
-              breakable {
-                break()
-              }
             }
             else if (user_choice.equals("4")){
               println("Returning to home page")
@@ -102,14 +102,14 @@ object ExpertPreference {
   }
 
   def display_prompt(flag: Boolean): Unit = {
-    println("1 - MANUAL INSERT")
+    println("1 - SKIP")
     if(flag) {
-      println("2 - SELECT ID")
-      println("3 - SKIP")
+      println("2 - MANUAL INSERT")
+      println("3 - SELECT ID")
       println("4 - BACK")
     }
     else {
-      println("2 - SKIP")
+      println("2 - MANUAL INSERT")
       println("3 - BACK")
     }
 
