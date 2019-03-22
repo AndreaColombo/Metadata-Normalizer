@@ -65,7 +65,6 @@ object Utils {
       input = StdIn.readLine()
     }
     val code = input
-    val dummy = 2
 
     println()
     (source,code)

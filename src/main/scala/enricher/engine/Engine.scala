@@ -51,7 +51,8 @@ object Engine {
         val rv = RawValue(result_expert_preference.raw_value,result_expert_preference.table_name,result_expert_preference.column_name)
         val term = Term(onto, code, iri, Some(rv))
         try {
-          term.fill().fill_relation().saveToKB().save_relation()
+          val expert_term = term.fill().copy(rawValue = Some(rv))
+          expert_term.fill_relation().saveToKB().save_relation()
         }
         catch {
           case e: Exception => logger.info("Error in term retrieval " + term.code + e.getMessage)
