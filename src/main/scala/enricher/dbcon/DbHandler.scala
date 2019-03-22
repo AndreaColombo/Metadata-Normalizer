@@ -802,4 +802,10 @@ object DbHandler {
     logger.info("Relationship unfolded filled")
     logger.info("Unfolding complete")
   }
+
+  def delete_raw_annotation(rawValue: RawValue) = {
+    val q = raw_annotation.filter(a => a.table_name === rawValue.table && a.column_name === rawValue.column && a.label === rawValue.value).delete
+    val db = get_db()
+    Await.result(db.run(q),Duration.Inf)
+  }
 }

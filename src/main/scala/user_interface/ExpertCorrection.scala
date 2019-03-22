@@ -13,14 +13,17 @@ object ExpertCorrection {
     println("1 - Correct")
     println("2 - Invalidate")
     val choice = get_choice(2)
-
     if (choice ==  "1") {
       val source_code = input_source_code()
-      DbHandler.update_gcm_tid(RawValue(value_to_correct, table, column), None)
+      val rv = RawValue(value_to_correct, table, column)
+      DbHandler.update_gcm_tid(rv, None)
       DbHandler.insert_expert_preference(expert_preference_type(table, column, value_to_correct, source_code._1, source_code._2))
+      DbHandler.delete_raw_annotation(rv)
     }
     else {
-      DbHandler.update_gcm_tid(RawValue(value_to_correct, table, column), None)
+      val rv = RawValue(value_to_correct, table, column)
+      DbHandler.update_gcm_tid(rv, None)
+      DbHandler.delete_raw_annotation(rv)
     }
   }
 
