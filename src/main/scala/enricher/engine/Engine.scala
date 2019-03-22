@@ -31,7 +31,7 @@ object Engine {
       val condition = (a: raw_annotation) => a.table_name === table_name && a.column_name === column_name && a.label.toLowerCase === raw_value.toLowerCase
       val result_raw = DbHandler.get_raw_annotation(condition)
       val result_syn = DbHandler.get_synonym_by_value(raw_value.map(_.toLower))
-      val result_user_changes = DbHandler.get_raw_expert_preference(table_name, column_name, raw_value.map(_.toLower))
+      val result_expert_preference = DbHandler.get_raw_expert_preference(table_name, column_name, raw_value.map(_.toLower))
       val rv = RawValue(raw_value, table_name, column_name)
       logger.info("Evaluating value" + raw_value)
       //LOCAL KB LOOKUP
@@ -41,22 +41,20 @@ object Engine {
         logger.info(s"""Value "$raw_value" found as RAW in local KB with tid $raw_tid""")
         DbHandler.update_gcm_tid(rv, Some(result_raw.tid))
       }
-      else if (result_user_changes._1 != "null") {
+      else if (result_expert_preference.source != default_values.string) {
         //VALUE FOUND IN USER CHANGES
         logger.info(s"""Value "$raw_value" found in user changes""")
-        val source = result_user_changes._1
+        val source = result_expert_preference.source
         val onto = OlsInterface.ols_get_onto_info(source)
-        val code = result_user_changes._2
+        val code = result_expert_preference.code
         val iri = OlsInterface.ols_get_iri(source, code)
-        if (!DbHandler.onto_exist(onto.source)) {
-          DbHandler.insert_ontology(onto)
-        }
-        val term = Term(onto, code, iri)
+        val rv = RawValue(result_expert_preference.raw_value,result_expert_preference.table_name,result_expert_preference.column_name)
+        val term = Term(onto, code, iri, Some(rv))
         try {
           term.fill().fill_relation().saveToKB().save_relation()
         }
         catch {
-          case e: Exception => logger.info("Error in term retrieval " + term.code)
+          case e: Exception => logger.info("Error in term retrieval " + term.code + e.getMessage)
         }
       }
       else if (result_syn.tid != default_values.int && result_syn.ttype == "pref") {

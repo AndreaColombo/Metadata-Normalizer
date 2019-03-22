@@ -533,10 +533,10 @@ object DbHandler {
     * @param raw_value   Value to retrieve information
     * @return A tuple (source,code) if exists
     */
-  def get_raw_expert_preference(table_name: String, column_name: String, raw_value: String): (String, String) = {
+  def get_raw_expert_preference(table_name: String, column_name: String, raw_value: String): expert_preference_type = {
     val db = get_db()
-    var result = ("null", "null")
-    val q = expert_preference.filter(a => a.table_name === table_name && a.column_name === column_name && a.raw_value.toLowerCase === raw_value.toLowerCase).map(a => (a.source, a.code))
+    var result = expert_preference_type()
+    val q = expert_preference.filter(a => a.table_name === table_name && a.column_name === column_name && a.raw_value.toLowerCase === raw_value.toLowerCase)
     val f = db.run(q.result).map(a =>
       if (a.nonEmpty)
         result = a.head
