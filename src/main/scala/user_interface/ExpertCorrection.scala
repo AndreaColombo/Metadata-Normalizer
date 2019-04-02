@@ -28,7 +28,7 @@ object ExpertCorrection {
   }
 
   def delete_ontology(): Unit = {
-    var flag = false
+    var flag = true
     while (flag){
       println("Insert ontology to delete")
       var onto = StdIn.readLine()
