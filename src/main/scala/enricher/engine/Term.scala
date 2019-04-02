@@ -115,7 +115,7 @@ case class Term(ontology: ontology_type,
 
       insert_ontology(this.ontology)
 
-      val vocabulary = vocabulary_type(-1, this.ontology.source, this.code, this.prefLabel.get, this.description.get, this.iri)
+      val vocabulary = vocabulary_type(-1, this.ontology.source.toLowerCase, this.code, this.prefLabel.get, this.description.get, this.iri)
 
       val new_tid = vocabulary_insert(vocabulary)
 
@@ -133,7 +133,7 @@ case class Term(ontology: ontology_type,
         reference_type(
             -1,
             new_tid,
-            a.source,
+            a.source.toLowerCase,
             a.code,
             a.url
         )
@@ -282,7 +282,7 @@ object Term {
     * Load term from local kb and assign tid if term exists
     */
   def loadFromKB(term: Term): Term = {
-    val existing_tid = get_tid_option(term.ontology.source, term.code)
+    val existing_tid = get_tid_option(term.ontology.source.toLowerCase, term.code)
     if (existing_tid.isDefined) {
       term.copy(tid = existing_tid)
     }

@@ -388,7 +388,8 @@ object DbHandler {
     */
   def insert_expert_preference(rows: expert_preference_type): Unit = {
     val db = get_db()
-    val insertAction = expert_preference.insertOrUpdate(rows)
+    val ins = rows.copy(source = rows.source.toLowerCase,raw_value = rows.raw_value.toLowerCase)
+    val insertAction = expert_preference.insertOrUpdate(ins)
     val insert = db.run(insertAction)
     Await.result(insert, Duration.Inf)
     // db.close()
