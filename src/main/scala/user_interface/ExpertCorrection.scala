@@ -8,12 +8,12 @@ import scala.io.StdIn
 
 object ExpertCorrection {
 
-  def correct_value(value_to_correct: String,table: String, column: String): Unit = {
+  def correct_value(value_to_correct: String, table: String, column: String): Unit = {
     println("Correct or invalidate?")
     println("1 - Correct")
     println("2 - Invalidate")
     val choice = get_choice(2)
-    if (choice ==  "1") {
+    if (choice == "1") {
       val source_code = input_source_code()
       val rv = RawValue(value_to_correct, table, column)
       DbHandler.update_gcm_tid(rv, None)
@@ -29,27 +29,27 @@ object ExpertCorrection {
 
   def delete_ontology(): Unit = {
     var flag = true
-    while (flag){
+    while (flag) {
       println("Insert ontology to delete")
       var onto = StdIn.readLine()
       println
-      while (!DbHandler.onto_exist(onto)){
+      while (!DbHandler.onto_exist(onto)) {
         println("Ontology not found")
         println("Please input a valid ontology")
         onto = StdIn.readLine()
         println
         DbHandler.delete_ontology(onto)
-        println("Do you wish to delete another ontology?")
-        println("1 - Yes")
-        println("2 - No")
-        val choice = get_choice(2)
-
-        if(choice.equalsIgnoreCase("1")){
-          flag = true
-        }
-        else if(choice.equalsIgnoreCase("2"))
-          flag = false
       }
+      println("Do you wish to delete another ontology?")
+      println("1 - Yes")
+      println("2 - No")
+      val choice = get_choice(2)
+
+      if (choice.equalsIgnoreCase("1")) {
+        flag = true
+      }
+      else if (choice.equalsIgnoreCase("2"))
+        flag = false
     }
   }
 
@@ -67,9 +67,9 @@ object ExpertCorrection {
       println("Input value to update")
       var value = StdIn.readLine()
       println
-      while (!DbHandler.value_exist(value,table,column)){
+      while (!DbHandler.value_exist(value, table, column)) {
         println("Value not valid")
-        val options = DbHandler.get_suggestions_raw(value,table,column)
+        val options = DbHandler.get_suggestions_raw(value, table, column)
         if (options.nonEmpty) {
           println("Select one from these options")
           for (i <- options.indices) {
@@ -85,17 +85,17 @@ object ExpertCorrection {
           println
         }
       }
-      correct_value(value,table,column)
+      correct_value(value, table, column)
 
       println("Do you wish to update another value?")
       println("1 - Yes")
       println("2 - No")
       val choice = get_choice(2)
 
-      if(choice.equalsIgnoreCase("1")){
+      if (choice.equalsIgnoreCase("1")) {
         flag = true
       }
-      else if(choice.equalsIgnoreCase("2"))
+      else if (choice.equalsIgnoreCase("2"))
         flag = false
     }
   }
