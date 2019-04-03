@@ -8,8 +8,8 @@ object main_test {
 
   def main(args: Array[String]): Unit = {
 
-
-   print(ols_exist("NCBITaxon",ols_get_iri("NCBITaxon","NCBITaxon_9606")))
+    val a = ols_get_info("UBERON","UBERON_0001295",ols_get_iri("uberon","UBERON_0001295"))
+    a.synonyms.get.foreach(println)
 
   }
 }

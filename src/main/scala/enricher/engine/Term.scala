@@ -18,7 +18,7 @@ object RelationType extends Enumeration {
   */
 object SynonymType extends Enumeration {
   type ttype = Value
-  val SYN, RELATED = Value
+  val SYN, RELATED, BROAD, ADJ = Value
 }
 
 /**
