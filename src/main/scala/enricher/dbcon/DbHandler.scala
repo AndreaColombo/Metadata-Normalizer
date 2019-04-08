@@ -23,7 +23,7 @@ object DbHandler {
   /**
     * Current database
     */
-  private var _db_name = "gmql_meta_new2"
+  private var _db_name = "current_db"
 
   /**
     * Getter method for database name
