@@ -106,6 +106,7 @@ case class Term(ontology: ontology_type,
           existing.rawValue.get.column,
           'L'
         )
+        synonym_insert(List(synonym_type(-1,existing.tid.get,this.rawValue.get.value,"RAW")))
         raw_insert(raw)
         update_gcm_tid(existing.rawValue.get, existing.tid)
       }
