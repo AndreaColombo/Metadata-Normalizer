@@ -75,8 +75,11 @@ object main extends App {
           val col = args(1)
           Engine.controller(t,col)
         }
+        unfold()
       }
-      unfold()
+      else {
+        print_manual()
+      }
     }
     catch{
       case e: Exception => logger.error("Error", e)
@@ -91,6 +94,17 @@ object main extends App {
     val elapsed  = days + ":" + hours % 24 + ":" + minutes % 60 + ":" + seconds % 60
 
     logger.info("Elapsed time for arg "+args.mkString(" ")+": "+elapsed)
+  }
+
+  def print_manual(): Unit = {
+    println("Program arguments: ")
+    println("all \t\t\t\t\t\t\t\t Launch the script for all table and columns" +
+      "\n" +
+      "<table_name> \t\t\t\t\t\t Launch the script for that specific table " +
+      "\n" +
+      "<table_name> <column_name> \t\t\t Launch the script for that specific column" +
+      "\n" +
+      "reset \t\t\t\t\t\t Wipes the LKB and sets all the tid of GCM to null")
   }
 
 }
