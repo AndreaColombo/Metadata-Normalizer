@@ -114,7 +114,7 @@ case class Term(ontology: ontology_type,
     }
     else {
 
-      insert_ontology(this.ontology)
+      insert_ontology(ontology(this.ontology.source.toLowerCase,this.ontology.title,this.ontology.description,this.ontology.url))
 
       val vocabulary = vocabulary_type(-1, this.ontology.source.toLowerCase, this.code, this.prefLabel.get, this.description.get, this.iri)
 
@@ -130,7 +130,7 @@ case class Term(ontology: ontology_type,
       ):+synonym_type(-1,new_tid,this.prefLabel.get,"PREF")
 
       val references = this.xref.get.map{a =>
-        insert_ontology(ols_get_onto_info(a.source))
+        insert_ontology(ols_get_onto_info(a.source.toLowerCase))
         reference_type(
             -1,
             new_tid,
