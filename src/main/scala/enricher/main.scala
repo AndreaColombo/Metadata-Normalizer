@@ -39,7 +39,7 @@ object main extends App {
       if (args.nonEmpty) {
         if (args(0).equals("init")) {
           DbHandler.init()
-//          DbHandler.create_fk_gcm()
+          DbHandler.create_fk_gcm()
         }
         else if (args(0).equals("reset")) {
             DbHandler.null_gcm()
@@ -98,13 +98,20 @@ object main extends App {
 
   def print_manual(): Unit = {
     println("Program arguments: ")
+    println
+    println
     println("all \t\t\t\t\t\t\t\t Launch the script for all table and columns" +
       "\n" +
       "<table_name> \t\t\t\t\t\t Launch the script for that specific table " +
       "\n" +
       "<table_name> <column_name> \t\t\t Launch the script for that specific column" +
       "\n" +
-      "reset \t\t\t\t\t\t Wipes the LKB and sets all the tid of GCM to null")
+      "reset \t\t\t\t\t\t\t\t Wipes the LKB and sets all the tid of GCM to null and recreate tables"+
+      "\n" +
+      "init \t\t\t\t\t\t\t\t Creates LKB tables on empty database"
+    )
+    println
+    println
   }
 
 }
