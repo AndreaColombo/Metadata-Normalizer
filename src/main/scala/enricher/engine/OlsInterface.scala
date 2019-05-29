@@ -174,6 +174,7 @@ object OlsInterface {
       val related_syn = (j \ "annotation" \ "has_related_synonym").validate[List[String]].getOrElse(List()).distinct
       val broad_syn_l = (j \ "annotation" \ "has_broad_synonym").validate[List[String]].getOrElse(List()).distinct
       val adj_syn_l = (j \ "annotation" \ "has_relational_adjective").validate[List[String]].getOrElse(List()).distinct
+      val alternative_term = (j \ "annotation" \ "alternative term").validate[List[String]].getOrElse(List()).distinct
 
       val synonym_l_fin = (synonym_l ++ exact_syn).distinct
 
@@ -181,6 +182,8 @@ object OlsInterface {
       val rel_synonym = related_syn.map(f => Synonym(f, SynonymType.RELATED))
       val broad_synonym = broad_syn_l.map(f => Synonym(f, SynonymType.BROAD))
       val adj_synonym = adj_syn_l.map(f => Synonym(f, SynonymType.ADJ))
+      val alternative_term_synonym = alternative_term.map(f => Synonym(f, SynonymType.ALTERNATIVE))
+
 
       val xref = (j \ "obo_xref").validate[List[JsValue]].getOrElse(List()).map(a =>
         Xref(
@@ -204,7 +207,7 @@ object OlsInterface {
 
       val children = List(Relation(Right(children_url), RelationType.IS_A), Relation(Right(has_part_url), PART_OF))
 
-      returned = Term(ontology, ontology_id, iri, None, Some(prefLabel), Some(description), Some(synonym ++ rel_synonym ++ broad_synonym ++ adj_synonym), Some(xref), Some(parents), Some(children))
+      returned = Term(ontology, ontology_id, iri, None, Some(prefLabel), Some(description), Some(synonym ++ rel_synonym ++ broad_synonym ++ adj_synonym ++ alternative_term_synonym), Some(xref), Some(parents), Some(children))
     }
     else {
       logger.warn(s"Ols retrieval failed after $attempts attempts")

@@ -18,7 +18,7 @@ object RelationType extends Enumeration {
   */
 object SynonymType extends Enumeration {
   type ttype = Value
-  val SYN, RELATED, BROAD, ADJ = Value
+  val SYN, RELATED, BROAD, ADJ, ALTERNATIVE = Value
 }
 
 /**
@@ -106,7 +106,6 @@ case class Term(ontology: ontology_type,
           existing.rawValue.get.column,
           'L'
         )
-        synonym_insert(List(synonym_type(-1,existing.tid.get,this.rawValue.get.value,"RAW")))
         raw_insert(raw)
         update_gcm_tid(existing.rawValue.get, existing.tid)
       }
@@ -114,9 +113,9 @@ case class Term(ontology: ontology_type,
     }
     else {
 
-      insert_ontology(ontology_type(this.ontology.source.toLowerCase,this.ontology.title,this.ontology.description,this.ontology.url))
+      insert_ontology(this.ontology)
 
-      val vocabulary = vocabulary_type(-1, this.ontology.source.toLowerCase, this.code, this.prefLabel.get, this.description.get, this.iri)
+      val vocabulary = vocabulary_type(-1, this.ontology.source, this.code, this.prefLabel.get, this.description.get, this.iri)
 
       val new_tid = vocabulary_insert(vocabulary)
 
@@ -130,11 +129,11 @@ case class Term(ontology: ontology_type,
       ):+synonym_type(-1,new_tid,this.prefLabel.get,"PREF")
 
       val references = this.xref.get.map{a =>
-        insert_ontology(ols_get_onto_info(a.source.toLowerCase))
+        insert_ontology(ols_get_onto_info(a.source))
         reference_type(
             -1,
             new_tid,
-            a.source.toLowerCase,
+            a.source,
             a.code,
             a.url
         )
@@ -283,7 +282,7 @@ object Term {
     * Load term from local kb and assign tid if term exists
     */
   def loadFromKB(term: Term): Term = {
-    val existing_tid = get_tid_option(term.ontology.source.toLowerCase, term.code)
+    val existing_tid = get_tid_option(term.ontology.source, term.code)
     if (existing_tid.isDefined) {
       term.copy(tid = existing_tid)
     }
