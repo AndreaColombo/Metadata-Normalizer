@@ -82,7 +82,7 @@ object DbHandler {
     db
   }
 
-  val tables = List(ontology, vocabulary, synonym, reference, raw_annotation, relationship, expert_feedback, relationship_unfolded)
+  val tables = List(ontology, vocabulary, synonym, reference, raw_annotation, relationship, expert_feedback, expert_choice, relationship_unfolded)
 
   /**
     * Drops foreign key references on the GCM tables
